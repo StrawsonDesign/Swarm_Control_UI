@@ -36,8 +36,10 @@ class Application(tk.Frame):
 
     def createVideo(self):
         #define new frame
-        Vid_frame=tk.Frame(self, bg='red')
+        Vid_frame=tk.Frame(self)
         Vid_frame.grid(row=1,column=1,rowspan=3,columnspan=2, sticky=tk.N+tk.S+tk.E+tk.W)
+        Vid_lab=tk.Label(self,bg='red')
+        Vid_lab.grid(row=1,column=1)
         # for camera feed vid = cv2.VideoCapture(0)
         
         vid=cv2.VideoCapture('/home/kishan/Desktop/Python/Timer.mp4') # read the video from the file
@@ -46,25 +48,27 @@ class Application(tk.Frame):
         waitPerFrameMillisec = int (1000/fps) # cv2 needs to wait this much before advancing to next frame 
 
         print 'Frame Rate = ', fps, ' frames per sec'
-        
-''' Convert to Label here to display images '''
-
 
         while(True):
             frameImg = vid.read()[1] # extracting image from frame
             cv2image= cv2.cvtColor(frameImg,cv2.COLOR_BGR2RGBA)
             # cv2.imshow('image',frameImg) # display image using openCV
             img = Image.fromarray(cv2image)
-            imgtk = ImageTk.PhotoImage(image=img)
-            Vid_frame.imgtk = imgtk
-            Vid_frame.configure(image=imgtk)
-            Vid_frame.after(10, show_frame)
+            imgtk = ImageTk.PhotoImage(img)
+            #Vid_lab.imgtk = imgtk
+            Vid_lab.configure(image=imgtk)
+            #Vid_lab.after(10, show_frame)
             if cv2.waitKey(waitPerFrameMillisec) & 0xFF == ord('q'):
                 break
             # wait some milliseconds before advancing to next frame
 
-        vid.release() # freeing up mmemory 
+        
+
+
+        #vid.release() # freeing up memory 
         #cv2.destroyAllWindows() # kill all windows
+
+
         
 
     def createWidgets(self,frame,txt,r,c,rspan,cspan):

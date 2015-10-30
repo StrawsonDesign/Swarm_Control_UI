@@ -1,5 +1,5 @@
 from Tkinter import *
-import tkFont
+import tkFont, threading, Queue
 	
 # class VideoControlWidget(Frame):
 	
@@ -13,7 +13,6 @@ import tkFont
 	# def ButtonWidget(self):
 		
 		
-		
 class SettingsWidget(Frame):
 	
 	def __init__(self, parent,frame,row,col,row_span,col_span):
@@ -21,6 +20,9 @@ class SettingsWidget(Frame):
 		self.names = ['Position', 'Attitude']
 		self.vars = []
 		counter = 0
+		self.queque = Queue.Queue()
+		ThreadedTask(self.queque).start()
+		self.parent.after(100, self.process_queue)
 		
 		for self.name in self.names:
 			var = IntVar()
@@ -31,7 +33,14 @@ class SettingsWidget(Frame):
 		self.rowconfigure(row, weight = 1)
 		self.columnconfigure(col, weight = 1)
 	
-
+	def process_queue(self):
+		try:
+			msg = self.queue.get(0)
+			print msg
+			
+		except Queue.Empty:
+			self.parent.after(100, self.process_queue)
+			
 # class VideoWidget(Frame):
 
 
@@ -42,6 +51,9 @@ class StatisticsWidget(Frame):
 		self.names = ['Velocity', 'Acceleration', 'Position', 'Roll', 'Pitch', 'Yaw']
 		self.vars = []
 		counter = 0
+		self.queque = Queue.Queue()
+		ThreadedTask(self.queque).start()
+		self.parent.after(100, self.process_queue)
 		
 		for self.name in self.names:
 			var = IntVar()
@@ -51,11 +63,28 @@ class StatisticsWidget(Frame):
 		
 		self.rowconfigure(row, weight = 1)
 		self.columnconfigure(col, weight = 1)
+		
+	def process_queue(self):
+		try:
+			msg = self.queue.get(0)
+			print msg
+			
+		except Queue.Empty:
+			self.parent.after(100, self.process_queue)
+			
 # class YourUAVIDWidget(Frame):
 
 
 # class ScrollingUAVIDWidget(Frame):
 
+class ThreadedTask(threading.Thread):
+
+	def __init__(self, queque)
+		threading.Thread.__init__(self)
+		self.queue = queque
+		
+	def run(self)
+		self.queue.put("Task Finished")
 
 	
 def main():

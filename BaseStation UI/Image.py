@@ -1,16 +1,25 @@
-from PIL import ImageTk,Image
-from Tkinter import *
+import Tkinter as tk
+import cv2
+import cv
+from PIL import ImageTk , Image
 
-class Application(Frame):              
-    def __init__(self, master=None):
-    	Frame.__init__(self, master)
-        self.grid()
-        img = ImageTk.PhotoImage(file='/home/kishan/Desktop/lena.png')
-        panel = Label(self)
-        panel.grid()
-        panel.config(image=img, bg='red')
-        panel.image=img
+width, height = 800, 600
+cap = cv2.VideoCapture(0)
 
-app = Application()                       
-app.master.title('Sample application')
-app.mainloop()
+root = tk.Tk()
+root.bind('<Escape>', lambda e: root.quit())
+lmain = tk.Label(root)
+lmain.pack()
+
+def show_frame():
+    _, frame = cap.read()
+    #frame = cv2.flip(frame, 1)
+    cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+    img = Image.fromarray(cv2image)
+    imgtk = ImageTk.PhotoImage(image=img)
+    lmain.imgtk = imgtk
+    lmain.configure(image=imgtk)
+    lmain.after(10, show_frame)
+
+show_frame()
+root.mainloop()

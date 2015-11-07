@@ -1,6 +1,6 @@
 import Tkinter as tk
 import cv2
-import cv
+#import cv
 from PIL import ImageTk , Image
 
 width, height = 800, 600
@@ -19,7 +19,7 @@ def show_frame():
     imgtk = ImageTk.PhotoImage(image=img)
     lmain.imgtk = imgtk
     lmain.configure(image=imgtk)
-    lmain.after(10, show_frame)
+    lmain.after(10, show_frame)	
 
 show_frame()
 root.mainloop()

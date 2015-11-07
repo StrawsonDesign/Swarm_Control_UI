@@ -1,8 +1,9 @@
+import tkMessageBox # for messageboxes 
 import Tkinter as tk
 from PIL import ImageTk , Image
 import cv2 # OpenCV for video handling
 import tkFont # for fonts
-from time import sleep
+from time import sleep #imprort threading # for threading in python ; threading is more powerful than thread
 
 
 class Application(tk.Frame):              
@@ -14,6 +15,17 @@ class Application(tk.Frame):
         top=self.winfo_toplevel() 
         top.rowconfigure(0, weight=1)
         top.columnconfigure(0, weight=1)
+        # make all rows and columns grow with the widget window ; weight signifies relative rate of window growth
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+        self.rowconfigure(2, weight=1)
+        self.rowconfigure(3, weight=1)
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.columnconfigure(2, weight=1)
+        self.columnconfigure(3, weight=1)        
+
+
         Status=tk.Frame(self)
         Status.grid()
         MyUAV=tk.Frame(self)
@@ -39,31 +51,44 @@ class Application(tk.Frame):
         
 
 
-        vidLabel=tk.Label(self)
-        vidLabel.grid(row=1,column=1,rowspan=3,columnspan=2, sticky=tk.N+tk.S+tk.E+tk.W)
+        vidFrame=tk.Frame(self)
+        vidFrame.grid()        
+        vidLabel=tk.Label(vidFrame)
+        vidLabel.grid(row=1,column=1,rowspan=3,columnspan=2,sticky=tk.N+tk.S+tk.E+tk.W)
+        vidFrame.grid(row=1,column=1,rowspan=3,columnspan=2,sticky=tk.N+tk.S+tk.E+tk.W)       
         vid_cap = cv2.VideoCapture(0)
-        self.showVideo(vid_cap,vidLabel)
+        #vidLabel.bind("<Configure>", self.resize)
+        
 
     
-    def showVideo(self,vid_cap,vidLabel):
-        _, frame = vid_cap.read()
-        frame = cv2.flip(frame, 1) # flips the video feed
-        cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
-        img = Image.fromarray(cv2image)
-        imgtk = ImageTk.PhotoImage(image=img)
-        vidLabel.imgtk = imgtk
-        vidLabel.configure(image=imgtk)
-        vidLabel.after(10, self.showVideo(vid_cap,vidLabel)) # calls the method after 
+        def showVideo():
+            _, frame = vid_cap.read(0)  
+            frame = cv2.flip(frame, 1) # flips the video feed
+            cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+            img = Image.fromarray(cv2image)
+#            img_resize= img.resize([vidFrame.winfo_width(),vidFrame.winfo_height()]) #resize
+            imgtk = ImageTk.PhotoImage(image=img)
+            vidLabel.imgtk = imgtk
+            vidLabel.configure(image=imgtk)
+            #vidLabel.after(10,showVideo) # calls the method after 10 ms
+
+        showVideo()
 
 
     def createWidgets(self,frame,txt,r,c,rspan,cspan):
 
-        self.rowconfigure(r, weight=1)           
-        self.columnconfigure(c, weight=1)
-        self.qt = tk.Button(self, text=txt,command=self.quit)
+        self.qt = tk.Button(self, text=txt,command=self.OnButton)
         self.qt.grid(row=r, column=c,rowspan=rspan,columnspan=cspan,
         sticky=tk.N+tk.S+tk.W+tk.E) #stretch the widget both horizontally and 
                                 # vertically to fill the cell
+
+    def OnButton(self):
+        result=tkMessageBox.askokcancel(title="File already exists", message="File already exists. Overwrite?")
+        if result is True:
+            print "User clicked Ok"
+        else:
+            print "User clicked Cancel"
+
 
 
 app = Application()                       

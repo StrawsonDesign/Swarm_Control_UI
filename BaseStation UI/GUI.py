@@ -57,7 +57,7 @@ class Application(tk.Frame):
         vidLabel=tk.Label(vidFrame)
         vidLabel.grid(row=1,column=1,rowspan=3,columnspan=2,sticky=tk.N+tk.S+tk.E+tk.W)
         vidFrame.grid(row=1,column=1,rowspan=3,columnspan=2,sticky=tk.N+tk.S+tk.E+tk.W)       
-        vid_cap = cv2.VideoCapture(cv2)
+        vid_cap = cv2.VideoCapture(0)
         #0.destroyAllWindows() 
     
         
@@ -66,7 +66,7 @@ class Application(tk.Frame):
 
         
 
-        while 1:
+        def showVideo():
             _, frame = vid_cap.read(0)  
             frame = cv2.flip(frame, 1) # flips the video feed
             cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
@@ -76,9 +76,9 @@ class Application(tk.Frame):
             vidLabel.imgtk = imgtk
             vidLabel.configure(image=imgtk)
             
-            #vidLabel.after(10,showVideo) # calls the method after 10 ms
+            vidLabel.after(10,showVideo) # calls the method after 10 ms
 
-        #showVideo()
+        showVideo()
 
 
 

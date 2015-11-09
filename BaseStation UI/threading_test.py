@@ -54,11 +54,10 @@ class Video(threading.Thread):
                       sticky=tk.N+tk.S+tk.E+tk.W)
         self.vidFrame.config(width=640,height=480)       
         self.vid_cap = cv2.VideoCapture(0)
-        print 'I was here'
 
     def run(self):
         self.showVideo(self.vidLabel,self.vidFrame)
-        print 'I was here now'
+        
 
     def showVideo(self,vidLabel,vidFrame):
         _, frame = self.vid_cap.read(0)  
@@ -129,8 +128,11 @@ class Application(tk.Frame):
         self.createWidgets(Video_Button,'Video',2,3,2,1)
 
         print '# active threads are ',threading.enumerate()
-        videoThread.start()
-        myUAVThread.start()
+        videoThread.start() # becomes mainthread
+        myUAVThread.start() # becomes secondard thread
+
+    
+
 
     def createWidgets(self,frame,txt,r,c,rspan,cspan):
 

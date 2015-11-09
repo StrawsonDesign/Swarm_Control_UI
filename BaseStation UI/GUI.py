@@ -3,7 +3,8 @@ import Tkinter as tk
 from PIL import ImageTk , Image
 import cv2 # OpenCV for video handling
 import tkFont # for fonts
-from time import sleep #imprort threading # for threading in python ; threading is more powerful than thread
+from time import sleep 
+import threading #imprort threading # for threading in python ; threading is more powerful than thread
 
 
 class Application(tk.Frame):              
@@ -56,12 +57,16 @@ class Application(tk.Frame):
         vidLabel=tk.Label(vidFrame)
         vidLabel.grid(row=1,column=1,rowspan=3,columnspan=2,sticky=tk.N+tk.S+tk.E+tk.W)
         vidFrame.grid(row=1,column=1,rowspan=3,columnspan=2,sticky=tk.N+tk.S+tk.E+tk.W)       
-        vid_cap = cv2.VideoCapture(0)
+        vid_cap = cv2.VideoCapture(cv2)
+        #0.destroyAllWindows() 
+    
+        
         #vidLabel.bind("<Configure>", self.resize)
         
 
-    
-        def showVideo():
+        
+
+        while 1:
             _, frame = vid_cap.read(0)  
             frame = cv2.flip(frame, 1) # flips the video feed
             cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
@@ -70,9 +75,11 @@ class Application(tk.Frame):
             imgtk = ImageTk.PhotoImage(image=img)
             vidLabel.imgtk = imgtk
             vidLabel.configure(image=imgtk)
+            
             #vidLabel.after(10,showVideo) # calls the method after 10 ms
 
-        showVideo()
+        #showVideo()
+
 
 
     def createWidgets(self,frame,txt,r,c,rspan,cspan):

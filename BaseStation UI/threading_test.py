@@ -4,7 +4,7 @@ import Tkinter as tk
 from PIL import ImageTk , Image
 import cv2 # OpenCV for video handling
 import tkFont # for fonts
-from time import sleep 
+from time import strftime
 
 
 class MyUAV(threading.Thread):
@@ -53,7 +53,7 @@ class Video(threading.Thread):
                       columnspan=2,
                       sticky=tk.N+tk.S+tk.E+tk.W)
         self.vidFrame.config(width=640,height=480)
-        self.vid_cap = cv2.VideoCapture(0)
+        
 
         # Intialize vidControl Frame
         self.vidControl =tk.Frame(master)
@@ -62,29 +62,61 @@ class Video(threading.Thread):
                       rowspan=1,
                       columnspan=1,
                       sticky=tk.N+tk.S+tk.E+tk.W)
-        self.recordButton = tk.Button(self.vidControl, text="Record", bd = 1 , bg= "Red")
+        self.recordButton = tk.Button(self.vidControl, 
+                                        text="Record", 
+                                        bd = 1,
+                                        bg= "Red")
         self.recordButton.pack(fill=tk.BOTH,expand=1)
-        self.toggleCameraButton = tk.Button(self.vidControl, text = "Camera Toggle", command=self.toggleCamera)
-        self.toggleCameraButton.pack(fill=tk.BOTH,expand=1)
-        self.screenshotButton = tk.Button(self.vidControl, text = "Screen Capture")
-        self.screenshotButton.pack(fill=tk.BOTH,expand=1)
-        self.depthToggleButton = tk.Button(self.vidControl, text = "Show Depth")
-        self.depthToggleButton.pack(fill=tk.BOTH,expand=1)
+        self.toggleCameraButton = tk.Button(self.vidControl, 
+                                            text = "Camera Toggle", 
+                                            command=self.toggleCamera)
+        self.toggleCameraButton.pack(fill=tk.BOTH,
+                                    expand=1)
+        self.screenshotButton = tk.Button(self.vidControl, 
+                                            text = "Screen Capture",
+                                            command=self.screenshot)
+        self.screenshotButton.pack(fill=tk.BOTH,
+                                   expand=1)
+        self.depthToggleButton = tk.Button(self.vidControl,
+                                        text = "Show Depth",
+                                        command=self.depthToggle)
+        self.depthToggleButton.pack(fill=tk.BOTH,
+                                    expand=1)
 
 
     def run(self):
+        self.takeScreenShot=0 # Intialize screenshot toggle to be zero
+        self.cameraChannelOnVideo=0 # Intialize Camera Channel to default to zero
+        self.vid_cap = cv2.VideoCapture(self.cameraChannelOnVideo) # Assign channel to video capture
         self.showVideo(self.vidLabel,self.vidFrame)
+
+    def depthToggle(self):
+        print 'Depth Toggling function goes here- Read from the stereo camera manual how to do this'
+
+    def screenshot(self):
+        self.takeScreenShot=1
 
     def toggleCamera(self):
         #### Implement this when we have multiple camera channels to toggle"
-        self.vid_cap = cv2.VideoCapture(1) # should stop feed right now
-        print 'Displaying Video Feed from Camera number', self.activeVideoChannel       
-
+        try: # fix error handling here
+            self.cameraChannelOnVideo=1
+            self.vid_cap = cv2.VideoCapture(self.cameraChannelOnVideo) # should stop feed right now
+            print 'Displaying Video Feed from Camera number 1'
+        except :
+            self.vid_cap = cv2.VideoCapture(0)
+            raise
+            pass
+        
     def showVideo(self,vidLabel,vidFrame):
         _, frame = self.vid_cap.read(0) 
         frame = cv2.flip(frame, 1) # flips the video feed
         cv2image = cv2.cvtColor(frame,cv2.COLOR_BGR2RGBA)
         img = Image.fromarray(cv2image)
+        # save image if screenshot toggle is on
+        if self.takeScreenShot==1:
+                img.save('Camera '+str(self.cameraChannelOnVideo)+'_'+strftime("%c")+'.jpg')
+                self.takeScreenShot=0
+
         new_width= int(10*(vidFrame.winfo_width()/10)) # round image size to nearest 
         new_height = int(10*(vidFrame.winfo_height()/10)) # frame size
         img_resize= img.resize([new_width,new_height]) #resizing image

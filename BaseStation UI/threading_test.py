@@ -4,7 +4,7 @@ import Tkinter as tk
 from PIL import ImageTk , Image
 import cv2 # OpenCV for video handling
 import tkFont # for fonts
-from time import strftime
+from time import strftime,sleep
 
 
 class MyUAV(threading.Thread):
@@ -30,7 +30,7 @@ class MyUAV(threading.Thread):
     def run(self):
         i=0
         while i<10:
-            # print 'i is =',i
+            print 'i is =',i
             # print '# active threads in MyUAV loop are',threading.enumerate()
             sleep(2)
             i+= 1
@@ -95,17 +95,25 @@ class Video(threading.Thread):
 
     def screenshot(self):
         self.takeScreenShot=1
+        print 'Took a Screenshot!'
 
     def toggleCamera(self):
-        #### Implement this when we have multiple camera channels to toggle"
-        try: # fix error handling here
-            self.cameraChannelOnVideo=1
-            self.vid_cap = cv2.VideoCapture(self.cameraChannelOnVideo) # should stop feed right now
-            print 'Displaying Video Feed from Camera number 1'
-        except :
-            self.vid_cap = cv2.VideoCapture(0)
-            raise
-            pass
+        # works for only two cameras
+        #try: # error handling is not working
+        newChannel = 1-self.cameraChannelOnVideo
+        self.vid_cap = cv2.VideoCapture(newChannel)
+        self.cameraChannelOnVideo=newChannel
+
+        isChannelValid,_= self.vid_cap.read(0)
+        if isChannelValid:
+            self.cameraChannelOnVideo=newChannel
+        else:
+            self.cameraChannelOnVideo=0
+            self.vid_cap = cv2.VideoCapture(self.cameraChannelOnVideo) # result to default camera method
+            print 'Displaying Video Feed from Camera Number = ',    self.cameraChannelOnVideo 
+        # except:
+        #     print 'Hi'
+
         
     def showVideo(self,vidLabel,vidFrame):
         _, frame = self.vid_cap.read(0) 
@@ -166,9 +174,8 @@ class Application(tk.Frame):
         self.createWidgets(Team,'Team UAVs',0,2,1,2)
         self.createWidgets(Status,'Stats',1,0,2,1)
         self.createWidgets(Settings,'Settings',3,0,1,1)
-#        self.createWidgets(Vid_Cntrl,'Video Control',1,3,1,1)
         self.createWidgets(Log,'Logging',2,3,2,1)
-        self.createWidgets(Video_Button,'Video',2,3,2,1)
+
 
         print '# active threads are ',threading.enumerate()
         videoThread.start() # becomes mainthread

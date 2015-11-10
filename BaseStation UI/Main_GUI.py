@@ -8,7 +8,7 @@ import tkFont, threading, Queue, time
 class LoggingWidget(Frame):
 	
 	def __init__(self, parent,frame,row,col,row_span,col_span):
-		Frame.__init__(self,parent)
+		Frame.__init__(self,parent)	
 		self.checkbox_names = ['Attitude', 'Position', 'Velocity', 'Battery']
 		self.button_names = ['Record', 'Stop']
 		self.vars = []

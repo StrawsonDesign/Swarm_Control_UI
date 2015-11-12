@@ -41,54 +41,85 @@ class Video(threading.Thread):
     def __init__(self,master):
         threading.Thread.__init__(self)
         self.vidFrame=tk.Frame(master)
+        self.vidFrame.grid(row=1,
+                      column=1,
+                      rowspan=3,
+                      columnspan=2,
+                      sticky=tk.S+tk.N+tk.E+tk.W)
+        self.vidFrame.config(width=640,height=480)
         self.vidLabel=tk.Label(master)
         self.vidLabel.grid(row=1,
                       column=1,
                       rowspan=3,
                       columnspan=2,
-                      sticky=tk.N+tk.S+tk.E+tk.W)
-        self.vidFrame.grid(row=1,
-                      column=1,
-                      rowspan=3,
-                      columnspan=2,
-                      sticky=tk.N+tk.S+tk.E+tk.W)
-        self.vidFrame.config(width=640,height=480)
+                      sticky=tk.S+tk.N+tk.E+tk.W)
+
+        #self.vidLabel.pack(fill=tk.BOTH,
+        #                            expand=1)
+
+        def enforceAspectRatio(event):
+            dw=int(0.7*event.width)
+            dh=int(0.75*event.width)
+            print "w,h is ",event.width, event.height,dw,dh
+            self.vidLabel.config(width=dw,height=dh)
+            print "frame size is", self.vidFrame.winfo_width(), self.vidFrame.winfo_height()  
+
+        #self.vidFrame.bind("<Configure>",enforceAspectRatio)
         
 
         # Intialize vidControl Frame
-        self.vidControl =tk.Frame(master)
-        self.vidControl.grid(row=1,
+        vidControl =tk.Frame(master)
+        vidControl.grid(row=1,
                       column=3,
                       rowspan=1,
                       columnspan=1,
                       sticky=tk.N+tk.S+tk.E+tk.W)
-        self.recordButton = tk.Button(self.vidControl, 
+        recordButton = tk.Button(vidControl, 
                                         text="Record", 
                                         bd = 1,
-                                        bg= "Red")
-        self.recordButton.pack(fill=tk.BOTH,expand=1)
-        self.toggleCameraButton = tk.Button(self.vidControl, 
+                                        bg= "Red",
+                                        command=self.recordVideo)
+        recordButton.pack(fill=tk.BOTH,
+                                expand=1)
+        toggleCameraButton = tk.Button(vidControl, 
                                             text = "Camera Toggle", 
                                             command=self.toggleCamera)
-        self.toggleCameraButton.pack(fill=tk.BOTH,
+        toggleCameraButton.pack(fill=tk.BOTH,
                                     expand=1)
-        self.screenshotButton = tk.Button(self.vidControl, 
+        screenshotButton = tk.Button(vidControl, 
                                             text = "Screen Capture",
                                             command=self.screenshot)
-        self.screenshotButton.pack(fill=tk.BOTH,
+        screenshotButton.pack(fill=tk.BOTH,
                                    expand=1)
-        self.depthToggleButton = tk.Button(self.vidControl,
+        depthToggleButton = tk.Button(vidControl,
                                         text = "Show Depth",
                                         command=self.depthToggle)
-        self.depthToggleButton.pack(fill=tk.BOTH,
+        depthToggleButton.pack(fill=tk.BOTH,
                                     expand=1)
+
 
 
     def run(self):
+        self.saveVideoToggle=0 # Intialize videocapture toggle to zero
         self.takeScreenShot=0 # Intialize screenshot toggle to be zero
         self.cameraChannelOnVideo=0 # Intialize Camera Channel to default to zero
         self.vid_cap = cv2.VideoCapture(self.cameraChannelOnVideo) # Assign channel to video capture
         self.showVideo(self.vidLabel,self.vidFrame)
+
+    def recordVideo(self):
+        try:
+            w=int(self.vid_cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH ))
+            h=int(self.vid_cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT ))
+            fourcc = cv2.cv.CV_FOURCC('M','P','4','A')
+            outputFPS = 20
+            self.videoWriter = cv2.VideoWriter("output.avi", fourcc, outputFPS, (w, h))
+            print "I was here"
+            if self.videoWriter.isOpened():
+                self.videoWriter.write(frame)
+                print ('Saving Video Frames')
+
+        except expection as e:
+            print e
 
     def depthToggle(self):
         print 'Depth Toggling function goes here- Read from the stereo camera manual how to do this'
@@ -110,7 +141,7 @@ class Video(threading.Thread):
         else:
             self.cameraChannelOnVideo=0
             self.vid_cap = cv2.VideoCapture(self.cameraChannelOnVideo) # result to default camera method
-            print 'Displaying Video Feed from Camera Number = ',    self.cameraChannelOnVideo 
+        print 'Displaying Video Feed from Camera Number = ',self.cameraChannelOnVideo 
         # except:
         #     print 'Hi'
 
@@ -120,18 +151,24 @@ class Video(threading.Thread):
         frame = cv2.flip(frame, 1) # flips the video feed
         cv2image = cv2.cvtColor(frame,cv2.COLOR_BGR2RGBA)
         img = Image.fromarray(cv2image)
+    
         # save image if screenshot toggle is on
         if self.takeScreenShot==1:
                 img.save('Camera '+str(self.cameraChannelOnVideo)+'_'+strftime("%c")+'.jpg')
                 self.takeScreenShot=0
 
-        new_width= int(10*(vidFrame.winfo_width()/10)) # round image size to nearest 
-        new_height = int(10*(vidFrame.winfo_height()/10)) # frame size
+        frameAspectRatio = (float(vidFrame.winfo_width())/float(vidFrame.winfo_height()))
+        if frameAspectRatio > (1.333): # Frame is wider than it needs to be
+           new_height= int(10*(vidFrame.winfo_height()/10)) # round image size to nearest
+           new_width=int(1.33*new_height)
+        else: # Frame is taller than it needs to be
+            new_width= int(10*(vidFrame.winfo_width()/10))
+            new_height =int(0.75* new_width)
         img_resize= img.resize([new_width,new_height]) #resizing image
         imgtk = ImageTk.PhotoImage(image=img_resize)
         vidLabel.imgarbage = imgtk # for python to exclude image from garbage collection
         vidLabel.configure(image=imgtk)
-        vidLabel.after(10,self.showVideo,vidLabel,vidFrame) # calls the method after 10 ms
+        vidLabel.after(2,self.showVideo,vidLabel,vidFrame) # calls the method after 10 ms
 
     
 
@@ -180,6 +217,7 @@ class Application(tk.Frame):
         print '# active threads are ',threading.enumerate()
         videoThread.start() # becomes mainthread
         myUAVThread.start() # becomes secondard thread
+        print '# active threads are ',threading.enumerate()
 
     
 

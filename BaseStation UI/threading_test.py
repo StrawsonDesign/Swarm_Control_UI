@@ -74,12 +74,12 @@ class Video(threading.Thread):
                       rowspan=1,
                       columnspan=1,
                       sticky=tk.N+tk.S+tk.E+tk.W)
-        recordButton = tk.Button(vidControl, 
+        self.recordButton = tk.Button(vidControl, 
                                         text="Record", 
                                         bd = 1,
                                         bg= "Red",
-                                        command=self.recordVideo)
-        recordButton.pack(fill=tk.BOTH,
+                                        command= self.recordVideo)
+        self.recordButton.pack(fill=tk.BOTH,
                                 expand=1)
         toggleCameraButton = tk.Button(vidControl, 
                                             text = "Camera Toggle", 
@@ -110,16 +110,22 @@ class Video(threading.Thread):
         try:
             w=int(self.vid_cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH ))
             h=int(self.vid_cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT ))
-            fourcc = cv2.cv.CV_FOURCC('M','P','4','A')
-            outputFPS = 20
-            self.videoWriter = cv2.VideoWriter("output.avi", fourcc, outputFPS, (w, h))
-            print "I was here"
-            if self.videoWriter.isOpened():
-                self.videoWriter.write(frame)
-                print ('Saving Video Frames')
+            fourcc = cv2.cv.CV_FOURCC('D','I','V','X')
+            outputFPS = 20.0
+            self.vidWriter = cv2.VideoWriter('Video_'+str(self.cameraChannelOnVideo)+'_'+strftime("%c")+'.avi', fourcc, outputFPS, (w, h), True)
+            #self.videoWriter.open("output.avi", fourcc, outputFPS, (w, h))
+            self.saveVideoToggle=1 # start capturing video frames in video loop
+            self.recordButton.configure(text="Stop",
+                                            command=self.stopVideoRecord)
+        except:
+            print "Something bad happened with recordVideo"
 
-        except expection as e:
-            print e
+    def stopVideoRecord(self):
+        self.saveVideoToggle=0
+        print "Stopped Recording Video"
+        self.recordButton.configure(text="Record",
+                                        command= self.recordVideo)
+        self.vidWriter.release()
 
     def depthToggle(self):
         print 'Depth Toggling function goes here- Read from the stereo camera manual how to do this'
@@ -154,8 +160,13 @@ class Video(threading.Thread):
     
         # save image if screenshot toggle is on
         if self.takeScreenShot==1:
-                img.save('Camera '+str(self.cameraChannelOnVideo)+'_'+strftime("%c")+'.jpg')
-                self.takeScreenShot=0
+            img.save('Camera '+str(self.cameraChannelOnVideo)+'_'+strftime("%c")+'.jpg')
+            self.takeScreenShot=0
+
+        if self.saveVideoToggle==1:
+           # print "Hi there, Recording Video"
+           #print self.videoWriter.isOpened
+           self.vidWriter.write(frame)
 
         frameAspectRatio = (float(vidFrame.winfo_width())/float(vidFrame.winfo_height()))
         if frameAspectRatio > (1.333): # Frame is wider than it needs to be

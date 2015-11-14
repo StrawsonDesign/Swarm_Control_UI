@@ -6,6 +6,7 @@ import cv2 # OpenCV for video handling
 import tkFont # for fonts
 from time import strftime,sleep
 
+activeDronesList=['Azog','Othrod',' The Great Goblin','Boldog']
 
 class MyUAV(threading.Thread):
     def __init__(self,master,r,c,rspan,cspan):
@@ -34,6 +35,25 @@ class MyUAV(threading.Thread):
             # print '# active threads in MyUAV loop are',threading.enumerate()
             sleep(2)
             i+= 1
+
+class otherdrones(threading.Thread):
+    def __init__(self,master):
+        threading.Thread.__init__(self)
+        droneFrame=tk.Frame(master)
+        droneFrame.grid(row=0,
+                        column=2,
+                        rowspan=1,
+                        columnspan=2,
+                        sticky=tk.N+tk.S+tk.W+tk.E)
+        self.updateActiveDrones(droneFrame)
+
+    def updateActiveDrones(self,droneFrame):
+        for orcs in activeDronesList:
+            b=tk.Button(droneFrame,text=activeDronesList(i))
+            b.pack()
+
+
+
 
 
 
@@ -97,8 +117,6 @@ class Video(threading.Thread):
         depthToggleButton.pack(fill=tk.BOTH,
                                     expand=1)
 
-
-
     def run(self):
         self.saveVideoToggle=0 # Intialize videocapture toggle to zero
         self.takeScreenShot=0 # Intialize screenshot toggle to be zero
@@ -150,7 +168,6 @@ class Video(threading.Thread):
         print 'Displaying Video Feed from Camera Number = ',self.cameraChannelOnVideo 
         # except:
         #     print 'Hi'
-
         
     def showVideo(self,vidLabel,vidFrame):
         _, frame = self.vid_cap.read(0) 
@@ -180,9 +197,7 @@ class Video(threading.Thread):
         vidLabel.imgarbage = imgtk # for python to exclude image from garbage collection
         vidLabel.configure(image=imgtk)
         vidLabel.after(2,self.showVideo,vidLabel,vidFrame) # calls the method after 10 ms
-
-    
-
+   
 class Application(tk.Frame):              
     def __init__(self): #,master= None):
         tk.Frame.__init__(self)
@@ -204,22 +219,21 @@ class Application(tk.Frame):
 
         Status=tk.Frame(self)
         Status.grid()
-        Team=tk.Frame(self)
-        Team.grid()
+        #Team=tk.Frame(self)
+        #Team.grid()
         Settings=tk.Frame(self)
         Settings.grid()
-#        Vid_Cntrl=tk.Frame(self)
-#        Vid_Cntrl.grid()
         Log=tk.Frame(self)
         Log.grid()
-        Video_Button=tk.Frame(self)
-        Video_Button.grid()
 
 
         myUAVThread=MyUAV(self,0,0,1,2)
         videoThread=Video(self)
+        otherDrones=otherdrones(self)
+        videoThread.setDaemon(True) # Quit even if some operations are remaining to be complete
         myUAVThread.setDaemon(True)
-        self.createWidgets(Team,'Team UAVs',0,2,1,2)
+        otherDrones.setDaemon(True)  
+        #self.createWidgets(Team,'Team UAVs',0,2,1,2)
         self.createWidgets(Status,'Stats',1,0,2,1)
         self.createWidgets(Settings,'Settings',3,0,1,1)
         self.createWidgets(Log,'Logging',2,3,2,1)

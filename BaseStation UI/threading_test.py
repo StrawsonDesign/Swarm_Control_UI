@@ -1,4 +1,5 @@
 import threading
+import multiprocessing
 import tkMessageBox # for messageboxes 
 import Tkinter as tk
 from PIL import ImageTk , Image
@@ -6,9 +7,13 @@ import cv2 # OpenCV for video handling
 import tkFont # for fonts
 from time import strftime,sleep
 
-# move these lists to the respective buffer /data structures eventually 
-allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal']
+allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','More Orcs','Orc1','Orc2','Orc3','Orc4']
 activeDronesList=['Othrod','Ugluk','Bolg','Orcobal'] 
+
+
+
+
+# move these lists to the respective buffer /data structures eventually 
 
 class MyUAV(threading.Thread):
     def __init__(self,master,r,c,rspan,cspan):
@@ -41,21 +46,26 @@ class MyUAV(threading.Thread):
 class otherdrones(threading.Thread):
     def __init__(self,master):
         threading.Thread.__init__(self)
-        self.droneFrame=tk.Frame(master)
-        self.droneFrame.grid(row=0,
+        #otherDroneFrame=tk.Frame(master)
+        otherDroneCanvas = tk.Canvas(master) # to add scroll bar
+        otherDroneCanvas.grid(row=0,
                         column=2,
                         rowspan=1,
                         columnspan=2,
                         sticky=tk.N+tk.S+tk.W+tk.E)
         
         #self.updateActiveDrones(droneFrame)
-        # Intialize places for 
+        # Intialize places for
         i=0 # counter for referencing objects in the list
-        self.allDroneCanvas=dict() # initalizing empty dictionary 
+        self.allDroneDict=dict() # initalizing empty dictionary 
         for orc in allDronesList:
-            self.allDroneCanvas[orc]=tk.Button(self.droneFrame,text=orc, bg = "gray14", fg="snow")
-            self.allDroneCanvas[orc].pack(side=tk.LEFT, fill= tk.Y)
+            otherDroneCanvas.columnconfigure(i,weight=1)
+            self.allDroneDict[orc]=tk.Button(otherDroneCanvas,text=orc, bg = "gray14", fg="snow")
+            self.allDroneDict[orc].grid(row=0,column=i,sticky=tk.E+tk.W)
             i=i+1
+
+        scrollBarOtherDrones = AutoScrollbar(otherDroneCanvas,orient=tk.HORIZONTAL)
+        scrollBarOtherDrones.grid(row=1,columnspan=i,sticky=tk.E+tk.W)
 
     def run(self):
         sleep(2) # remove this eventually
@@ -71,28 +81,29 @@ class otherdrones(threading.Thread):
     def updateActiveDrones(self):
         # add missing key error exceptions here
         for orc in activeDronesList:
-            self.allDroneCanvas[orc].configure(bg='medium spring green', fg='black')
+            self.allDroneDict[orc].configure(bg='medium spring green', fg='black')
 
 
 class Video(threading.Thread):
     def __init__(self,master):
         threading.Thread.__init__(self)
         self.vidFrame=tk.Frame(master)
+        #stickyelf.vidFrame.config(padx=20)
+ 
         self.vidFrame.grid(row=1,
                       column=1,
                       rowspan=3,
                       columnspan=2,
                       sticky=tk.S+tk.N+tk.E+tk.W)
-        self.vidFrame.config(width=640,height=480)
-        self.vidLabel=tk.Label(master)
-        self.vidLabel.grid(row=1,
-                      column=1,
-                      rowspan=3,
-                      columnspan=2,
-                      sticky=tk.S+tk.N+tk.E+tk.W)
+        self.vidLabel=tk.Label(self.vidFrame)
 
-        #self.vidLabel.pack(fill=tk.BOTH,
-        #                            expand=1)
+        # self.vidLabel.grid(row=1,
+        #               column=1,
+        #               rowspan=3,
+        #               columnspan=2,
+        #               sticky=tk.S+tk.N+tk.E+tk.W)
+
+        self.vidLabel.pack(fill=tk.BOTH,expand=1)
 
         def enforceAspectRatio(event):
             dw=int(0.7*event.width)
@@ -150,8 +161,10 @@ class Video(threading.Thread):
             self.vidWriter = cv2.VideoWriter('Video_'+str(self.cameraChannelOnVideo)+'_'+strftime("%c")+'.avi', fourcc, outputFPS, (w, h), True)
             #self.videoWriter.open("output.avi", fourcc, outputFPS, (w, h))
             self.saveVideoToggle=1 # start capturing video frames in video loop
-            self.recordButton.configure(text="Stop",
-                                            command=self.stopVideoRecord)
+            self.recordButton.configure(text="Stop", 
+                                        bg= "black",
+                                        fg ="snow",
+                                        command=self.stopVideoRecord)
         except:
             print "Something bad happened with recordVideo"
 
@@ -159,7 +172,9 @@ class Video(threading.Thread):
         self.saveVideoToggle=0
         print "Stopped Recording Video"
         self.recordButton.configure(text="Record",
-                                        command= self.recordVideo)
+                                    bg="Red",
+                                    fg ="Black",
+                                    command= self.recordVideo)
         self.vidWriter.release()
 
     def depthToggle(self):
@@ -244,16 +259,17 @@ class Application(tk.Frame):
         Log.grid()
 
 
-        myUAVThread=MyUAV(self,0,0,1,2)
         videoThread=Video(self)
         otherDrones=otherdrones(self)
+        myUAVThread=MyUAV(self,0,0,1,2)
+
 
         # Quit even if some operations are remaining to be complete
 
         videoThread.setDaemon(True) 
         myUAVThread.setDaemon(True)
         otherDrones.setDaemon(True)  
-        #self.createWidgets(Team,'Team UAVs',0,2,1,2)
+
         self.createWidgets(Status,'Stats',1,0,2,1)
         self.createWidgets(Settings,'Settings',3,0,1,1)
         self.createWidgets(Log,'Logging',2,3,2,1)
@@ -283,7 +299,27 @@ class Application(tk.Frame):
         else:
             print "User clicked Cancel"
 
+class AutoScrollbar(tk.Scrollbar):
+    # a scrollbar that hides itself if it's not needed.  only
+    # works if you use the grid geometry manager.
+    def set(self, lo, hi):
+        if float(lo) <= 0.0 and float(hi) >= 1.0:
+            # grid_remove is currently missing from Tkinter!
+            self.tk.call("grid", "remove", self)
+        else:
+            self.grid()
+        Scrollbar.set(self, lo, hi)
+    def pack(self, **kw):
+        raise TclError, "cannot use pack with this widget"
+    def place(self, **kw):
+        raise TclError, "cannot use place with this widget"
+        raise tk.TclError, "cannot use place with this widget"
+
 def main():
+    listeningThread=listener()
+    lsitener.setDaemon(True)
+    listener.start()
+    # start tkinter stuff
     root = Application()
     root.master.title("Azog")
     root.mainloop()

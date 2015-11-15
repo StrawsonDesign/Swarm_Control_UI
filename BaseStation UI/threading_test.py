@@ -6,7 +6,9 @@ import cv2 # OpenCV for video handling
 import tkFont # for fonts
 from time import strftime,sleep
 
-activeDronesList=['Azog','Othrod',' The Great Goblin','Boldog']
+# move these lists to the respective buffer /data structures eventually 
+allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal']
+activeDronesList=['Othrod','Ugluk','Bolg','Orcobal'] 
 
 class MyUAV(threading.Thread):
     def __init__(self,master,r,c,rspan,cspan):
@@ -39,22 +41,37 @@ class MyUAV(threading.Thread):
 class otherdrones(threading.Thread):
     def __init__(self,master):
         threading.Thread.__init__(self)
-        droneFrame=tk.Frame(master)
-        droneFrame.grid(row=0,
+        self.droneFrame=tk.Frame(master)
+        self.droneFrame.grid(row=0,
                         column=2,
                         rowspan=1,
                         columnspan=2,
                         sticky=tk.N+tk.S+tk.W+tk.E)
-        self.updateActiveDrones(droneFrame)
+        
+        #self.updateActiveDrones(droneFrame)
+        # Intialize places for 
+        i=0 # counter for referencing objects in the list
+        self.allDroneCanvas=dict() # initalizing empty dictionary 
+        for orc in allDronesList:
+            self.allDroneCanvas[orc]=tk.Button(self.droneFrame,text=orc, bg = "gray14", fg="snow")
+            self.allDroneCanvas[orc].pack(side=tk.LEFT, fill= tk.Y)
+            i=i+1
 
-    def updateActiveDrones(self,droneFrame):
-        for orcs in activeDronesList:
-            b=tk.Button(droneFrame,text=activeDronesList(i))
-            b.pack()
+    def run(self):
+        sleep(2) # remove this eventually
+        print "Starting Active Drone Demo"
+        i=1
+        while 1:
+            self.updateActiveDrones()
+            if (i%60)==0: # print every 30 seconds - thread is alive
+                print "Updated Active Drones in the vicinity" 
+            i=i+1
+            sleep(0.5) # sleep for 500ms before updating
 
-
-
-
+    def updateActiveDrones(self):
+        # add missing key error exceptions here
+        for orc in activeDronesList:
+            self.allDroneCanvas[orc].configure(bg='medium spring green', fg='black')
 
 
 class Video(threading.Thread):
@@ -230,7 +247,10 @@ class Application(tk.Frame):
         myUAVThread=MyUAV(self,0,0,1,2)
         videoThread=Video(self)
         otherDrones=otherdrones(self)
-        videoThread.setDaemon(True) # Quit even if some operations are remaining to be complete
+
+        # Quit even if some operations are remaining to be complete
+
+        videoThread.setDaemon(True) 
         myUAVThread.setDaemon(True)
         otherDrones.setDaemon(True)  
         #self.createWidgets(Team,'Team UAVs',0,2,1,2)
@@ -242,6 +262,7 @@ class Application(tk.Frame):
         print '# active threads are ',threading.enumerate()
         videoThread.start() # becomes mainthread
         myUAVThread.start() # becomes secondard thread
+        otherDrones.start()
         print '# active threads are ',threading.enumerate()
 
     
@@ -264,7 +285,7 @@ class Application(tk.Frame):
 
 def main():
     root = Application()
-    root.master.title("Base Station")
+    root.master.title("Azog")
     root.mainloop()
             
 if __name__ == '__main__':

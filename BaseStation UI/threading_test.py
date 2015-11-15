@@ -6,13 +6,10 @@ from PIL import ImageTk , Image
 import cv2 # OpenCV for video handling
 import tkFont # for fonts
 from time import strftime,sleep
+from collections import deque
 
 allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','More Orcs','Orc1','Orc2','Orc3','Orc4']
 activeDronesList=['Othrod','Ugluk','Bolg','Orcobal'] 
-
-
-
-
 # move these lists to the respective buffer /data structures eventually 
 
 class MyUAV(threading.Thread):
@@ -40,7 +37,7 @@ class MyUAV(threading.Thread):
         while i<10:
             print 'i is =',i
             # print '# active threads in MyUAV loop are',threading.enumerate()
-            sleep(2)
+            sleep(20)
             i+= 1
 
 class otherdrones(threading.Thread):
@@ -69,7 +66,6 @@ class otherdrones(threading.Thread):
 
     def run(self):
         sleep(2) # remove this eventually
-        print "Starting Active Drone Demo"
         i=1
         while 1:
             self.updateActiveDrones()
@@ -82,7 +78,6 @@ class otherdrones(threading.Thread):
         # add missing key error exceptions here
         for orc in activeDronesList:
             self.allDroneDict[orc].configure(bg='medium spring green', fg='black')
-
 
 class Video(threading.Thread):
     def __init__(self,master):
@@ -281,8 +276,6 @@ class Application(tk.Frame):
         otherDrones.start()
         print '# active threads are ',threading.enumerate()
 
-    
-
 
     def createWidgets(self,frame,txt,r,c,rspan,cspan):
         # for testing
@@ -315,15 +308,55 @@ class AutoScrollbar(tk.Scrollbar):
         raise TclError, "cannot use place with this widget"
         raise tk.TclError, "cannot use place with this widget"
 
+class listener(threading.Thread):
+    def __init__(self,sizeOfBuffer):
+        threading.Thread.__init__(self)
+        self.receviedPacketBuffer = deque([], sizeOfBuffer)
+        print "Initialized Ring Buffer as size of", sizeOfBuffer
+
+    def run(self):
+        for i in xrange(12): # replace by reading head
+            self.receviedPacketBuffer.append(i)
+            print "Buffer is : ", self.receviedPacketBuffer
+            #print "Last element is ", self.receviedPacketBuffer[len(self.receviedPacketBuffer)-1] # show last element - required for other operations
+            sleep(0.1)
+
+class logger(threading.Thread):
+
+    def __init__(self,listeningThread):
+        threading.Thread.__init__(self)
+        outfile='testfile.txt'
+        self.listenerobject=listeningThread
+        self.log_dummy=open(outfile,"w",1) # a = append mode, buffering set to true
+        print "file", outfile, "is opened"
+
+    def run(self): 
+        try :
+            while 1:
+                sleep(0.2)
+                if len(self.listenerobject.receviedPacketBuffer)>0:
+                    data=strftime("%c")+"\t"+str(self.listenerobject.receviedPacketBuffer.popleft())+"\n"
+                    print 'writing this now',data
+                    self.log_dummy.write(data)
+
+        except IndexError:
+            print "No elements in the Buffer"
+            self.log_dummy.close()
+
 def main():
-    listeningThread=listener()
-    lsitener.setDaemon(True)
-    listener.start()
+    listeningThread=listener(6)
+    listeningThread.setDaemon(True) # exit UI even if some listening is going on
+    listeningThread.start()
+
+    loggingThread=logger(listeningThread)
+    loggingThread.setDaemon(True)
+    #loggingThread.setDaemon(False) # Do not exit if things are pending here
+    loggingThread.start()
+
     # start tkinter stuff
     root = Application()
     root.master.title("Azog")
     root.mainloop()
             
 if __name__ == '__main__':
-    main()
-    
+    main()    

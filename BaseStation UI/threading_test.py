@@ -48,7 +48,7 @@ class otherdrones(threading.Thread):
         otherDroneCanvas.grid(row=0,
                         column=2,
                         rowspan=1,
-                        columnspan=2,
+                        columnspan=3,
                         sticky=tk.N+tk.S+tk.W+tk.E)
         otherDroneCanvas.rowconfigure(0,weight=1)
         #self.updateActiveDrones(droneFrame)
@@ -88,7 +88,7 @@ class Video(threading.Thread):
         self.vidFrame.grid(row=1,
                       column=1,
                       rowspan=3,
-                      columnspan=2,
+                      columnspan=3,
                       sticky=tk.S+tk.N+tk.E+tk.W)
         self.vidLabel=tk.Label(self.vidFrame)
 
@@ -113,7 +113,7 @@ class Video(threading.Thread):
         # Intialize vidControl Frame
         vidControl =tk.Frame(master)
         vidControl.grid(row=1,
-                      column=3,
+                      column=4,
                       rowspan=1,
                       columnspan=1,
                       sticky=tk.N+tk.S+tk.E+tk.W)
@@ -267,7 +267,7 @@ class Application(tk.Frame):
 
         self.createWidgets(Status,'Stats',1,0,2,1)
         self.createWidgets(Settings,'Settings',3,0,1,1)
-        self.createWidgets(Log,'Logging',2,3,2,1)
+        self.createWidgets(Log,'Logging',2,4,2,1)
 
 
         print '# active threads are ',threading.enumerate()

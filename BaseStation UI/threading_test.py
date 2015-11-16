@@ -50,7 +50,7 @@ class otherdrones(threading.Thread):
                         rowspan=1,
                         columnspan=2,
                         sticky=tk.N+tk.S+tk.W+tk.E)
-        
+        otherDroneCanvas.rowconfigure(0,weight=1)
         #self.updateActiveDrones(droneFrame)
         # Intialize places for
         i=0 # counter for referencing objects in the list
@@ -58,7 +58,7 @@ class otherdrones(threading.Thread):
         for orc in allDronesList:
             otherDroneCanvas.columnconfigure(i,weight=1)
             self.allDroneDict[orc]=tk.Button(otherDroneCanvas,text=orc, bg = "gray14", fg="snow")
-            self.allDroneDict[orc].grid(row=0,column=i,sticky=tk.E+tk.W)
+            self.allDroneDict[orc].grid(row=0,column=i,sticky=tk.N+tk.S+tk.E+tk.W)
             i=i+1
 
         scrollBarOtherDrones = AutoScrollbar(otherDroneCanvas,orient=tk.HORIZONTAL)
@@ -327,7 +327,7 @@ class logger(threading.Thread):
         threading.Thread.__init__(self)
         outfile='testfile.txt'
         self.listenerobject=listeningThread
-        self.log_dummy=open(outfile,"w",1) # a = append mode, buffering set to true
+        self.log_dummy=open(outfile,"w",1) # use a = append mode, buffering set to true
         print "file", outfile, "is opened"
 
     def run(self): 
@@ -336,7 +336,7 @@ class logger(threading.Thread):
                 sleep(0.2)
                 if len(self.listenerobject.receviedPacketBuffer)>0:
                     data=strftime("%c")+"\t"+str(self.listenerobject.receviedPacketBuffer.popleft())+"\n"
-                    print 'writing this now',data
+                    #print 'writing this now',data # for testing
                     self.log_dummy.write(data)
 
         except IndexError:

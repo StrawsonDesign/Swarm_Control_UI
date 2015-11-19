@@ -142,7 +142,7 @@ class Video(threading.Thread):
 
     def run(self):
         self.saveVideoToggle=0 # Intialize videocapture toggle to zero
-        self.takeScreenShot=0 # Intialize screenshot toggle to be zero
+        self.takeScreenShot=0 # Intialize screenshot toggle to be zerod
         self.cameraChannelOnVideo=0 # Intialize Camera Channel to default to zero
         self.vid_cap = cv2.VideoCapture(self.cameraChannelOnVideo) # Assign channel to video capture
         self.showVideo(self.vidLabel,self.vidFrame)

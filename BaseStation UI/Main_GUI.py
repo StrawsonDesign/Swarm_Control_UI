@@ -1,126 +1,162 @@
-from Tkinter import *
-import tkFont, threading, Queue, time
-	
+import Tkinter as tk
+import tkFont, threading, Queue, multiprocessing, tkMessageBox
+from time import strftime, sleep
+
 # class VideoControlWidget(Frame):
 	
 	# button_names = ['Record', 'Snapshot', 'Show Depth', 'Camera 1', 'Camera 2']
+class listener(threading.Thread):
+    def __init__(self,sizeOfBuffer):
+        threading.Thread.__init__(self)
+        self.receviedPacketBuffer = deque([], sizeOfBuffer)
+        print "Initialized Ring Buffer as size of", sizeOfBuffer
 
-class LoggingWidget(Frame):
+    def run(self):
+        for i in xrange(12): # replace by reading head
+            self.receviedPacketBuffer.append(i)
+            print "Buffer is : ", self.receviedPacketBuffer
+            #print "Last element is ", self.receviedPacketBuffer[len(self.receviedPacketBuffer)-1] # show last element - required for other operations
+            sleep(0.1)
+			
+class logging(tk.Frame):
 	
 	def __init__(self, parent,frame,row,col,row_span,col_span):
-		Frame.__init__(self,parent)	
+		tk.Frame.__init__(self,parent)	
 		self.checkbox_names = ['Attitude', 'Position', 'Velocity', 'Battery']
 		self.button_names = ['Record', 'Stop']
 		self.vars = []
 		counter = 0
 		
 		for self.checkbox_name in self.checkbox_names:
-			var = IntVar()
+			var = tk.IntVar()
 			counter += 1
-			logging = Checkbutton(self, text = self.checkbox_name, variable = var)
-			logging.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky = W)
+			loggingCheckbutton = tk.Checkbutton(self, text = self.checkbox_name, variable = var)
+			loggingCheckbutton.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
+			loggingCheckbutton.rowconfigure(counter, weight = 1)
 		
+		self.vars = []	
+		counter = 0	
 		for self.button_name in self.button_names:
-			var = IntVar()
+			var = tk.IntVar()
 			counter += 1
-			logging = Button(self, text = self.button_name, command = self.quit)
-			logging.grid(row = row + counter, column = col + counter, rowspan = row_span, columnspan = col_span, sticky = W)
-		
-		self.rowconfigure(row, weight = 1)
-		self.columnconfigure(col, weight = 1)
-	
-	def process_queue(self):
-		try:
-			msg = self.queue.get(0)
-			print msg
 			
-		except Queue.Empty:
-			self.parent.after(100, self.process_queue)
+			if self.button_name in ('Record'):
+				loggingButton = tk.Button(self, text = self.button_name, command = self.record_data)
+			elif self.button_name in ('Stop'):
+				loggingButton = tk.Button(self, text = self.button_name, command = self.stop_recording)
+				
+			loggingButton.columnconfigure(col + counter, weight = 1)
+			loggingButton.rowconfigure(row + counter, weight = 1)
+			loggingButton.grid(row = row + counter, column = col + counter, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
+			loggingButton.columnconfigure(counter, weight = 1)
+	
+	def record_data(self):
 		
-class SettingsWidget(Frame):
+		file = 'testfile.txt'
+		self.listenerobject = listeningThread
+		self.logfile = open(file, 'w',1)
+		print "The file", file, "has been opened"
+		
+		try:
+			while 1:
+				sleep(0.1)				
+				if len(self.listenerobject.receviedPacketBuffer)>0:
+					data=strftime("%c")+"\t"+str(self.listenerobject.receviedPacketBuffer.popleft())+"\n"
+					self.logfile.write(data)
+					
+		except IndexError:
+			print "No elements in the Buffer"
+	
+	def stop_recording(self):
+	
+			self.logfile.close()
+			# print file + "is not open"
+	
+	def run(self):
+		pass
+	
+	
+	# self.rowconfigure(row, weight = 1)
+	# self.columnconfigure(col, weight = 1)
+		
+class settings(tk.Frame):
 	
 	def __init__(self, parent,frame,row,col,row_span,col_span):
-		Frame.__init__(self,parent)
+		tk.Frame.__init__(self,parent)
 		self.names = ['Position', 'Attitude']
 		self.vars = []
 		counter = 0
 		
 		for self.name in self.names:
-			var = IntVar()
+			var = tk.IntVar()
 			counter += 1
-			settings = Checkbutton(self, text = self.name, variable = var)
-			settings.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky = W)
-		
-		self.rowconfigure(row, weight = 1)
-		self.columnconfigure(col, weight = 1)
-	
-	def process_queue(self):
-		try:
-			msg = self.queue.get(0)
-			print msg
 			
-		except Queue.Empty:
-			self.parent.after(100, self.process_queue)
+			settings = tk.Checkbutton(self, text = self.name, variable = var)
+			settings.rowconfigure(row + counter, weight = 1)
+			settings.columnconfigure(col + counter, weight = 1)			
+			settings.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
 			
 # class VideoWidget(Frame):
 
 
-class StatisticsWidget(Frame):
+class statistics(tk.Frame):
 	
 	def __init__(self, parent,frame,row,col,row_span,col_span):
-		Frame.__init__(self,parent)
+		tk.Frame.__init__(self,parent)
 		self.names = ['Velocity', 'Acceleration', 'Position', 'Roll', 'Pitch', 'Yaw']
 		self.vars = []
 		counter = 0
 		
 		for self.name in self.names:
-			var = IntVar()
+			var = tk.IntVar()
 			counter += 1
-			statistics = Checkbutton(self, text = self.name, variable = var)
-			statistics.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky = W)
-		
-		self.rowconfigure(row, weight = 1)
-		self.columnconfigure(col, weight = 1)
-		
-	def process_queue(self):
-		try:
-			msg = self.queue.get(0)
-			print msg
+			statistics = tk.Checkbutton(self, text = self.name, variable = var)
+			statistics.rowconfigure(row + counter, weight = 1)
+			statistics.columnconfigure(col + counter, weight = 1)
+			statistics.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
 			
-		except Queue.Empty:
-			self.parent.after(100, self.process_queue)
+	def plot_data():
+		pass
+		
 			
-# class YourUAVIDWidget(Frame):
+	# class YourUAVIDWidget(Frame):
 
 
-# class ScrollingUAVIDWidget(Frame):
+	# class ScrollingUAVIDWidget(Frame):
 
-class GuiPart:
-    def __init__(self, master, queue, endCommand):
-		self.queue = queue
+class Application(tk.Frame):
+    def __init__(self):
+		tk.Frame.__init__(self)
+		self.grid()
+		self.grid(sticky = tk.N + tk.S + tk.E + tk.W)
+		# make top level of the application stretchable and space filling 
+		top=self.winfo_toplevel() 
+		top.rowconfigure(0, weight=1)
+		top.columnconfigure(0, weight=1)
+		# make all rows and columns grow with the widget window ; weight signifies relative rate of window growth
+		self.rowconfigure(0, weight=1)
+		self.rowconfigure(1, weight=1)
+		self.rowconfigure(2, weight=1)
+		self.rowconfigure(3, weight=1)
+		self.columnconfigure(0, weight=1)
+		self.columnconfigure(1, weight=1)
+		self.columnconfigure(2, weight=1)
+		self.columnconfigure(3, weight=1)
+		
         # Set up the GUI
-		console = Button(master, text='Done', command=endCommand)
-		console.grid(row = 5, column = 0, rowspan = 3, columnspan = 2)
-		settings = SettingsWidget(master,'Settings',3,0,1,1)
-		settings.grid(row = 3, column = 0, rowspan = 1, columnspan = 1)
-		statistics = StatisticsWidget(master,'Statistics',1,0,1,1)
-		statistics.grid(row = 1, column = 0, rowspan = 2, columnspan = 1)
-		logging = LoggingWidget(master, 'Logging',2,3,2,1)
-		logging.grid(row = 2, column = 3, rowspan = 2, columnspan = 1)
+		# console = tk.Button(self, text='Done', command=endCommand)
+		# console.grid(row = 5, column = 0, rowspan = 3, columnspan = 2)
+		
+		settingsThread = settings(self,'Settings',3,0,1,1)
+		settingsThread.grid(row = 3, column = 0, rowspan = 1, columnspan = 1)
+		
+		statisticsThread = statistics(self,'Statistics',1,0,1,1)
+		statisticsThread.grid(row = 1, column = 0, rowspan = 2, columnspan = 1)
+		
+		loggingThread = logging(self, 'Logging',2,3,2,1)
+		loggingThread.grid(row = 2, column = 3, rowspan = 2, columnspan = 1)
+		
         # Add more GUI stuff here
-
-    def processIncoming(self):
-		"""
-		Handle all the messages currently in the queue (if any).
-		"""
-		while self.queue.qsize():
-			try:
-				msg = self.queue.get(0)
-				# Check contents of message and do what it says
-				# As a test, we simply print it
-				print msg
-			except Queue.Empty:
-				pass
 				
 class ThreadedTask:
 	"""
@@ -136,11 +172,8 @@ class ThreadedTask:
 		"""
 		self.master = master
 
-		# Create the queue
-		self.queue = Queue.Queue()
-
 		# Set up the GUI part
-		self.gui = GuiPart(master, self.queue, self.endApplication)
+		self.gui = Application(master)
 
 		# Set up the thread to do asynchronous I/O
 		# More can be made if necessary
@@ -188,9 +221,14 @@ class ThreadedTask:
 
 	
 def main():
-	root = Tk()
-	root.title("GUI")
-	GUI = ThreadedTask(root)
+	listeningThread=listener(6)
+	listeningThread.setDaemon(True) # exit UI even if some listening is going on
+	listeningThread.start()
+
+
+	root = Application()
+	root.master.title("GUI")
+	# GUI = ThreadedTask(root)
 	root.mainloop()
 			
 if __name__ == '__main__':

@@ -34,10 +34,10 @@ class MyUAV(threading.Thread):
 
     def run(self):
         i=0
-        while i<10:
+        while i<6:
             print 'i is =',i
             # print '# active threads in MyUAV loop are',threading.enumerate()
-            sleep(20)
+            sleep(5)
             i+= 1
 
 class otherdrones(threading.Thread):
@@ -78,6 +78,97 @@ class otherdrones(threading.Thread):
         # add missing key error exceptions here
         for orc in activeDronesList:
             self.allDroneDict[orc].configure(bg='medium spring green', fg='black')
+
+class settingsThreadClass(threading.Thread):
+    def __init__(self,master):
+        threading.Thread.__init__(self)
+        settingsFrame=tk.Frame(master)
+        settingsFrame.grid(row=3,
+            column=0,
+            sticky=tk.N+tk.S+tk.E+tk.W)
+        settingsFrame.rowconfigure(0, weight=1)
+        settingsFrame.rowconfigure(1, weight=1)
+        settingsFrame.rowconfigure(2, weight=1)
+        settingsFrame.rowconfigure(3, weight=1)
+        settingsFrame.columnconfigure(0, weight=1)
+        # Mapping modes are : SLAM (0) or VICON pos input (1)
+        # Flight modes are : Altitude (2) vs Manual Thrust (3) vs POS hold (4)
+        # Pilot reference mode: global (5), First Person View (6), PPV (7)
+        # Control mode: User (8) , Auto land (9), Come back home (10), Circle Mode (11) 
+
+        mappingModeFrame=tk.Frame(settingsFrame)
+        mappingModeFrame.grid(row=0,sticky=tk.N+tk.S+tk.E+tk.W)
+        flightModeFrame=tk.Frame(settingsFrame)
+        flightModeFrame.grid(row=1,sticky=tk.N+tk.S+tk.E+tk.W)
+        pilotReferenceModeFrame=tk.Frame(settingsFrame)
+        pilotReferenceModeFrame.grid(row=2,sticky=tk.N+tk.S+tk.E+tk.W)
+        controlModeFrame=tk.Frame(settingsFrame)
+        controlModeFrame.grid(row=3,sticky=tk.N+tk.S+tk.E+tk.W)
+
+        m=tk.IntVar()
+        f=tk.IntVar()
+        p=tk.IntVar()   
+        c=tk.IntVar()   
+
+        # default flight modes
+        m.set(0) #mappingMode = 0    
+        f.set(4) #flightMode = 4
+        p.set(5) #pilotReferenceMode=5
+        c.set(8) #controlMode= 8
+
+        mappingModeRadioButton0=tk.Radiobutton(mappingModeFrame, text="SLAM", variable=m, 
+                                value=0,indicatoron=0,
+                                state=tk.ACTIVE, command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+        mappingModeRadioButton1=tk.Radiobutton(mappingModeFrame, text="VICON position input", 
+                                variable=m,
+                                value=1,indicatoron=0,
+                                command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+        mappingModeRadioButton0.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+        mappingModeRadioButton1.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+
+        flightModeRadioButton2=tk.Radiobutton(flightModeFrame, text="Altitude", variable=f, value=2,
+                                indicatoron=0,
+                                state=tk.ACTIVE, # set as default
+                                command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+        flightModeRadioButton3=tk.Radiobutton(flightModeFrame, text="Manual Thrust", variable=f, value=3,
+                                indicatoron=0,command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+        flightModeRadioButton4=tk.Radiobutton(flightModeFrame, text="POS hold", variable=f, value=4,
+                                indicatoron=0,
+                                command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+        flightModeRadioButton2.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+        flightModeRadioButton3.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+        flightModeRadioButton4.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+
+        pilotReferenceModeRadioButton5=tk.Radiobutton(pilotReferenceModeFrame, text="Global", variable=p, value=5,
+                                            indicatoron=0,
+                                            state=tk.ACTIVE,
+                                            command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+        pilotReferenceModeRadioButton6=tk.Radiobutton(pilotReferenceModeFrame, text="First Person View",
+                                            variable=p, value=6,indicatoron=0,
+                                            command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+        pilotReferenceModeRadioButton7=tk.Radiobutton(pilotReferenceModeFrame, text="PPV", variable=p,
+                                            value=7,indicatoron=0,
+                                            command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+        pilotReferenceModeRadioButton5.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+        pilotReferenceModeRadioButton6.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+        pilotReferenceModeRadioButton7.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+
+        controlModeRadioButton8=tk.Radiobutton(controlModeFrame, text="User", variable=c,
+                                            value=8,indicatoron=0,
+                                            command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+        controlModeRadioButton9=tk.Radiobutton(controlModeFrame, text="Auto Land", variable=c,
+                                            value=9,indicatoron=0,
+                                            command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+        controlModeRadioButton10=tk.Radiobutton(controlModeFrame, text="Return Home", variable=c,
+                                            value=10,indicatoron=0,
+                                            command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+        controlModeRadioButton11=tk.Radiobutton(controlModeFrame, text="Hover", variable=c,
+                                            value=11,indicatoron=0,
+                                            command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+        controlModeRadioButton8.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+        controlModeRadioButton9.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+        controlModeRadioButton10.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+        controlModeRadioButton11.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
 
 class Video(threading.Thread):
     def __init__(self,master):
@@ -208,8 +299,6 @@ class Video(threading.Thread):
             self.takeScreenShot=0
 
         if self.saveVideoToggle==1:
-           # print "Hi there, Recording Video"
-           #print self.videoWriter.isOpened
            self.vidWriter.write(frame)
 
         frameAspectRatio = (float(vidFrame.winfo_width())/float(vidFrame.winfo_height()))
@@ -224,8 +313,8 @@ class Video(threading.Thread):
         vidLabel.imgarbage = imgtk # for python to exclude image from garbage collection
         vidLabel.configure(image=imgtk)
         vidLabel.after(2,self.showVideo,vidLabel,vidFrame) # calls the method after 10 ms
-   
-class Application(tk.Frame):              
+        
+class tkinterGUI(tk.Frame):         
     def __init__(self): #,master= None):
         tk.Frame.__init__(self)
         self.grid()
@@ -246,10 +335,6 @@ class Application(tk.Frame):
 
         Status=tk.Frame(self)
         Status.grid()
-        #Team=tk.Frame(self)
-        #Team.grid()
-        Settings=tk.Frame(self)
-        Settings.grid()
         Log=tk.Frame(self)
         Log.grid()
 
@@ -257,23 +342,26 @@ class Application(tk.Frame):
         videoThread=Video(self)
         otherDrones=otherdrones(self)
         myUAVThread=MyUAV(self,0,0,1,2)
+        settingsThread=settingsThreadClass(self)
 
 
         # Quit even if some operations are remaining to be complete
 
         videoThread.setDaemon(True) 
         myUAVThread.setDaemon(True)
-        otherDrones.setDaemon(True)  
+        otherDrones.setDaemon(True)
+        settingsThread.setDaemon(True)  
 
         self.createWidgets(Status,'Stats',1,0,2,1)
-        self.createWidgets(Settings,'Settings',3,0,1,1)
+        #self.createWidgets(Settings,'Settings',3,0,1,1)
         self.createWidgets(Log,'Logging',2,4,2,1)
 
 
-        print '# active threads are ',threading.enumerate()
+       
         videoThread.start() # becomes mainthread
         myUAVThread.start() # becomes secondard thread
         otherDrones.start()
+        settingsThread.start()
         print '# active threads are ',threading.enumerate()
 
 
@@ -313,16 +401,20 @@ class listener(threading.Thread):
         threading.Thread.__init__(self)
         self.receviedPacketBuffer = deque([], sizeOfBuffer)
         print "Initialized Ring Buffer as size of", sizeOfBuffer
+        self.isBufferBusy=0
 
     def run(self):
-        for i in xrange(12): # replace by reading head
-            self.receviedPacketBuffer.append(i)
-            print "Buffer is : ", self.receviedPacketBuffer
-            #print "Last element is ", self.receviedPacketBuffer[len(self.receviedPacketBuffer)-1] # show last element - required for other operations
-            sleep(0.1)
+
+        for i in xrange(100): # replace by reading head
+            #if self.isBufferBusy==0:
+                #self.isBufferBusy=1
+                self.receviedPacketBuffer.append(i)
+                print "Buffer is : ", self.receviedPacketBuffer
+                #print "Last element is ", self.receviedPacketBuffer[len(self.receviedPacketBuffer)-1] # show last element - required for other operations
+            #    self.isBufferBusy=0
+                sleep(0.1)
 
 class logger(threading.Thread):
-
     def __init__(self,listeningThread):
         threading.Thread.__init__(self)
         outfile='testfile.txt'
@@ -332,31 +424,69 @@ class logger(threading.Thread):
 
     def run(self): 
         try :
-            while 1:
-                sleep(0.2)
-                if len(self.listenerobject.receviedPacketBuffer)>0:
-                    data=strftime("%c")+"\t"+str(self.listenerobject.receviedPacketBuffer.popleft())+"\n"
-                    #print 'writing this now',data # for testing
-                    self.log_dummy.write(data)
+            sleep(0.5)
+            tempData=""
+            m=0
+            while m<50: # change this
+                if len(self.listenerobject.receviedPacketBuffer)>0: #& self.listenerobject.isBufferBusy==0:
+                    #self.listenerobject.isBufferBusy=1
+                    val=self.listenerobject.receviedPacketBuffer.popleft()
+                    data=strftime("%c")+"\t"+str(val)+"\n"
+                    tempData=tempData+data
+                    m=m+1
+                    #self.listenerobject.isBufferBusy=0
+                
+                if m%20==0:
+                    self.log_dummy.write(tempData)
+                    print "wrote to disk"                
+                    tempData="" 
 
         except IndexError:
             print "No elements in the Buffer"
             self.log_dummy.close()
 
-def main():
-    listeningThread=listener(6)
-    listeningThread.setDaemon(True) # exit UI even if some listening is going on
-    listeningThread.start()
+def UDP():
+    UDPlistenThread=listener(6) # sizeOfRingBuffer
+    UDPlistenThread.setDaemon(False) # exit UI even if some listening is going on
+    
+    UDPlogThread=logger(UDPlistenThread)
+    UDPlogThread.setDaemon(False)
+    
+    UDPlistenThread.start()
+    UDPlogThread.start()
+    
+    UDPlistenThread.join()
+    UDPlogThread.join()
 
-    loggingThread=logger(listeningThread)
-    loggingThread.setDaemon(True)
-    #loggingThread.setDaemon(False) # Do not exit if things are pending here
-    loggingThread.start()
-
-    # start tkinter stuff
-    root = Application()
-    root.master.title("Azog")
+def startTkinter():
+    root = tkinterGUI()
+    root.master.title("Azog") # Name of current drone, Here it is Azog 
     root.mainloop()
-            
+
+def sendSettingPacket(m,f,p,c):
+    # m - Mapping modes are : SLAM (0) or VICON pos input (1)
+    # f - Flight modes are : Altitude (2) vs Manual Thrust (3) vs POS hold (4)
+    # p - Pilot reference mode: global (5), First Person View (6), PPV (7)
+    # c - Control mode: User (8) , Auto land (9), Come back home (10), Circle Mode (11) 
+    print "New Settings received :",'Mapping Mode',m,'\tFlight Mode :',f,'\tPilot Reference Mode',p,'\tControl Mode',c
+
+def broadcast():
+    while 1:
+        print "Sent packets"
+        sleep(15)
+
+def main():
+    #global udpProcess # try to kill updprocess using startTkinter
+    udpProcess=multiprocessing.Process(name='UDP Process', target=UDP)
+    TkinterProcess=multiprocessing.Process(name='Tkinter Process', target=startTkinter)
+    broadcastProcess=multiprocessing.Process(name='Broadcasting Process', target=broadcast)
+
+    udpProcess.start()
+    TkinterProcess.start()
+    broadcastProcess.start()
+
+    #print '# active threads are ',threading.enumerate()
+    # start tkinter stuff
+
 if __name__ == '__main__':
-    main()    
+    main()

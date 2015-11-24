@@ -1,6 +1,7 @@
 import Tkinter as tk
 import tkFont, threading, Queue, multiprocessing, tkMessageBox
 from time import strftime, sleep
+from collections import deque
 
 # class VideoControlWidget(Frame):
 	
@@ -17,11 +18,117 @@ class listener(threading.Thread):
             print "Buffer is : ", self.receviedPacketBuffer
             #print "Last element is ", self.receviedPacketBuffer[len(self.receviedPacketBuffer)-1] # show last element - required for other operations
             sleep(0.1)
+
+class logger(threading.Thread):
+	def __init__(self,listeningThread):
+		threading.Thread.__init__(self)
+		file='testfile.txt'
+		self.listenerobject=listeningThread
+		self.logfile=open(file,"w",1) # use a = append mode, buffering set to true
+		print "file", file, "is opened"
+		self.recordData = False
+		
+	def record_data(self, listeningThread):
+		self.recordData = True
+		# file = 'testfile.txt'
+		# self.listenerobject = listeningThread
+		# self.logfile = open(file, 'w',1)
+		# print "The file", file, "has been opened"
+		
+		# try:
+			# while 1:
+				# sleep(0.1)				
+				# if len(self.listenerobject.receviedPacketBuffer)>0:
+					# data=strftime("%c")+"\t"+str(self.listenerobject.receviedPacketBuffer.popleft())+"\n"
+					# self.logfile.write(data)
+					
+		# except IndexError:
+			# print "No elements in the Buffer"
 			
-class logging(tk.Frame):
+		# return self.logfile
+		
+	def stop_recording(self):
+		self.recordData = False
+		print "closing the file"
+		self.logfile.close()
+		print file + "is not open"
 	
-	def __init__(self, parent,frame,row,col,row_span,col_span):
-		tk.Frame.__init__(self,parent)	
+	def Print():
+		print 'Log hi!'
+	
+	def run(self): 
+		try :
+			sleep(0.5)
+			tempData=""
+			m=0
+			while m<50: # change this
+				if len(self.listenerobject.receviedPacketBuffer)>0: #& self.listenerobject.isBufferBusy==0:
+					# self.listenerobject.isBufferBusy=1
+					val=self.listenerobject.receviedPacketBuffer.popleft()
+					data=strftime("%c")+"\t"+str(val)+"\n"
+					tempData=tempData+data
+					m=m+1
+					# self.listenerobject.isBufferBusy=0
+
+				# if m%20==0:
+			if self.recordData in True:
+				self.logfile.write(tempData)
+				print "wrote to disk"                
+				tempData="" 
+
+		except IndexError:
+			print "No elements in the Buffer"
+			self.logfile.close()
+			
+class loggingThreadClass(threading.Thread):
+	
+	def __init__(self, master):
+		threading.Thread.__init__(self)
+		loggingFrame = tk.Frame(master)
+		loggingFrame.grid(row = 2, 
+						column = 3,
+						sticky = tk.S + tk.N + tk.W + tk.E)
+		# loggingFrame.rowconfigure(0, weight = 1)
+		# loggingFrame.rowconfigure(1, weight = 1)
+		# loggingFrame.rowconfigure(2, weight = 1)
+		# loggingFrame.columnconfigure(0, weight = 1)
+		
+		# log_attitudeBoxFrame = tk.Frame(loggingFrame)
+		# log_attitudeBoxFrame.grid(row = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		# log_positionBoxFrame = tk.Frame(loggingFrame)
+		# log_positionBoxFrame.grid(row = 1, sticky = tk.N + tk.S + tk.W + tk.E)
+		# log_velocityBoxFrame = tk.Frame(loggingFrame)
+		# log_velocityBoxFrame.grid(row = 2, sticky = tk.N + tk.S + tk.W + tk.E)
+		# log_batteryBoxFrame = tk.Frame(loggingFrame)
+		# log_batteryBoxFrame.grid(row = 3, sticky = tk.N + tk.S + tk.W + tk.E)
+		
+		log_recordButtonFrame = tk.Frame(loggingFrame)
+		log_recordButtonFrame.grid(row = 4, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_stopButtonFrame = tk.Frame(loggingFrame)
+		log_stopButtonFrame.grid(row = 5, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		
+		
+		# log_iattitude = tk.IntVar
+		# log_iposition = tk.IntVar
+		# log_ivelocity = tk.IntVar
+		# log_ibattery = tk.IntVar
+		
+		# log_attitudeCheckButton = tk.Checkbutton(log_attitudeBoxFrame, text = 'Attitude', variable = log_iattitude)
+		# log_positionCheckButton = tk.Checkbutton(log_positionBoxFrame, text = 'Position', variable = log_iposition)
+		# log_velocityCheckButton = tk.Checkbutton(log_velocityBoxFrame, text = 'Velocity', variable = log_ivelocity)
+		# log_batteryCheckButton = tk.Checkbutton(log_batteryBoxFrame, text =  'Battery', variable = log_ibattery)
+		
+		# log_attitudeCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		# log_positionCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		# log_velocityCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		# log_batteryCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		
+		log_recordButton = tk.Button(log_recordButtonFrame, text = 'Record', command = logger.Print)
+		log_stopButton = tk.Button(log_stopButtonFrame, text = 'Stop', command = logger.Print)
+		
+		log_recordButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		log_stopButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		
 		self.checkbox_names = ['Attitude', 'Position', 'Velocity', 'Battery']
 		self.button_names = ['Record', 'Stop']
 		self.vars = []
@@ -29,48 +136,60 @@ class logging(tk.Frame):
 		
 		for self.checkbox_name in self.checkbox_names:
 			var = tk.IntVar()
-			counter += 1
-			loggingCheckbutton = tk.Checkbutton(self, text = self.checkbox_name, variable = var)
-			loggingCheckbutton.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
+			CheckButtonFrame = tk.Frame(loggingFrame)
+			CheckButtonFrame.grid(row = 0 + counter, sticky = tk.N + tk.S + tk.E + tk.W)
+			loggingCheckbutton = tk.Checkbutton(CheckButtonFrame, text = self.checkbox_name, variable = var)
+			# loggingCheckbutton.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
 			loggingCheckbutton.rowconfigure(counter, weight = 1)
-		
-		self.vars = []	
-		counter = 0	
-		for self.button_name in self.button_names:
-			var = tk.IntVar()
+			loggingCheckbutton.columnconfigure(0, weight = 1)
+			loggingCheckbutton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 			counter += 1
 			
-			if self.button_name in ('Record'):
-				loggingButton = tk.Button(self, text = self.button_name, command = self.record_data)
-			elif self.button_name in ('Stop'):
-				loggingButton = tk.Button(self, text = self.button_name, command = self.stop_recording)
+		# self.vars = []
+		# counter = 0
+		
+		# for self.button_name in self.button_names:
+			# var = tk.IntVar()			
+			# ButtonFrame = tk.Frame(loggingFrame)
+			# ButtonFrame.grid(row = 4 + counter, sticky = tk.N + tk.S + tk.W + tk.E)
+			
+			# if self.button_name in ('Record'):
+				# loggingButton = tk.Button(ButtonFrame, text = self.button_name, command = lambda: logger.record_data)
 				
-			loggingButton.columnconfigure(col + counter, weight = 1)
-			loggingButton.rowconfigure(row + counter, weight = 1)
-			loggingButton.grid(row = row + counter, column = col + counter, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
-			loggingButton.columnconfigure(counter, weight = 1)
+			# elif self.button_name in ('Stop'):
+				# loggingButton = tk.Button(ButtonFrame, text = self.button_name, command = lambda: logger.stop_recording(loggingButton))
+			
+			# loggingButton.columnconfigure(0 + counter, weight = 1)
+			# loggingButton.rowconfigure(4 + counter, weight = 1)
+			# loggingButton.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = 1)
+			# loggingButton.grid(row = row + counter, column = col + counter, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
+			# counter += 1
 	
-	def record_data(self):
+	# def record_data(self, listeningThread):
 		
-		file = 'testfile.txt'
-		self.listenerobject = listeningThread
-		self.logfile = open(file, 'w',1)
-		print "The file", file, "has been opened"
+		# file = 'testfile.txt'
+		# self.listenerobject = listeningThread
+		# self.logfile = open(file, 'w',1)
+		# print "The file", file, "has been opened"
 		
-		try:
-			while 1:
-				sleep(0.1)				
-				if len(self.listenerobject.receviedPacketBuffer)>0:
-					data=strftime("%c")+"\t"+str(self.listenerobject.receviedPacketBuffer.popleft())+"\n"
-					self.logfile.write(data)
+		# try:
+			# while 1:
+				# sleep(0.1)				
+				# if len(self.listenerobject.receviedPacketBuffer)>0:
+					# data=strftime("%c")+"\t"+str(self.listenerobject.receviedPacketBuffer.popleft())+"\n"
+					# self.logfile.write(data)
 					
-		except IndexError:
-			print "No elements in the Buffer"
-	
-	def stop_recording(self):
-	
-			self.logfile.close()
+		# except IndexError:
+			# print "No elements in the Buffer"
+			
+		# return self.logfile
+		
+	# def stop_recording(self,log_recordButton):	
+			# self.logfile.close()
 			# print file + "is not open"
+	def Print(self):
+		print 'Hi!'
+	
 	
 	def run(self):
 		pass
@@ -79,44 +198,132 @@ class logging(tk.Frame):
 	# self.rowconfigure(row, weight = 1)
 	# self.columnconfigure(col, weight = 1)
 		
-class settings(tk.Frame):
+class settingsThreadClass(threading.Thread):
 	
-	def __init__(self, parent,frame,row,col,row_span,col_span):
-		tk.Frame.__init__(self,parent)
-		self.names = ['Position', 'Attitude']
-		self.vars = []
-		counter = 0
+	def __init__(self, master):
+		threading.Thread.__init__(self)
+		settingsFrame = tk.Frame(master)
+		settingsFrame.grid(row = 3, 
+							column = 0, 
+							rowspan = 1, 
+							columnspan = 1)
+		settingsFrame.rowconfigure(0, weight = 1)
+		settingsFrame.rowconfigure(1, weight = 1)
+		settingsFrame.columnconfigure(0, weight = 1)
 		
-		for self.name in self.names:
-			var = tk.IntVar()
-			counter += 1
-			
-			settings = tk.Checkbutton(self, text = self.name, variable = var)
-			settings.rowconfigure(row + counter, weight = 1)
-			settings.columnconfigure(col + counter, weight = 1)			
-			settings.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
+		set_positionBoxFrame = tk.Frame(settingsFrame)
+		set_positionBoxFrame.grid(row = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		set_attitudeBoxFrame = tk.Frame(settingsFrame)
+		set_attitudeBoxFrame.grid(row = 1, sticky = tk.N + tk.S + tk.W + tk.E)
+		
+		set_iattitude = tk.IntVar
+		set_iposition = tk.IntVar
+		
+		set_attitudeCheckButton = tk.Checkbutton(set_attitudeBoxFrame, text = 'Attitude', variable = set_iattitude)
+		set_positionCheckButton = tk.Checkbutton(set_positionBoxFrame, text = 'Position', variable = set_iposition)
+		
+		set_attitudeCheckButton.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		set_positionCheckButton.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		
+		# self.names = ['Position', 'Attitude']
+		# self.vars = []
+		# counter = 0
+		
+		# for self.name in self.names:
+			# var = tk.IntVar()			
+			# CheckBoxFrame = tk.Frame(settingsFrame)
+			# CheckBoxFrame.grid(row = 0 + counter, sticky = tk.N + tk.S + tk.W + tk.E)
+			# settingsCheckButtons = tk.Checkbutton(CheckBoxFrame, text = self.name, variable = var)
+			# settingsCheckButtons.rowconfigure(0 + counter, weight = 1)
+			# settingsCheckButtons.columnconfigure(0, weight = 1)
+			# settingsCheckButtons.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+			# counter += 1
+			# settings.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
 			
 # class VideoWidget(Frame):
 
 
-class statistics(tk.Frame):
+class statisticsThreadClass(threading.Thread):
 	
-	def __init__(self, parent,frame,row,col,row_span,col_span):
-		tk.Frame.__init__(self,parent)
-		self.names = ['Velocity', 'Acceleration', 'Position', 'Roll', 'Pitch', 'Yaw']
-		self.vars = []
-		counter = 0
+	def __init__(self, master):
+		threading.Thread.__init__(self)
+		statisticsFrame = tk.Frame(master)
+		statisticsFrame.grid(row = 1, 
+								column = 0, 
+								rowspan = 1, 
+								columnspan = 1)
+		statisticsFrame.rowconfigure(0, weight = 1)
+		statisticsFrame.rowconfigure(1, weight = 1)
+		statisticsFrame.rowconfigure(2, weight = 1)
+		statisticsFrame.rowconfigure(3, weight = 1)
+		statisticsFrame.rowconfigure(4, weight = 1)
+		statisticsFrame.rowconfigure(5, weight = 1)
+		statisticsFrame.columnconfigure(0, weight = 1)
 		
-		for self.name in self.names:
-			var = tk.IntVar()
-			counter += 1
-			statistics = tk.Checkbutton(self, text = self.name, variable = var)
-			statistics.rowconfigure(row + counter, weight = 1)
-			statistics.columnconfigure(col + counter, weight = 1)
-			statistics.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
-			
-	def plot_data():
-		pass
+		stat_velocityBoxFrame = tk.Frame(statisticsFrame)
+		stat_velocityBoxFrame.grid(row = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_accelerationBoxFrame = tk.Frame(statisticsFrame)
+		stat_accelerationBoxFrame.grid(row = 1, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_positionBoxFrame = tk.Frame(statisticsFrame)
+		stat_positionBoxFrame.grid(row = 2, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_rollBoxFrame = tk.Frame(statisticsFrame)
+		stat_rollBoxFrame.grid(row = 3, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_pitchBoxFrame = tk.Frame(statisticsFrame)
+		stat_pitchBoxFrame.grid(row = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_yawBoxFrame = tk.Frame(statisticsFrame)
+		stat_yawBoxFrame.grid(row = 5, sticky = tk.N + tk.S + tk.W + tk.E)
+		
+		stat_ivelocity = tk.IntVar()
+		stat_iacceleration = tk.IntVar()
+		stat_iposition = tk.IntVar()
+		stat_iroll = tk.IntVar()
+		stat_ipitch = tk.IntVar()
+		stat_iyaw = tk.IntVar()
+		
+		stat_velocityCheckButton = tk.Checkbutton(stat_velocityBoxFrame, text = 'Velocity', variable = stat_ivelocity, command = lambda : self.Plot('Velocity'))
+		stat_accelerationCheckButton = tk.Checkbutton(stat_accelerationBoxFrame, text = 'Acceleration', variable = stat_iacceleration, command = lambda : self.Plot('Acceleration'))
+		stat_positionCheckButton = tk.Checkbutton(stat_positionBoxFrame, text = 'Position', variable = stat_iposition, command = lambda : self.Plot('Position'))
+		stat_rollCheckButton = tk.Checkbutton(stat_rollBoxFrame, text = 'Roll', variable = stat_iroll, command = lambda : self.Plot('Roll'))
+		stat_pitchCheckButton = tk.Checkbutton(stat_pitchBoxFrame, text = 'Pitch', variable = stat_ipitch, command = lambda : self.Plot('Pitch'))
+		stat_yawCheckButton = tk.Checkbutton(stat_yawBoxFrame, text = 'Yaw', variable = stat_iyaw, command = lambda : self.Plot('Yaw'))
+		
+		stat_velocityCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		stat_accelerationCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		stat_positionCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		stat_rollCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		stat_pitchCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		stat_yawCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		
+		# self.names = ['Velocity', 'Acceleration', 'Position', 'Roll', 'Pitch', 'Yaw']
+		# self.vars = []
+		# counter = 0
+		
+		# for i in range(len(self.names)):
+			# var = tk.IntVar()
+			# CheckBoxFrame = tk.Frame(statisticsFrame)
+			# CheckBoxFrame.grid(row = 0 + counter, sticky = tk.N + tk.S + tk.W + tk.E)
+			# if self.name[i] in ('Velocity'):
+				# statisticsCheckButton = tk.Checkbutton(CheckBoxFrame, text = self.name[i], variable = var, command = lambda i=i: self.Plot(self.name[i]))
+			# elif self.name[i] in ('Acceleration'):
+				# statisticsCheckButton = tk.Checkbutton(CheckBoxFrame, text = self.name[i], variable = var, command = lambda i=i: self.Plot(self.name[i]))
+			# elif self.name[i] in ('Position'):
+				# statisticsCheckButton = tk.Checkbutton(CheckBoxFrame, text = self.name[i], variable = var, command = lambda i=i: self.Plot(self.name[i]))
+			# elif self.name[i] in ('Roll'):
+				# statisticsCheckButton = tk.Checkbutton(CheckBoxFrame, text = self.name[i], variable = var, command = lambda i=i: self.Plot(self.name[i]))
+			# elif self.name[i] in ('Pitch'):
+				# statisticsCheckButton = tk.Checkbutton(CheckBoxFrame, text = self.name[i], variable = var, command = lambda i=i: self.Plot(self.name[i]))				
+			# elif self.name[i] in ('Yaw'):
+				# statisticsCheckButton = tk.Checkbutton(CheckBoxFrame, text = self.name[i], variable = var, command = lambda i=i: self.Plot(self.name[i]))	
+			# print 'Name: ' + self.name[i]
+			# statisticsCheckButton.rowconfigure(0+counter, weight = 1)
+			# statisticsCheckButton.columnconfigure(0, weight = 1)
+			# statisticsCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+			# statistics.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
+			# counter += 1
+		
+	def Plot(self,variable_name):
+	
+		print "Now plotting " + variable_name
 		
 			
 	# class YourUAVIDWidget(Frame):
@@ -142,94 +349,127 @@ class Application(tk.Frame):
 		self.columnconfigure(1, weight=1)
 		self.columnconfigure(2, weight=1)
 		self.columnconfigure(3, weight=1)
-		
         # Set up the GUI
 		# console = tk.Button(self, text='Done', command=endCommand)
 		# console.grid(row = 5, column = 0, rowspan = 3, columnspan = 2)
 		
-		settingsThread = settings(self,'Settings',3,0,1,1)
-		settingsThread.grid(row = 3, column = 0, rowspan = 1, columnspan = 1)
+		settingsThread = settingsThreadClass(self)
+		loggingThread = loggingThreadClass(self)
+		statisticsThread = statisticsThreadClass(self)
 		
-		statisticsThread = statistics(self,'Statistics',1,0,1,1)
-		statisticsThread.grid(row = 1, column = 0, rowspan = 2, columnspan = 1)
 		
-		loggingThread = logging(self, 'Logging',2,3,2,1)
-		loggingThread.grid(row = 2, column = 3, rowspan = 2, columnspan = 1)
 		
+		settingsThread.setDaemon(True)
+		loggingThread.setDaemon(True)
+		statisticsThread.setDaemon(True)
+		
+		
+		settingsThread.start()
+		loggingThread.start()
+		statisticsThread.start()
+		
+		print '# active threads are ',threading.enumerate()
         # Add more GUI stuff here
 				
-class ThreadedTask:
-	"""
-	Launch the main part of the GUI and the worker thread. periodicCall and
-	endApplication could reside in the GUI part, but putting them here
-	means that you have all the thread controls in a single place.
-	"""
-	def __init__(self, master):
-		"""
-		Start the GUI and the asynchronous threads. We are in the main
-		(original) thread of the application, which will later be used by
-		the GUI. We spawn a new thread for the worker.
-		"""
-		self.master = master
+# class ThreadedTask:
+	# """
+	# Launch the main part of the GUI and the worker thread. periodicCall and
+	# endApplication could reside in the GUI part, but putting them here
+	# means that you have all the thread controls in a single place.
+	# """
+	# def __init__(self, master):
+		# """
+		# Start the GUI and the asynchronous threads. We are in the main
+		# (original) thread of the application, which will later be used by
+		# the GUI. We spawn a new thread for the worker.
+		# """
+		# self.master = master
 
 		# Set up the GUI part
-		self.gui = Application(master)
+		# self.gui = Application(master)
 
 		# Set up the thread to do asynchronous I/O
 		# More can be made if necessary
-		self.running = 1
-		self.thread1 = threading.Thread(target=self.workerThread1)
-		self.thread1.start()
+		# self.running = 1
+		# self.thread1 = threading.Thread(target=self.workerThread1)
+		# self.thread1.start()
 
 		# Start the periodic call in the GUI to check if the queue contains
 		# anything
-		self.periodicCall()
+		# self.periodicCall()
 	
-	def periodicCall(self):
-		"""
-		Check every 100 ms if there is something new in the queue.
-		"""
-		self.gui.processIncoming()
+	# def periodicCall(self):
+		# """
+		# Check every 100 ms if there is something new in the queue.
+		# """
+		# self.gui.processIncoming()
 
-		if not self.running:
+		# if not self.running:
 			# This is the brutal stop of the system. You may want to do
 			# some cleanup before actually shutting it down.
-			import sys
-			sys.exit(1)
-		self.master.after(100, self.periodicCall)
+			# import sys
+			# sys.exit(1)
+		# self.master.after(100, self.periodicCall)
 		
-	def workerThread1(self):
-		"""
-		This is where we handle the asynchronous I/O. For example, it may be
-		a 'select()'.
-		One important thing to remember is that the thread has to yield
-		control.
-		"""
-		while self.running:
+	# def workerThread1(self):
+		# """
+		# This is where we handle the asynchronous I/O. For example, it may be
+		# a 'select()'.
+		# One important thing to remember is that the thread has to yield
+		# control.
+		# """
+		# while self.running:
 			# To simulate asynchronous I/O, we create a random number at
 			# random intervals. Replace the following 2 lines with the real
 			# thing.
-			time.sleep(rand.random() * 0.3)
-			msg = rand.random()
-			self.queue.put(msg)
+			# time.sleep(rand.random() * 0.3)
+			# msg = rand.random()
+			# self.queue.put(msg)
 
-	def endApplication(self):
-		self.running = 0
+	# def endApplication(self):
+		# self.running = 0
 		
-	def run(self):
-		self.queue.put("Task Finished")
+	# def run(self):
+		# self.queue.put("Task Finished")
+def UDP():
+	UDPlistenThread=listener(6) # sizeOfRingBuffer
+	UDPlistenThread.setDaemon(False) # exit UI even if some listening is going on
 
+	UDPloggingThread=logger(UDPlistenThread)
+	UDPloggingThread.setDaemon(False)
 	
-def main():
-	listeningThread=listener(6)
-	listeningThread.setDaemon(True) # exit UI even if some listening is going on
-	listeningThread.start()
+	UDPlistenThread.start()
+	UDPloggingThread.start()
 
-
+	UDPlistenThread.join()
+	UDPloggingThread.join()
+	
+def startTkinter():
 	root = Application()
 	root.master.title("GUI")
-	# GUI = ThreadedTask(root)
 	root.mainloop()
+
+def sendSettingPacket(m,f,p,c):
+	# m - Mapping modes are : SLAM (0) or VICON pos input (1)
+	# f - Flight modes are : Altitude (2) vs Manual Thrust (3) vs POS hold (4)
+	# p - Pilot reference mode: global (5), First Person View (6), PPV (7)
+	# c - Control mode: User (8) , Auto land (9), Come back home (10), Circle Mode (11) 
+	print "New Settings received :",'Mapping Mode',m,'\tFlight Mode :',f,'\tPilot Reference Mode',p,'\tControl Mode',c
+
+def broadcast():
+	while 1:
+		print "Sent packets"
+		sleep(15)
+
+def main():	
+	#global udpProcess # try to kill updprocess using startTkinter
+	udpProcess=multiprocessing.Process(name = 'UDP Process', target = UDP)
+	TkinterProcess=multiprocessing.Process(name = 'Tkinter Process', target = startTkinter)
+	broadcastProcess=multiprocessing.Process(name = 'Broadcasting Process', target = broadcast)
+
+	udpProcess.start()
+	TkinterProcess.start()
+	broadcastProcess.start()
 			
 if __name__ == '__main__':
 	main()

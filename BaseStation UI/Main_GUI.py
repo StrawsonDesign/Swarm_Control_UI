@@ -210,11 +210,10 @@ class loggingThreadClass(threading.Thread):
 	def Stop(self, master):
 		master.quit()     # stops mainloop
 		master.destroy()  # this is necessary on Windows to prevent
-                    # Fatal Python Error: PyEval_RestoreThread: NULL tstate
+							# Fatal Python Error: PyEval_RestoreThread: NULL tstate
 	
 	def run(self):
 		pass
-	
 	
 	# self.rowconfigure(row, weight = 1)
 	# self.columnconfigure(col, weight = 1)
@@ -222,27 +221,28 @@ class loggingThreadClass(threading.Thread):
 class settingsThreadClass(threading.Thread):
 	
 	def __init__(self, master):
-		threading.Thread.__init__(self)
-		settingsFrame = tk.Frame(master)
-		settingsFrame.grid(row = 7, 
+		threading.Thread.__init__(self)		
+		self.settingsFrame = tk.Frame(master)
+	def run(self):		
+		self.settingsFrame.grid(row = 7, 
 								column = 0, 
 								rowspan = 1,
 								columnspan = 2,
 								sticky = tk.S + tk.N + tk.W + tk.E)
-		settingsFrame.rowconfigure(5, weight = 1)
-		settingsFrame.rowconfigure(6, weight = 1)
-		settingsFrame.columnconfigure(0, weight = 1)
+		self.settingsFrame.rowconfigure(5, weight = 1)
+		self.settingsFrame.rowconfigure(6, weight = 1)
+		self.settingsFrame.columnconfigure(0, weight = 1)
 		
-		set_positionBoxFrame = tk.Frame(settingsFrame)
+		set_positionBoxFrame = tk.Frame(self.settingsFrame)
 		set_positionBoxFrame.grid(row = 5, sticky = tk.N + tk.S + tk.W + tk.E)
-		set_attitudeBoxFrame = tk.Frame(settingsFrame)
+		set_attitudeBoxFrame = tk.Frame(self.settingsFrame)
 		set_attitudeBoxFrame.grid(row = 6, sticky = tk.N + tk.S + tk.W + tk.E)
 		
 		set_iattitude = tk.IntVar()
 		set_iposition = tk.IntVar()
 		
-		set_attitudeCheckButton = tk.Checkbutton(set_attitudeBoxFrame, text = 'Attitude', variable = set_iattitude)
-		set_positionCheckButton = tk.Checkbutton(set_positionBoxFrame, text = 'Position', variable = set_iposition)
+		set_attitudeCheckButton = tk.Checkbutton(set_attitudeBoxFrame, text = 'Attitude', variable = set_iattitude.get)
+		set_positionCheckButton = tk.Checkbutton(set_positionBoxFrame, text = 'Position', variable = set_iposition.get)
 		
 		set_attitudeCheckButton.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
 		set_positionCheckButton.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
@@ -261,13 +261,12 @@ class settingsThreadClass(threading.Thread):
 			# settingsCheckButtons.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
 			# counter += 1
 			# settings.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
-			
+		return set_iattitude.get(), set_iposition.get()
 # class VideoWidget(Frame):
 # class PlotWindow(tk.Frame):
 	# def __init__(self, master)
 		# tk.Frame.__init__(self,master)
 		# plotFrame.grid
-
 
 class statisticsThreadClass(threading.Thread):
 	
@@ -317,21 +316,24 @@ class statisticsThreadClass(threading.Thread):
 		
 		# x = range(100)
 		# y = range(100)
-		# self.f = Figure(figsize = (3,3), dpi = 50)		
+		# self.f = Figure(figsize = (3,3), dpi = 50)
 		# self.a = self.f.add_subplot(111)
 		fig = plt.figure(figsize = (3,3), dpi = 50)
+		fig.add_subplot(111)
+		plt.xlabel('Time(s)')
+		plt.ylabel('Variable Name')
 		
 		canvas = FigureCanvasTkAgg(fig, self.plotFrame)
-		canvas.draw()
+		canvas.show()
 		canvas.get_tk_widget().pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		
 			
-		stat_velocityCheckButton = tk.Checkbutton(stat_velocityBoxFrame, text = 'Velocity', variable = stat_ivelocity, command = lambda : self.Plot('Velocity', stat_ivelocity.get()))
-		stat_accelerationCheckButton = tk.Checkbutton(stat_accelerationBoxFrame, text = 'Acceleration', variable = stat_iacceleration, command = lambda : self.Plot('Acceleration', stat_iacceleration.get()))
-		stat_positionCheckButton = tk.Checkbutton(stat_positionBoxFrame, text = 'Position', variable = stat_iposition, command = lambda : self.Plot('Position', stat_iposition.get()))
+		stat_velocityCheckButton = tk.Checkbutton(stat_velocityBoxFrame, text = 'Velocity', variable = stat_ivelocity, command = lambda : self.Plot('Velocity', stat_ivelocity.get(), fig))
+		stat_accelerationCheckButton = tk.Checkbutton(stat_accelerationBoxFrame, text = 'Acceleration', variable = stat_iacceleration, command = lambda : self.Plot('Acceleration', stat_iacceleration.get(), fig))
+		stat_positionCheckButton = tk.Checkbutton(stat_positionBoxFrame, text = 'Position', variable = stat_iposition, command = lambda : self.Plot('Position', stat_iposition.get(), fig))
 		stat_rollCheckButton = tk.Checkbutton(stat_rollBoxFrame, text = 'Roll', variable = stat_iroll, command = lambda : self.Plot('Roll', stat_iroll.get()))
-		stat_pitchCheckButton = tk.Checkbutton(stat_pitchBoxFrame, text = 'Pitch', variable = stat_ipitch, command = lambda : self.Plot('Pitch', stat_ipitch.get()))
-		stat_yawCheckButton = tk.Checkbutton(stat_yawBoxFrame, text = 'Yaw', variable = stat_iyaw, command = lambda : self.Plot('Yaw', stat_iyaw.get()))
+		stat_pitchCheckButton = tk.Checkbutton(stat_pitchBoxFrame, text = 'Pitch', variable = stat_ipitch, command = lambda : self.Plot('Pitch', stat_ipitch.get(), fig))
+		stat_yawCheckButton = tk.Checkbutton(stat_yawBoxFrame, text = 'Yaw', variable = stat_iyaw, command = lambda : self.Plot('Yaw', stat_iyaw.get(), fig))
 		
 		stat_velocityCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		stat_accelerationCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
@@ -367,15 +369,62 @@ class statisticsThreadClass(threading.Thread):
 			# statisticsCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 			# statistics.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
 			# counter += 1
+			
+			
+	# def AnimatePlot():
+		# pullData = open('').read()
+		# dataList = pullData.split('\n')
+		# xList = []
+		# yList = []
+		# zList =  []
 		
-	def Plot(self,var_name, var_state):
-
+		# for eachLine in dataList
+			# if len(eachLine) > 1:
+				# x, y = eachLine.split(',')
+				# xList.append(int(x))
+				# yList.append(int(y))
+				# zList.append(int(z))
+		
+		# a.clear()
+		# a.plot(xList,yList)
+		
+		
+	def Plot(self,var_name, var_state, fig):
+		
 		if var_state == 1:
+		
+			if var_name is "Velocity":
+				k = np.arange(0.0, 3.0, 0.01)
+				s = np.sin(np.pi*k)
+				plt.plot(k,s)
+				
+			elif var_name is "Acceleration":
+				t = np.arange(0.0, 3.0, 0.01)
+				s = np.sin(3*np.pi*t)
+				plt.plot(t,s)
+				
+			elif var_name is "Position":
+				t = np.arange(0.0, 3.0, 0.01)
+				s = np.sin(5*np.pi*t)
+				plt.plot(t,s)
+				
+			elif var_name is "Roll":
+				t = np.arange(0.0, 3.0, 0.01)
+				s = np.sin(7*np.pi*t)
+				plt.plot(t,s)
+				
+			elif var_name is "Pitch":
+				t = np.arange(0.0, 3.0, 0.01)
+				s = np.sin(9*np.pi*t)
+				plt.plot(t,s)
+				
+			elif var_name is "Yaw":
+				t = np.arange(0.0, 3.0, 0.01)
+				s = np.sin(11*np.pi*t)
+				plt.plot(t,s)
+				
 			print "Plotting " + var_name
-			t = np.arange(0.0, 3.0, 0.01)
-			s = np.sin(2*np.pi*t)
-			plt.clf()
-			plt.plot(t,s)
+			print k
 			plt.gcf().canvas.draw()
 			
 
@@ -385,6 +434,30 @@ class statisticsThreadClass(threading.Thread):
 			# self.canvas.draw()
 			
 		else:
+		
+			if var_name is "Velocity":
+				del k
+				fig.add_subplot(111)
+			elif var_name is "Acceleration":
+				plt.clf()
+				fig.add_subplot(111)
+			elif var_name is "Position":
+				plt.clf()
+				fig.add_subplot(111)
+				
+			elif var_name is "Roll":
+				plt.clf()
+				fig.add_subplot(111)
+				
+			elif var_name is "Pitch":
+				plt.clf()
+				fig.add_subplot(111)
+				
+			elif var_name is "Yaw":
+				plt.clf()
+				fig.add_subplot(111)
+				
+			plt.gcf().canvas.draw()
 			print "Not Plotting" + var_name
 
 class Application(tk.Frame):
@@ -392,8 +465,8 @@ class Application(tk.Frame):
 		tk.Frame.__init__(self)
 		self.grid()
 		self.grid(sticky = tk.N + tk.S + tk.E + tk.W)
-		# make top level of the application stretchable and space filling 
-		top=self.winfo_toplevel() 
+		# make top level of the application stretchable and space filling
+		top=self.winfo_toplevel()
 		top.rowconfigure(0, weight=1)
 		top.columnconfigure(0, weight=1)
 		# make all rows and columns grow with the widget window ; weight signifies relative rate of window growth
@@ -411,20 +484,18 @@ class Application(tk.Frame):
 		self.columnconfigure(1, weight=1)
 		self.columnconfigure(2, weight=1)
 		self.columnconfigure(3, weight=1)
+		
         # Set up the GUI
 		# console = tk.Button(self, text='Done', command=endCommand)
 		# console.grid(row = 5, column = 0, rowspan = 3, columnspan = 2)
-		
 		
 		settingsThread = settingsThreadClass(self)
 		loggingThread = loggingThreadClass(self)
 		statisticsThread = statisticsThreadClass(self)
 		
-		
 		settingsThread.setDaemon(True)
 		loggingThread.setDaemon(True)
 		statisticsThread.setDaemon(True)
-		
 		
 		settingsThread.start()
 		loggingThread.start()
@@ -435,13 +506,13 @@ class Application(tk.Frame):
 def UDP():
 	UDPlistenThread = listener(6) # sizeOfRingBuffer
 	UDPlistenThread.setDaemon(False) # exit UI even if some listening is going on
-
+	
 	UDPloggingThread = logger(UDPlistenThread)
 	UDPloggingThread.setDaemon(False)
 	
 	UDPlistenThread.start()
 	UDPloggingThread.start()
-
+	
 	UDPlistenThread.join()
 	UDPloggingThread.join()
 	
@@ -449,12 +520,12 @@ def startTkinter():
 	root = Application()
 	root.master.title("GUI")
 	root.mainloop()
-
+	
 def sendSettingPacket(m,f,p,c):
 	# m - Mapping modes are : SLAM (0) or VICON pos input (1)
 	# f - Flight modes are : Altitude (2) vs Manual Thrust (3) vs POS hold (4)
 	# p - Pilot reference mode: global (5), First Person View (6), PPV (7)
-	# c - Control mode: User (8) , Auto land (9), Come back home (10), Circle Mode (11) 
+	# c - Control mode: User (8) , Auto land (9), Come back home (10), Circle Mode (11)
 	print "New Settings received :",'Mapping Mode',m,'\tFlight Mode :',f,'\tPilot Reference Mode',p,'\tControl Mode',c
 
 def saveDroneData():
@@ -465,17 +536,17 @@ def broadcast():
 		# print "Sent packets"
 		# sleep (5)
 	pass
-
-def main():	
-	#global udpProcess # try to kill updprocess using startTkinter
+	
+def main():
+	#global udpProcess # try to kill updprocess using startTkinter	
 	udpProcess = multiprocessing.Process(name = 'UDP Process', target = UDP)
 	TkinterProcess = multiprocessing.Process(name = 'Tkinter Process', target = startTkinter)
 	broadcastProcess = multiprocessing.Process(name = 'Broadcasting Process', target = broadcast)
-
+	
 	udpProcess.start()
 	TkinterProcess.start()
 	broadcastProcess.start()
 	
 if __name__ == '__main__':
 	main()
-	
+	parent_conn, child_conn = multiprocessing.Pipe()

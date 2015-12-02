@@ -1,12 +1,13 @@
-import threading
-import multiprocessing
+import threading # multithreading 
+import multiprocessing #multiprocessing
 import tkMessageBox # for messageboxes 
 import Tkinter as tk
-from PIL import ImageTk , Image
+from PIL import ImageTk , Image # for image conversion
 import cv2 # OpenCV for video handling
 import tkFont # for fonts
-from time import strftime,sleep
-from collections import deque
+from time import strftime,sleep # for sleep
+from collections import deque # for ring buffer
+import socket # for sending across UDP packets 
 
 allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','More Orcs','Orc1','Orc2','Orc3','Orc4']
 activeDronesList=['Othrod','Ugluk','Bolg','Orcobal'] 
@@ -90,20 +91,23 @@ class settingsThreadClass(threading.Thread):
         settingsFrame.rowconfigure(1, weight=1)
         settingsFrame.rowconfigure(2, weight=1)
         settingsFrame.rowconfigure(3, weight=1)
+        settingsFrame.rowconfigure(4, weight=1)
         settingsFrame.columnconfigure(0, weight=1)
         # Mapping modes are : SLAM (0) or VICON pos input (1)
         # Flight modes are : Altitude (2) vs Manual Thrust (3) vs POS hold (4)
         # Pilot reference mode: global (5), First Person View (6), PPV (7)
         # Control mode: User (8) , Auto land (9), Come back home (10), Circle Mode (11) 
 
+        killButton=tk.Button(settingsFrame, text="Kill Drone", command = killDroneMethod, bg ="red")
+        killButton.grid(row=0,sticky=tk.N+tk.S+tk.E+tk.W)
         mappingModeFrame=tk.Frame(settingsFrame)
-        mappingModeFrame.grid(row=0,sticky=tk.N+tk.S+tk.E+tk.W)
+        mappingModeFrame.grid(row=1,sticky=tk.N+tk.S+tk.E+tk.W)
         flightModeFrame=tk.Frame(settingsFrame)
-        flightModeFrame.grid(row=1,sticky=tk.N+tk.S+tk.E+tk.W)
+        flightModeFrame.grid(row=2,sticky=tk.N+tk.S+tk.E+tk.W)
         pilotReferenceModeFrame=tk.Frame(settingsFrame)
-        pilotReferenceModeFrame.grid(row=2,sticky=tk.N+tk.S+tk.E+tk.W)
+        pilotReferenceModeFrame.grid(row=3,sticky=tk.N+tk.S+tk.E+tk.W)
         controlModeFrame=tk.Frame(settingsFrame)
-        controlModeFrame.grid(row=3,sticky=tk.N+tk.S+tk.E+tk.W)
+        controlModeFrame.grid(row=4,sticky=tk.N+tk.S+tk.E+tk.W)
 
         m=tk.IntVar()
         f=tk.IntVar()
@@ -244,7 +248,8 @@ class Video(threading.Thread):
             h=int(self.vid_cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT ))
             fourcc = cv2.cv.CV_FOURCC('D','I','V','X')
             outputFPS = 20.0
-            self.vidWriter = cv2.VideoWriter('Video_'+str(self.cameraChannelOnVideo)+'_'+strftime("%c")+'.avi', fourcc, outputFPS, (w, h), True)
+            self.vidWriter = cv2.VideoWriter('Video_'+str(self.cameraChannelOnVideo)+
+                            '_'+strftime("%c")+'.avi', fourcc, outputFPS, (w, h), True)
             #self.videoWriter.open("output.avi", fourcc, outputFPS, (w, h))
             self.saveVideoToggle=1 # start capturing video frames in video loop
             self.recordButton.configure(text="Stop", 
@@ -471,7 +476,30 @@ def sendSettingPacket(m,f,p,c):
     print "New Settings received :",'Mapping Mode',m,'\tFlight Mode :',f,'\tPilot Reference Mode',p,'\tControl Mode',c
 
 def broadcast():
+    IPaddr = '8.4.2.1' # IP to send the packets
+    portNmbr = 80 # port number of destination
+
+    # Data content of the UDP packet as hex
+    packetData = 'f1a525da11f6'.decode('hex')
+     
+    # initialize a socket
+    # SOCK_DGRAM specifies that this is UDP
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
+     
+    try:
+        # connect the socket
+        s.connect((IPADDR, PORTNUM))
+     
+        # send the packet
+        s.send(packetData)
+    except:
+        pass
+     
+    # close the socket
+    s.close()
+
     while 1:
+
         print "Sent packets"
         sleep(15)
 
@@ -485,7 +513,9 @@ def main():
     TkinterProcess.start()
     broadcastProcess.start()
 
-    #print '# active threads are ',threading.enumerate()
+def killDroneMethod():
+    print 'this should send a specific MAVlink packet'
+    
     # start tkinter stuff
 
 if __name__ == '__main__':

@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 # matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
+import matplotlib.animation as animation
 import tkFont, threading, Queue, multiprocessing, tkMessageBox
 from time import strftime, sleep
 from collections import deque
-
 
 # class VideoControlWidget(Frame):
 	
@@ -110,35 +110,34 @@ class loggingThreadClass(threading.Thread):
 		loggingFrame.columnconfigure(0, weight = 1)
 		loggingFrame.columnconfigure(3, weight = 1)
 		
-		# log_attitudeBoxFrame = tk.Frame(loggingFrame)
-		# log_attitudeBoxFrame.grid(row = 0, sticky = tk.N + tk.S + tk.W + tk.E)
-		# log_positionBoxFrame = tk.Frame(loggingFrame)
-		# log_positionBoxFrame.grid(row = 1, sticky = tk.N + tk.S + tk.W + tk.E)
-		# log_velocityBoxFrame = tk.Frame(loggingFrame)
-		# log_velocityBoxFrame.grid(row = 2, sticky = tk.N + tk.S + tk.W + tk.E)
-		# log_batteryBoxFrame = tk.Frame(loggingFrame)
-		# log_batteryBoxFrame.grid(row = 3, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_attitudeBoxFrame = tk.Frame(loggingFrame)
+		log_attitudeBoxFrame.grid(row = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_positionBoxFrame = tk.Frame(loggingFrame)
+		log_positionBoxFrame.grid(row = 1, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_velocityBoxFrame = tk.Frame(loggingFrame)
+		log_velocityBoxFrame.grid(row = 2, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_batteryBoxFrame = tk.Frame(loggingFrame)
+		log_batteryBoxFrame.grid(row = 3, sticky = tk.N + tk.S + tk.W + tk.E)
 		
 		log_recordButtonFrame = tk.Frame(loggingFrame)
 		log_recordButtonFrame.grid(row = 5, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
 		log_stopButtonFrame = tk.Frame(loggingFrame)
 		log_stopButtonFrame.grid(row = 6, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
 		
+		log_iattitude = tk.IntVar()
+		log_iposition = tk.IntVar()
+		log_ivelocity = tk.IntVar()
+		log_ibattery = tk.IntVar()
 		
-		# log_iattitude = tk.IntVar
-		# log_iposition = tk.IntVar
-		# log_ivelocity = tk.IntVar
-		# log_ibattery = tk.IntVar
+		log_attitudeCheckButton = tk.Checkbutton(log_attitudeBoxFrame, text = 'Attitude', variable = log_iattitude, command = lambda : self.logVariables('Attitude', log_iattitude.get()))
+		log_positionCheckButton = tk.Checkbutton(log_positionBoxFrame, text = 'Position', variable = log_iposition, command = lambda : self.logVariables('Position', log_iposition.get()))
+		log_velocityCheckButton = tk.Checkbutton(log_velocityBoxFrame, text = 'Velocity', variable = log_ivelocity, command = lambda : self.logVariables('Velocity', log_ivelocity.get()))
+		log_batteryCheckButton = tk.Checkbutton(log_batteryBoxFrame, text =  'Battery', variable = log_ibattery, command = lambda : self.logVariables('Battery', log_ibattery.get()))
 		
-		# log_attitudeCheckButton = tk.Checkbutton(log_attitudeBoxFrame, text = 'Attitude', variable = log_iattitude)
-		# log_positionCheckButton = tk.Checkbutton(log_positionBoxFrame, text = 'Position', variable = log_iposition)
-		# log_velocityCheckButton = tk.Checkbutton(log_velocityBoxFrame, text = 'Velocity', variable = log_ivelocity)
-		# log_batteryCheckButton = tk.Checkbutton(log_batteryBoxFrame, text =  'Battery', variable = log_ibattery)
-		
-		# log_attitudeCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
-		# log_positionCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
-		# log_velocityCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
-		# log_batteryCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		log_attitudeCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		log_positionCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		log_velocityCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		log_batteryCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		
 		log_recordButton = tk.Button(log_recordButtonFrame, text = 'Record', command = logger.Print)
 		log_stopButton = tk.Button(log_stopButtonFrame, text = 'Stop', command = master.destroy)
@@ -146,27 +145,29 @@ class loggingThreadClass(threading.Thread):
 		log_recordButton.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = 1)
 		log_stopButton.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = 1)
 		
-		self.checkbox_names = ['Attitude', 'Position', 'Velocity', 'Battery']
-		self.button_names = ['Record', 'Stop']
-		self.vars = []
-		counter = 0
+		# self.checkbox_names = ['Attitude', 'Position', 'Velocity', 'Battery']
+		# self.button_names = ['Record', 'Stop']
+		# self.vars = []
+		self.loggingVariables = []
+		# counter = 0
 		
-		for self.checkbox_name in self.checkbox_names:
-			var = tk.IntVar()
-			CheckButtonFrame = tk.Frame(loggingFrame)
-			CheckButtonFrame.grid(row = 1 + counter, sticky = tk.N + tk.S + tk.E + tk.W)
-			loggingCheckbutton = tk.Checkbutton(CheckButtonFrame, text = self.checkbox_name, variable = var)
+	
+		# for self.checkbox_name in self.checkbox_names:
+			# var = tk.IntVar()
+			# CheckButtonFrame = tk.Frame(loggingFrame)
+			# CheckButtonFrame.grid(row = 1 + counter, sticky = tk.N + tk.S + tk.E + tk.W)
+			# loggingCheckbutton = tk.Checkbutton(CheckButtonFrame, text = self.checkbox_name, variable = var)
 			# loggingCheckbutton.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
-			loggingCheckbutton.rowconfigure(counter, weight = 1)
-			loggingCheckbutton.columnconfigure(3, weight = 1)
-			loggingCheckbutton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
-			counter += 1
+			# loggingCheckbutton.rowconfigure(counter, weight = 1)
+			# loggingCheckbutton.columnconfigure(3, weight = 1)
+			# loggingCheckbutton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+			# counter += 1
 			
 		# self.vars = []
 		# counter = 0
 		
 		# for self.button_name in self.button_names:
-			# var = tk.IntVar()			
+			# var = tk.IntVar()
 			# ButtonFrame = tk.Frame(loggingFrame)
 			# ButtonFrame.grid(row = 4 + counter, sticky = tk.N + tk.S + tk.W + tk.E)
 			
@@ -204,19 +205,47 @@ class loggingThreadClass(threading.Thread):
 	# def stop_recording(self,log_recordButton):	
 			# self.logfile.close()
 			# print file + "is not open"
-	def Print(self):
-		print 'Hi!'
 		
 	def Stop(self, master):
 		master.quit()     # stops mainloop
 		master.destroy()  # this is necessary on Windows to prevent
 							# Fatal Python Error: PyEval_RestoreThread: NULL tstate
+							
+	def logVariables(self, var_Name, var_State):
 	
+		if var_State == 1:
+			self.loggingVariables.append(var_Name)
+			print self.loggingVariables
+			
+		elif var_State == 0:
+			ivar_Name = self.loggingVariables.index(var_Name)
+			self.loggingVariables.pop(ivar_Name)
+			print self.loggingVariables
+			
 	def run(self):
 		pass
 	
 	# self.rowconfigure(row, weight = 1)
 	# self.columnconfigure(col, weight = 1)
+class statVariables(object):
+
+	def getVelocity(self):
+		return random.randint(0,50)
+		
+	def getAcceleration(self):
+		return random.randint(50,100)
+		
+	def getPosition(self):
+		return random.randint(0,25)
+		
+	def getRoll(self):
+		return random.randint(25,50)
+		
+	def getPitch(self):
+		return random.randint(50,75)
+		
+	def getYaw(self):
+		return random.randint(75,100)
 		
 class settingsThreadClass(threading.Thread):
 	
@@ -273,9 +302,9 @@ class statisticsThreadClass(threading.Thread):
 	def __init__(self, master):
 		threading.Thread.__init__(self)
 		statisticsFrame = tk.Frame(master)
-		statisticsFrame.grid(row = 1, 
-								column = 1, 
-								rowspan = 3, 
+		statisticsFrame.grid(row = 1,
+								column = 1,
+								rowspan = 3,
 								columnspan = 1)
 		statisticsFrame.rowconfigure(1, weight = 1)
 		statisticsFrame.rowconfigure(2, weight = 1)
@@ -285,14 +314,14 @@ class statisticsThreadClass(threading.Thread):
 		statisticsFrame.rowconfigure(6, weight = 1)
 		statisticsFrame.columnconfigure(1, weight = 1)
 		
-		self.plotFrame = tk.Frame(master)
-		self.plotFrame.grid(row = 2, 
+		plotFrame = tk.Frame(master)
+		plotFrame.grid(row = 2,
 						column = 0,
 						rowspan = 1,
 						columnspan = 1,
 						sticky = tk.N + tk.S + tk.W + tk.E)
-		self.plotFrame.rowconfigure(2, weight = 1)
-		self.plotFrame.columnconfigure(0, weight = 1)	
+		plotFrame.rowconfigure(2, weight = 1)
+		plotFrame.columnconfigure(0, weight = 1)
 		
 		stat_velocityBoxFrame = tk.Frame(statisticsFrame)
 		stat_velocityBoxFrame.grid(row = 1, column = 1, sticky = tk.N + tk.S + tk.W + tk.E)
@@ -314,26 +343,50 @@ class statisticsThreadClass(threading.Thread):
 		stat_ipitch = tk.IntVar()
 		stat_iyaw = tk.IntVar()
 		
+		quad = statVariables()
+		
+		
 		# x = range(100)
 		# y = range(100)
-		# self.f = Figure(figsize = (3,3), dpi = 50)
-		# self.a = self.f.add_subplot(111)
-		fig = plt.figure(figsize = (3,3), dpi = 50)
-		fig.add_subplot(111)
+		# f = Figure(figsize = (3,3), dpi = 50)
+		# a = f.add_subplot(111)
+		fig = plt.figure(figsize = (4,4), dpi = 100)
+		self.ax = fig.add_subplot(111)
+		# plt.ion()
 		plt.xlabel('Time(s)')
 		plt.ylabel('Variable Name')
+		# plt.show()
 		
-		canvas = FigureCanvasTkAgg(fig, self.plotFrame)
+		canvas = FigureCanvasTkAgg(fig, plotFrame)
 		canvas.show()
 		canvas.get_tk_widget().pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		
-			
-		stat_velocityCheckButton = tk.Checkbutton(stat_velocityBoxFrame, text = 'Velocity', variable = stat_ivelocity, command = lambda : self.Plot('Velocity', stat_ivelocity.get(), fig))
-		stat_accelerationCheckButton = tk.Checkbutton(stat_accelerationBoxFrame, text = 'Acceleration', variable = stat_iacceleration, command = lambda : self.Plot('Acceleration', stat_iacceleration.get(), fig))
-		stat_positionCheckButton = tk.Checkbutton(stat_positionBoxFrame, text = 'Position', variable = stat_iposition, command = lambda : self.Plot('Position', stat_iposition.get(), fig))
-		stat_rollCheckButton = tk.Checkbutton(stat_rollBoxFrame, text = 'Roll', variable = stat_iroll, command = lambda : self.Plot('Roll', stat_iroll.get()))
-		stat_pitchCheckButton = tk.Checkbutton(stat_pitchBoxFrame, text = 'Pitch', variable = stat_ipitch, command = lambda : self.Plot('Pitch', stat_ipitch.get(), fig))
-		stat_yawCheckButton = tk.Checkbutton(stat_yawBoxFrame, text = 'Yaw', variable = stat_iyaw, command = lambda : self.Plot('Yaw', stat_iyaw.get(), fig))
+		velocity_line = plt.plot([],[])[0]
+		acceleration_line = plt.plot([],[])[0]
+		position_line = plt.plot([],[])[0]
+		roll_line = plt.plot([],[])[0]
+		pitch_line = plt.plot([],[])[0]
+		yaw_line = plt.plot([],[])[0]
+		
+		velocity_line.set_data([],[])
+		acceleration_line.set_data([],[])
+		position_line.set_data([],[])
+		roll_line.set_data([],[])
+		pitch_line.set_data([],[])
+		yaw_line.set_data([],[])
+		
+		# velocity_line = canvas.create_line(0,0,0,0, fill = 'red')
+		# acceleration_line = canvas.create_line(0,0,0,0, fill = 'blue')'
+		# position_line = canvas,create_line(0,0,0,0, fill = 'green')
+		# roll_line = canvas.create_line(0,0,0,0, fill = 'black')
+		# pitch_line = canvas.create_line(0,0,0,0, fill = ')		
+		
+		stat_velocityCheckButton = tk.Checkbutton(stat_velocityBoxFrame, text = 'Velocity', variable = stat_ivelocity, command = lambda : self.Plot('Velocity', stat_ivelocity.get(), canvas))
+		stat_accelerationCheckButton = tk.Checkbutton(stat_accelerationBoxFrame, text = 'Acceleration', variable = stat_iacceleration, command = lambda : self.Plot('Acceleration', stat_iacceleration.get(), canvas))
+		stat_positionCheckButton = tk.Checkbutton(stat_positionBoxFrame, text = 'Position', variable = stat_iposition, command = lambda : self.Plot('Position', stat_iposition.get(), canvas))
+		stat_rollCheckButton = tk.Checkbutton(stat_rollBoxFrame, text = 'Roll', variable = stat_iroll, command = lambda : self.Plot('Roll', stat_iroll.get(), canvas))
+		stat_pitchCheckButton = tk.Checkbutton(stat_pitchBoxFrame, text = 'Pitch', variable = stat_ipitch, command = lambda : self.Plot('Pitch', stat_ipitch.get(), canvas))
+		stat_yawCheckButton = tk.Checkbutton(stat_yawBoxFrame, text = 'Yaw', variable = stat_iyaw, command = lambda : self.Plot('Yaw', stat_iyaw.get(), canvas))
 		
 		stat_velocityCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		stat_accelerationCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
@@ -388,78 +441,92 @@ class statisticsThreadClass(threading.Thread):
 		# a.clear()
 		# a.plot(xList,yList)
 		
+		# updated_data, = plt.plot([], [])
 		
-	def Plot(self,var_name, var_state, fig):
+		#Whenever new data is received run this function to update the data array
+	# def update_line(new_data,ax, data):
+		# updated_data_x = data.set_xdata(np.append(data.get_xdata(), new_data))
+		# updated_data_y = data.set_ydata(np.append(data.get_ydata(), new_data))
+		# return updated_data_x, updated_data_y
+		# ax.relim()
+		# ax.autoscale_view()
+		# plt.draw
+	
+	# def animate():		
+		# anim = animation.FuncAnimation(fig, animate, init_func = init, frames = 360, interval = 5, blit = True)
+		
+	def Plot(self,var_name, var_state, canvas):
 		
 		if var_state == 1:
-		
+			
 			if var_name is "Velocity":
-				k = np.arange(0.0, 3.0, 0.01)
-				s = np.sin(np.pi*k)
-				plt.plot(k,s)
+				t = np.arange(0.0, 3.0, 0.01)
+				velocity = np.sin(np.pi*t)
+				self.velocity_line.set_data(t, velocity)
 				
 			elif var_name is "Acceleration":
 				t = np.arange(0.0, 3.0, 0.01)
-				s = np.sin(3*np.pi*t)
-				plt.plot(t,s)
+				acceleration = np.sin(3*np.pi*t)
+				self.acceleration_line.set_data(t, acceleration)
 				
 			elif var_name is "Position":
 				t = np.arange(0.0, 3.0, 0.01)
-				s = np.sin(5*np.pi*t)
-				plt.plot(t,s)
+				position = np.sin(5*np.pi*t)
+				self.position_line.set_data(t, position)
 				
 			elif var_name is "Roll":
 				t = np.arange(0.0, 3.0, 0.01)
-				s = np.sin(7*np.pi*t)
-				plt.plot(t,s)
+				roll = np.sin(7*np.pi*t)
+				self.roll_line.set_data(t, roll)
 				
 			elif var_name is "Pitch":
 				t = np.arange(0.0, 3.0, 0.01)
-				s = np.sin(9*np.pi*t)
-				plt.plot(t,s)
+				pitch = np.sin(9*np.pi*t)
+				self.pitch_line.set_data(t, pitch)
 				
 			elif var_name is "Yaw":
 				t = np.arange(0.0, 3.0, 0.01)
-				s = np.sin(11*np.pi*t)
-				plt.plot(t,s)
+				yaw = np.sin(11*np.pi*t)
+				self.yaw_line.set_data(t, yaw)
 				
 			print "Plotting " + var_name
-			print k
-			plt.gcf().canvas.draw()
-			
+			self.ax.relim()
+			self.ax.autoscale_view()
+			# plt.gcf().canvas.draw()
+			canvas.draw()
+			plt.pause(.001)
 
-			# self.a.plot(t, s)
-			
+			# self.a.plot(t, s)			
 			# self.canvas = FigureCanvasTkAgg(self.f, self.plotFrame)
 			# self.canvas.draw()
 			
 		else:
 		
 			if var_name is "Velocity":
-				del k
-				fig.add_subplot(111)
+				self.velocity_line.set_data([],[])
+				
 			elif var_name is "Acceleration":
-				plt.clf()
-				fig.add_subplot(111)
+				self.acceleration_line.set_data([],[])
+				
 			elif var_name is "Position":
-				plt.clf()
-				fig.add_subplot(111)
+				self.position_line.set_data([],[])
 				
 			elif var_name is "Roll":
-				plt.clf()
-				fig.add_subplot(111)
+				self.roll_line.set_data([],[])
 				
 			elif var_name is "Pitch":
-				plt.clf()
-				fig.add_subplot(111)
+				self.pitch_line.set_data([],[])
 				
 			elif var_name is "Yaw":
-				plt.clf()
-				fig.add_subplot(111)
-				
-			plt.gcf().canvas.draw()
+				self.yaw_line.set_data([],[])		
+			
 			print "Not Plotting" + var_name
-
+			self.ax.relim()
+			self.ax.autoscale_view()
+			# plt.gcf().canvas.draw()
+			canvas.draw()
+			plt.pause(.001)
+			
 class Application(tk.Frame):
     def __init__(self):
 		tk.Frame.__init__(self)
@@ -549,4 +616,3 @@ def main():
 	
 if __name__ == '__main__':
 	main()
-	parent_conn, child_conn = multiprocessing.Pipe()

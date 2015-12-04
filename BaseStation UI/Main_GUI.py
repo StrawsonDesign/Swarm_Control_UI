@@ -89,7 +89,66 @@ class logger(threading.Thread):
 		except IndexError:
 			print "No elements in the Buffer"
 			self.logfile.close()
-			
+class myUAVThreadClass(threading.Thread):
+	def __init__(self,master):
+		threading.Thread.__init__(self)
+		myUAVFrame = tk.Frame(master)
+		myUAVFrame.grid(row = 0, 
+						column = 0,
+						rowspan = 1,
+						columnspan = 1,
+						sticky = tk.S + tk.N + tk.W + tk.E)
+		myUAVFrame.rowconfigure(0, weight = 1)
+		myUAVFrame.columnconfigure(0, weight = 1)
+		myUAVFrame.columnconfigure(1, weight = 1)
+		myUAVFrame.columnconfigure(2, weight = 1)
+		myUAVFrame.columnconfigure(3, weight = 1)
+		
+		batteryLife = 75
+		signalStrength = 86
+		upTime = 524.53
+		myUAV = 'Hot'
+		
+		batteryLabel = tk.Label(myUAVFrame, text = "Battery Life: %d" % batteryLife)
+		signalLabel = tk.Label(myUAVFrame, text = "Signal Strength: %d" % signalStrength)
+		upTimeLabel = tk.Label(myUAVFrame, text = "Up Time: %f [s]" % upTime)
+		myUAVName = tk.Label(myUAVFrame, text = "UAV Name: %s" % myUAV)
+		
+		# batteryLabel.grid(row = 0, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		# signalLabel.grid(row = 0, column = 1, sticky = tk.N + tk.S + tk.W + tk.E)
+		# upTimeLabel.grid(row = 0, column = 2, sticky = tk.N + tk.S + tk.W + tk.E)
+		# myUAVName.grid(row = 0, column = 3, sticky = tk.N + tk.S + tk.W + tk.E)
+		
+		batteryLabel.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		signalLabel.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		upTimeLabel.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		myUAVName.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		
+		# myUAV_batteryFrame = tk.Frame(myUAVFrame)
+		# myUAV_batteryFrame.grid(row = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		# myUAV_signalStrengthFrame = tk.Frame(myUAVFrame)
+		# myUAV_signalStrengthFrame.grid(row = 1, sticky = tk.N + tk.S + tk.W + tk.E)
+		# myUAV_UpTimeFrame = tk.Frame(myUAVFrame)
+		# myUAV_UpTimeFrame.grid(row = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		# myUAV_NameFrame = tk.Frame(myUAVFrame)
+		# myUAV_NameFrame.grid(row = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+        
+        # testButton=tk.Button(myUAVFrame,
+                            # text='Overwrite',
+                            # command=self.quit())
+        # testButton.grid(row=0, 
+                        # column=0,
+                        # rowspan=1,
+                        # columnspan=1,
+                        # sticky = tk.N+tk.S+tk.W+tk.E)
+
+	def run(self):
+		i=0
+		while i<6:
+			print 'i is =',i
+			# print '# active threads in MyUAV loop are',threading.enumerate()
+			sleep(5)
+			i+= 1			
 class loggingThreadClass(threading.Thread):
 	
 	def __init__(self, master):
@@ -304,8 +363,8 @@ class statisticsThreadClass(threading.Thread):
 		statisticsFrame = tk.Frame(master)
 		statisticsFrame.grid(row = 1,
 								column = 1,
-								rowspan = 3,
-								columnspan = 1)
+								rowspan = 5,
+								columnspan = 2)
 		statisticsFrame.rowconfigure(1, weight = 1)
 		statisticsFrame.rowconfigure(2, weight = 1)
 		statisticsFrame.rowconfigure(3, weight = 1)
@@ -315,7 +374,7 @@ class statisticsThreadClass(threading.Thread):
 		statisticsFrame.columnconfigure(1, weight = 1)
 		
 		plotFrame = tk.Frame(master)
-		plotFrame.grid(row = 2,
+		plotFrame.grid(row = 1,
 						column = 0,
 						rowspan = 1,
 						columnspan = 1,
@@ -361,19 +420,19 @@ class statisticsThreadClass(threading.Thread):
 		canvas.show()
 		canvas.get_tk_widget().pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		
-		velocity_line = plt.plot([],[])[0]
-		acceleration_line = plt.plot([],[])[0]
-		position_line = plt.plot([],[])[0]
-		roll_line = plt.plot([],[])[0]
-		pitch_line = plt.plot([],[])[0]
-		yaw_line = plt.plot([],[])[0]
+		self.velocity_line = plt.plot([],[])[0]
+		self.acceleration_line = plt.plot([],[])[0]
+		self.position_line = plt.plot([],[])[0]
+		self.roll_line = plt.plot([],[])[0]
+		self.pitch_line = plt.plot([],[])[0]
+		self.yaw_line = plt.plot([],[])[0]
 		
-		velocity_line.set_data([],[])
-		acceleration_line.set_data([],[])
-		position_line.set_data([],[])
-		roll_line.set_data([],[])
-		pitch_line.set_data([],[])
-		yaw_line.set_data([],[])
+		self.velocity_line.set_data([],[])
+		self.acceleration_line.set_data([],[])
+		self.position_line.set_data([],[])
+		self.roll_line.set_data([],[])
+		self.pitch_line.set_data([],[])
+		self.yaw_line.set_data([],[])
 		
 		# velocity_line = canvas.create_line(0,0,0,0, fill = 'red')
 		# acceleration_line = canvas.create_line(0,0,0,0, fill = 'blue')'
@@ -556,17 +615,23 @@ class Application(tk.Frame):
 		# console = tk.Button(self, text='Done', command=endCommand)
 		# console.grid(row = 5, column = 0, rowspan = 3, columnspan = 2)
 		
+		
 		settingsThread = settingsThreadClass(self)
 		loggingThread = loggingThreadClass(self)
 		statisticsThread = statisticsThreadClass(self)
+		myUAVThread = myUAVThreadClass(self)
+		
 		
 		settingsThread.setDaemon(True)
 		loggingThread.setDaemon(True)
 		statisticsThread.setDaemon(True)
+		myUAVThread.setDaemon(True)
+		
 		
 		settingsThread.start()
 		loggingThread.start()
 		statisticsThread.start()
+		myUAVThread.start()
 		
 		print '# active threads are ',threading.enumerate()
 		

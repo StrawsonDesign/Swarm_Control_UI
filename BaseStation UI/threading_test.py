@@ -320,7 +320,7 @@ class Video(threading.Thread):
         vidLabel.after(2,self.showVideo,vidLabel,vidFrame) # calls the method after 10 ms
         
 class tkinterGUI(tk.Frame):         
-    def __init__(self): #,master= None):
+    def __init__(self): 
         tk.Frame.__init__(self)
         self.grid()
         self.grid(sticky=tk.N+tk.S+tk.E+tk.W) #The argument sticky=tk.N+tk.S+tk.E+tk.aW to self.grid() is necessary so that the Application widget will expand to fill its cell of the top-level window's grid
@@ -338,6 +338,9 @@ class tkinterGUI(tk.Frame):
         self.columnconfigure(2, weight=1)
         self.columnconfigure(3, weight=1) 
 
+        top.protocol("WM_DELETE_WINDOW", closeProgram) # controls what happens on exit : aim to close other threads
+        
+        
         Status=tk.Frame(self)
         Status.grid()
         Log=tk.Frame(self)
@@ -380,6 +383,7 @@ class tkinterGUI(tk.Frame):
     def OnButton(self):
         # for testing only
         result=tkMessageBox.askokcancel(title="File already exists", message="File already exists. Overwrite?")
+        killUDPprocessCounter=0
         if result is True:
             print "User clicked Ok"
         else:
@@ -404,70 +408,91 @@ class AutoScrollbar(tk.Scrollbar):
 class listener(threading.Thread):
     def __init__(self,sizeOfBuffer):
         threading.Thread.__init__(self)
-        self.receviedPacketBuffer = deque([], sizeOfBuffer)
+        global receviedPacketBuffer # Must declare gloabl varibale prior to assigning values
+        global receviedPacketBufferLock
+        receviedPacketBuffer= deque([], sizeOfBuffer)
+        receviedPacketBufferLock = threading.Lock()
         print "Initialized Ring Buffer as size of", sizeOfBuffer
-        self.isBufferBusy=0
+        #self.isBufferBusy=0
 
     def run(self):
+        for i in xrange(500): # replace by reading head
+            #sleep(1)
+            try:
+                if receviedPacketBufferLock.acquire(1):
+                   #print "Buffer is : ", receviedPacketBuffer
+                    receviedPacketBuffer.append(i)
+                #else:
+                    #print "Lock was not ON"
+            finally:
+                    receviedPacketBufferLock.release()
 
-        for i in xrange(100): # replace by reading head
-            #if self.isBufferBusy==0:
-                #self.isBufferBusy=1
-                self.receviedPacketBuffer.append(i)
-                print "Buffer is : ", self.receviedPacketBuffer
-                #print "Last element is ", self.receviedPacketBuffer[len(self.receviedPacketBuffer)-1] # show last element - required for other operations
-            #    self.isBufferBusy=0
-                sleep(0.1)
 
 class logger(threading.Thread):
-    def __init__(self,listeningThread):
+    def __init__(self):
         threading.Thread.__init__(self)
         outfile='testfile.txt'
-        self.listenerobject=listeningThread
         self.log_dummy=open(outfile,"w",1) # use a = append mode, buffering set to true
         print "file", outfile, "is opened"
 
     def run(self): 
-        try :
-            sleep(0.5)
-            tempData=""
-            m=0
-            while m<50: # change this
-                if len(self.listenerobject.receviedPacketBuffer)>0: #& self.listenerobject.isBufferBusy==0:
+        tempData=""
+        m=0
+        while m<100: # change this
+            #sleep(0.01)
+            if receviedPacketBufferLock.acquire(0):
+                try:
+                    while(1): # empty the entire list
                     #self.listenerobject.isBufferBusy=1
-                    val=self.listenerobject.receviedPacketBuffer.popleft()
-                    data=strftime("%c")+"\t"+str(val)+"\n"
-                    tempData=tempData+data
-                    m=m+1
-                    #self.listenerobject.isBufferBusy=0
-                
-                if m%20==0:
-                    self.log_dummy.write(tempData)
-                    print "wrote to disk"                
-                    tempData="" 
+                        val=receviedPacketBuffer.popleft()
+                        data=strftime("%c")+"\t"+str(val)+"\n"
+                        tempData=tempData+data
+                        # print "Just popped ",val
+                except:
+                    pass
+                finally:
+                    receviedPacketBufferLock.release()
+            m += 1   
+            #print "M is", m     
+            if m%50==0:
+                self.log_dummy.write(tempData)
+                print "wrote to disk"                
+                tempData="" 
 
-        except IndexError:
-            print "No elements in the Buffer"
-            self.log_dummy.close()
 
 def UDP():
-    UDPlistenThread=listener(6) # sizeOfRingBuffer
-    UDPlistenThread.setDaemon(False) # exit UI even if some listening is going on
-    
-    UDPlogThread=logger(UDPlistenThread)
-    UDPlogThread.setDaemon(False)
+    UDPlistenThread=listener(10) # sizeOfRingBuffer
+    UDPlistenThread.setDaemon(True)
+
+    UDPlogThread=logger()
+    UDPlogThread.setDaemon(True)
     
     UDPlistenThread.start()
     UDPlogThread.start()
     
     UDPlistenThread.join()
     UDPlogThread.join()
+    i=1
+    while(killUDPprocessCounter):
+        i=i+1
+        if i%20==0:
+            print killUDPprocessCounter
+    
+    UDPlistenThread.exit()
+    UDPlogThread.exit()
+    
+
+
+def closeProgram():
+    print "wowoo"
+    killUDPprocessCounter=0
+    print killUDPprocessCounter
+
 
 def startTkinter():
     root = tkinterGUI()
-    root.master.title("Azog") # Name of current drone, Here it is Azog 
+    root.master.title("Azog") # Name of current drone, Here it is Azog
     root.mainloop()
-
 def sendSettingPacket(m,f,p,c):
     # m - Mapping modes are : SLAM (0) or VICON pos input (1)
     # f - Flight modes are : Altitude (2) vs Manual Thrust (3) vs POS hold (4)
@@ -504,14 +529,15 @@ def broadcast():
         sleep(15)
 
 def main():
-    #global udpProcess # try to kill updprocess using startTkinter
+    #global udpProcess # try to kill updprocess using startTkinter  
+    global killUDPprocessCounter
+    killUDPprocessCounter=1
     udpProcess=multiprocessing.Process(name='UDP Process', target=UDP)
     TkinterProcess=multiprocessing.Process(name='Tkinter Process', target=startTkinter)
-    broadcastProcess=multiprocessing.Process(name='Broadcasting Process', target=broadcast)
-
+    # broadcastProcess=multiprocessing.Process(name='Broadcasting Process', target=broadcast)
     udpProcess.start()
     TkinterProcess.start()
-    broadcastProcess.start()
+    # broadcastProcess.start()
 
 def killDroneMethod():
     print 'this should send a specific MAVlink packet'

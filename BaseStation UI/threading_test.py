@@ -338,7 +338,7 @@ class tkinterGUI(tk.Frame):
         self.columnconfigure(2, weight=1)
         self.columnconfigure(3, weight=1) 
 
-        top.protocol("WM_DELETE_WINDOW", closeProgram) # controls what happens on exit : aim to close other threads
+        #top.protocol("WM_DELETE_WINDOW", closeProgram) # controls what happens on exit : aim to close other threads
         
         
         Status=tk.Frame(self)
@@ -473,10 +473,10 @@ def UDP():
     UDPlistenThread.join()
     UDPlogThread.join()
     i=1
-    while(killUDPprocessCounter):
-        i=i+1
-        if i%20==0:
-            print killUDPprocessCounter
+    # while(killUDPprocessCounter):
+    #     i=i+1
+    #     if i%20==0:
+    #         print killUDPprocessCounter
     
     UDPlistenThread.exit()
     UDPlogThread.exit()
@@ -484,7 +484,6 @@ def UDP():
 
 
 def closeProgram():
-    print "wowoo"
     killUDPprocessCounter=0
     print killUDPprocessCounter
 

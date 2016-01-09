@@ -12,6 +12,7 @@ import socket # for sending across UDP packets
 allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','More Orcs','Orc1','Orc2','Orc3','Orc4']
 activeDronesList=['Othrod','Ugluk','Bolg','Orcobal'] 
 # move these lists to the respective buffer /data structures eventually 
+killUDPprocessCounter=1
 
 class MyUAV(threading.Thread):
     def __init__(self,master,r,c,rspan,cspan):
@@ -336,10 +337,7 @@ class tkinterGUI(tk.Frame):
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
         self.columnconfigure(2, weight=1)
-        self.columnconfigure(3, weight=1) 
-
-        #top.protocol("WM_DELETE_WINDOW", closeProgram) # controls what happens on exit : aim to close other threads
-        
+        self.columnconfigure(3, weight=1)        
         
         Status=tk.Frame(self)
         Status.grid()
@@ -371,6 +369,8 @@ class tkinterGUI(tk.Frame):
         otherDrones.start()
         settingsThread.start()
         print '# active threads are ',threading.enumerate()
+
+        top.protocol("WM_DELETE_WINDOW", closeProgram) # controls what happens on exit : aim to close other threads
 
 
     def createWidgets(self,frame,txt,r,c,rspan,cspan):
@@ -427,7 +427,6 @@ class listener(threading.Thread):
             finally:
                     receviedPacketBufferLock.release()
 
-
 class logger(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
@@ -472,26 +471,31 @@ def UDP():
     
     UDPlistenThread.join()
     UDPlogThread.join()
-    i=1
-    # while(killUDPprocessCounter):
-    #     i=i+1
-    #     if i%20==0:
-    #         print killUDPprocessCounter
+
+    # Declaring global for killUDPprocesscounter
+    print "UDP process started"
     
+    i=0
+    while(killUDPprocessCounter):
+        i=i+1
+        sleep(0.05)
+        if i%20==0:
+            print "UDP counter is",killUDPprocessCounter, "i is ", i
+    
+    print "Came out of while loop"
     UDPlistenThread.exit()
     UDPlogThread.exit()
-    
-
 
 def closeProgram():
+    global killUDPprocessCounter
     killUDPprocessCounter=0
-    print killUDPprocessCounter
-
+    print "here I am ", killUDPprocessCounter
 
 def startTkinter():
     root = tkinterGUI()
     root.master.title("Azog") # Name of current drone, Here it is Azog
     root.mainloop()
+
 def sendSettingPacket(m,f,p,c):
     # m - Mapping modes are : SLAM (0) or VICON pos input (1)
     # f - Flight modes are : Altitude (2) vs Manual Thrust (3) vs POS hold (4)
@@ -529,8 +533,6 @@ def broadcast():
 
 def main():
     #global udpProcess # try to kill updprocess using startTkinter  
-    global killUDPprocessCounter
-    killUDPprocessCounter=1
     udpProcess=multiprocessing.Process(name='UDP Process', target=UDP)
     TkinterProcess=multiprocessing.Process(name='Tkinter Process', target=startTkinter)
     # broadcastProcess=multiprocessing.Process(name='Broadcasting Process', target=broadcast)

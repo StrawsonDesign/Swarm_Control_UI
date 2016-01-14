@@ -2,9 +2,9 @@ import Tkinter as tk
 import numpy as np
 import matplotlib.pyplot as plt
 # matplotlib.use("TkAgg")
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-from matplotlib.figure import Figure
-import matplotlib.animation as animation
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg #, NavigationToolbar2TkAgg
+#from matplotlib.figure import Figure
+#import matplotlib.animation as animation
 from PIL import ImageTk , Image # for image conversion
 import cv2 # OpenCV for video handling
 import tkFont, threading, Queue, multiprocessing, tkMessageBox

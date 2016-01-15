@@ -6,7 +6,7 @@ Created on Wed Jan 13 12:43:15 2016
 """
 
 import threading # multithreading 
-import multiprocessing #multiprocessing
+from multiprocessing import Process, Lock #multiprocessing
 import tkMessageBox # for messageboxes 
 import Tkinter as tk
 from PIL import ImageTk , Image # for image conversion
@@ -15,6 +15,8 @@ import tkFont # for fonts
 from time import strftime,sleep # for sleep
 from collections import deque # for ring buffer
 import socket # for sending across UDP packets 
+from multiprocessing.sharedctypes import Value, Array
+from ctypes import Structure, c_double, c_short, c_long
 
 allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','More Orcs','Orc1','Orc2','Orc3','Orc4']
 activeDronesList=['Othrod','Ugluk','Bolg','Orcobal'] 
@@ -414,11 +416,8 @@ class AutoScrollbar(tk.Scrollbar):
         
 
 class listener(threading.Thread):
-    def __init__(self,sizeOfBuffer, conn):
+    def __init__(self,sizeOfBuffer):
         threading.Thread.__init__(self)
-        self.conn = conn
-        self.conn.send = ([42, None, 'listen'])
-        self.conn.close()
         global receviedPacketBuffer # Must declare gloabl varibale prior to assigning values
         global receviedPacketBufferLock
         receviedPacketBuffer= deque([], sizeOfBuffer)
@@ -433,89 +432,85 @@ class listener(threading.Thread):
             try:
                 if receviedPacketBufferLock.acquire(1):
                     #print "Buffer is : ", receviedPacketBuffer, "\n"
-                    receviedPacketBuffer.append(i)                    
+                    receviedPacketBuffer.append(i)					
                 #else:
                     #print "Lock was not ON"
             finally:
-                    receviedPacketBufferLock.release()
+				receviedPacketBufferLock.release()				
                     
 
 class logger(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
-        outfile='testfile.txt'
-        self.log_dummy=open(outfile,"w",1) # use a = append mode, buffering set to true
-        print "file", outfile, "is opened"
-        #child_conn.send(['log'])
-        #child_conn.close()
+    def __init__(self,n):
+		threading.Thread.__init__(self)
+		outfile='testfile.txt'
+		self.log_dummy=open(outfile,"w",1) # use a = append mode, buffering set to true
+		print "file", outfile, "is opened"
+		self.Packets = n
         
     def run(self): 
-        tempData=""
-        m=0
-        while m<100: # change this
+		tempData=""
+		m=0
+		while m<40: # change this
             #sleep(0.01)
-            if receviedPacketBufferLock.acquire(0):
-                try:
-                    while(1): # empty the entire list
-                    #self.listenerobject.isBufferBusy=1
-                        val=receviedPacketBuffer.popleft()
-                        data=strftime("%c") + "\t" + str(val) + "\n"
-                        tempData=tempData+data
-                        # print "Just popped ",val
-                except:
-                    pass
-                finally:
-                    receviedPacketBufferLock.release()
-                    self.Packet_Received = True
+			if receviedPacketBufferLock.acquire(0):
+				try:
+					i = 0
+					#self.Packets.popleft()
+					while(1): # empty the entire list
+					#self.listenerobject.isBufferBusy=1
+						val=receviedPacketBuffer.popleft()
+						self.Packets[i] = val
+						data=strftime("%c") + "\t" + str(val) + "\n"
+						tempData=tempData+data
+						#print "Just popped " + str(val)
+						#print "Packet: " + str(self.Packets[:])
+						i += 1
+				except:
+					pass
+					
+				finally:
+					receviedPacketBufferLock.release()
+					print "Released Packet:" + str(self.Packets[:])
+			m += 1
+			#print "M is", m     
+			if m%50==0:
+				self.log_dummy.write(tempData)
+				print "wrote to disk"
+				tempData=""
 
-            m += 1   
-            #print "M is", m     
-            if m%50==0:
-                self.log_dummy.write(tempData)
-                print "wrote to disk"
-                tempData=""
-    def Packets(self):
-        print 'Checking Packet'
-        if self.Packet_Received:
-            print 'Returning Data'
-            return data
+def UDP(Packets):	
+	UDPlistenThread=listener(10) # sizeOfRingBuffer
+	UDPlistenThread.setDaemon(True)
+	
+	UDPlogThread=logger(Packets)
+	UDPlogThread.setDaemon(True)
+	
+	print('UDP')
+	UDPlistenThread.start()
+	#Listen_child_conn.send([84, None, 'Listen', receviedPacketBuffer])
+	#Listen_child_conn.close()
+	UDPlogThread.start()
+	#Logging_child_conn.send([42, None, 'Logging',receviedPacketBuffer])
+	#Logging_child_conn.close()
+	
+	UDPlistenThread.join()
+	UDPlogThread.join()	
+	print 'Pack:' + str(Packets[:])
+	# Declaring global for killUDPprocesscounter
+	"""
+	print "UDP process started"
 
-def UDP(Logging_child_conn, Listen_child_conn):
-    UDPlistenThread=listener(10, Listen_child_conn) # sizeOfRingBuffer
-    UDPlistenThread.setDaemon(True)
+	i=0
+	while(killUDPprocessCounter):
+		i=i+1
+		sleep(0.05)
+		if i%20==0:
+			print "UDP counter is",killUDPprocessCounter, "i is ", i
 
-    UDPlogThread=logger()
-    UDPlogThread.setDaemon(True)
-    print('UDP')
-    
-    UDPlistenThread.start()
-    #Listen_child_conn.send([84, None, 'Listen', receviedPacketBuffer])
-    #Listen_child_conn.close()
-    UDPlogThread.start()
-    print(UDPlogThread)
-    print(UDPlistenThread)
-    
-    #Logging_child_conn.send([42, None, 'Logging',receviedPacketBuffer])
-    #Logging_child_conn.close()
-    
-    UDPlistenThread.join()
-    UDPlogThread.join()
-
-    # Declaring global for killUDPprocesscounter
-    """
-    print "UDP process started"
-    
-    i=0
-    while(killUDPprocessCounter):
-        i=i+1
-        sleep(0.05)
-        if i%20==0:
-            print "UDP counter is",killUDPprocessCounter, "i is ", i
-    
-    print "Came out of while loop"
-    """
-    #UDPlistenThread.exit()
-    #UDPlogThread.exit()
+	print "Came out of while loop"
+	"""
+	#UDPlistenThread.exit()
+	#UDPlogThread.exit()
 
 def closeProgram():
     global killUDPprocessCounter
@@ -563,17 +558,21 @@ def broadcast():
         sleep(15)
 
 def main():
-    #global udpProcess # try to kill updprocess using startTkinter  
-    Logging_parent_conn, Logging_child_conn = multiprocessing.Pipe()
-    Listen_parent_conn, Listen_child_conn = multiprocessing.Pipe()
-    udpProcess = multiprocessing.Process(name='UDP Process', target=UDP, args = (Logging_child_conn, Listen_child_conn,))
-    #TkinterProcess = multiprocessing.Process(name='Tkinter Process', target=startTkinter)
-    # broadcastProcess=multiprocessing.Process(name='Broadcasting Process', target=broadcast)
-    udpProcess.start()
-    #TkinterProcess.start()
-    # broadcastProcess.start()
-    print(Logging_parent_conn.recv())
-    print(Listen_parent_conn.recv())
+    #global udpProcess # try to kill updprocess using startTkinter
+	lock = Lock()
+	n = Array('i', range(10), lock = lock)
+	
+	udpProcess = Process(name = 'UDP Process', target = UDP, args=(n,)) 
+	TkinterProcess = Process(name='Tkinter Process', target=startTkinter)	
+    # broadcastProcess = Process(name='Broadcasting Process', target=broadcast)
+	udpProcess.start()
+	TkinterProcess.start()
+	udpProcess.join()
+	TkinterProcess.join()
+	print 'Packets:' + str(n[:])
+	
+	
+	# broadcastProcess.start()
 
 def killDroneMethod():
     print 'this should send a specific MAVlink packet'

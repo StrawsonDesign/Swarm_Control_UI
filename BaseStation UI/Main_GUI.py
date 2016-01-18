@@ -7,10 +7,13 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg #, NavigationToo
 #import matplotlib.animation as animation
 from PIL import ImageTk , Image # for image conversion
 import cv2 # OpenCV for video handling
-import tkFont, threading, Queue, multiprocessing, tkMessageBox
+import tkFont, threading, Queue, tkMessageBox
 from time import strftime, sleep
 from collections import deque
 import socket # for sending across UDP packets 
+from multiprocessing.sharedctypes import Value, Array
+from ctypes import Structure, c_double, c_short, c_long
+from multiprocessing import Process, Lock #multiprocessing
 
 allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','More Orcs','Orc1','Orc2','Orc3','Orc4']
 activeDronesList=['Othrod','Ugluk','Bolg','Orcobal'] 
@@ -18,81 +21,64 @@ activeDronesList=['Othrod','Ugluk','Bolg','Orcobal']
 class listener(threading.Thread):
     def __init__(self,sizeOfBuffer):
         threading.Thread.__init__(self)
-        self.receviedPacketBuffer = deque([], sizeOfBuffer)
+        global receviedPacketBuffer # Must declare gloabl varibale prior to assigning values
+        global receviedPacketBufferLock
+        receviedPacketBuffer= deque([], sizeOfBuffer)
+        receviedPacketBufferLock = threading.Lock()
         print "Initialized Ring Buffer as size of", sizeOfBuffer
-
+        #self.isBufferBusy=0  
+        
+    
     def run(self):
-        for i in xrange(12): # replace by reading head
-            self.receviedPacketBuffer.append(i)
-            print "Buffer is : ", self.receviedPacketBuffer
-            #print "Last element is ", self.receviedPacketBuffer[len(self.receviedPacketBuffer)-1] # show last element - required for other operations
-            sleep(0.1)
+        for i in xrange(500): # replace by reading head
+            #sleep(1)
+            try:
+                if receviedPacketBufferLock.acquire(1):
+                    #print "Buffer is : ", receviedPacketBuffer, "\n"
+                    receviedPacketBuffer.append(i)					
+                #else:
+                    #print "Lock was not ON"
+            finally:
+				receviedPacketBufferLock.release()
 
 class logger(threading.Thread):
-
-	def __init__(self,listeningThread):
+    def __init__(self,n):
 		threading.Thread.__init__(self)
-		# self.recordData = False
-		self.listenerobject = listeningThread
-		
-	# def record_data(self):
-		# self.recordData = True
-		
-		# file='testfile.txt'		
-		# self.logfile = open(file,"w",1) # use a = append mode, buffering set to true
-		# print "file", file, "is opened"
-		
-		# return self.recordData
-		
-		file = 'testfile.txt'
-		self.listenerobject = listeningThread
-		self.logfile = open(file, 'w',1)
-		print "The file", file, "has been opened"
-		
-		try:
-			while 1:
-				sleep(0.1)				
-				if len(self.listenerobject.receviedPacketBuffer)>0:
-					data=strftime("%c")+"\t"+str(self.listenerobject.receviedPacketBuffer.popleft())+"\n"
-					self.logfile.write(data)
+		outfile='testfile.txt'
+		self.log_dummy=open(outfile,"w",1) # use a = append mode, buffering set to true
+		print "file", outfile, "is opened"
+		self.Packets = n
+        
+    def run(self): 
+		tempData=""
+		m=0
+		while m<40: # change this
+            #sleep(0.01)
+			if receviedPacketBufferLock.acquire(0):
+				try:
+					i = 0
+					#self.Packets.popleft()
+					while(1): # empty the entire list
+					#self.listenerobject.isBufferBusy=1
+						val=receviedPacketBuffer.popleft()
+						self.Packets[i] = val
+						data=strftime("%c") + "\t" + str(val) + "\n"
+						tempData=tempData+data
+						#print "Just popped " + str(val)
+						#print "Packet: " + str(self.Packets[:])
+						i += 1
+				except:
+					pass
 					
-		except IndexError:
-			print "No elements in the Buffer"
-			
-		return self.logfile
-		
-	# def stop_recording(self):
-		# self.recordData = False
-		# print "closing the file"
-		# self.logfile.close()
-		# print file + "is not open"
-	
-	def Print():
-		print 'Log hi!'
-	
-	def run(self): 
-		try :
-			sleep(0.5)
-			tempData=""
-			m=0
-			while m<50: # change this
-				if len(self.listenerobject.receviedPacketBuffer)>0: #& self.listenerobject.isBufferBusy==0:
-					# self.listenerobject.isBufferBusy=1
-					val=self.listenerobject.receviedPacketBuffer.popleft()
-					data=strftime("%c")+"\t"+str(val)+"\n"
-					tempData=tempData+data
-					m=m+1
-					# self.listenerobject.isBufferBusy=0
-
-				# if m%20==0:
-			if self.recordData in True:
-				self.logfile.write(tempData)
-				print "wrote to disk"                
-				tempData="" 
-
-		except IndexError:
-			print "No elements in the Buffer"
-			self.logfile.close()
+				finally:
+					receviedPacketBufferLock.release()
+					print "Released Packet:" + str(self.Packets[:])
+			m += 1
+			#print "M is", m     
+			if m%50==0:
+				self.log_dummy.write(tempData)
+				print "wrote to disk"
+				tempData=""
 			
 class myUAVThreadClass(threading.Thread):
 
@@ -200,34 +186,27 @@ class loggingThreadClass(threading.Thread):
 	def __init__(self, master):
 		threading.Thread.__init__(self)
 		loggingFrame = tk.Frame(master)
-		loggingFrame.grid(row = 3, 
-						column = 3,
+		loggingFrame.grid(row = 2, 
+						column = 4,
 						rowspan = 1,
 						columnspan = 1,
 						sticky = tk.S + tk.N + tk.W + tk.E)
-		loggingFrame.rowconfigure(0, weight = 1)
-		loggingFrame.rowconfigure(1, weight = 1)
 		loggingFrame.rowconfigure(2, weight = 1)
-		loggingFrame.rowconfigure(3, weight = 1)
-		loggingFrame.rowconfigure(4, weight = 1)
-		loggingFrame.rowconfigure(5, weight = 1)
-		loggingFrame.rowconfigure(6, weight = 1)
-		loggingFrame.columnconfigure(0, weight = 1)
-		loggingFrame.columnconfigure(3, weight = 1)
+		loggingFrame.columnconfigure(4, weight = 1)
 		
 		log_attitudeBoxFrame = tk.Frame(loggingFrame)
-		log_attitudeBoxFrame.grid(row = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_attitudeBoxFrame.grid(row = 2, sticky = tk.N + tk.S + tk.W + tk.E)
 		log_positionBoxFrame = tk.Frame(loggingFrame)
-		log_positionBoxFrame.grid(row = 1, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_positionBoxFrame.grid(row = 3, sticky = tk.N + tk.S + tk.W + tk.E)
 		log_velocityBoxFrame = tk.Frame(loggingFrame)
-		log_velocityBoxFrame.grid(row = 2, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_velocityBoxFrame.grid(row = 4, sticky = tk.N + tk.S + tk.W + tk.E)
 		log_batteryBoxFrame = tk.Frame(loggingFrame)
-		log_batteryBoxFrame.grid(row = 3, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_batteryBoxFrame.grid(row = 5, sticky = tk.N + tk.S + tk.W + tk.E)
 		
 		log_recordButtonFrame = tk.Frame(loggingFrame)
-		log_recordButtonFrame.grid(row = 4, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_recordButtonFrame.grid(row = 6, column = 3, sticky = tk.N + tk.S + tk.W + tk.E)
 		log_stopButtonFrame = tk.Frame(loggingFrame)
-		log_stopButtonFrame.grid(row = 5, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_stopButtonFrame.grid(row = 7, column = 3, sticky = tk.N + tk.S + tk.W + tk.E)
 		
 		log_iattitude = tk.IntVar()
 		log_iposition = tk.IntVar()
@@ -244,8 +223,8 @@ class loggingThreadClass(threading.Thread):
 		log_velocityCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		log_batteryCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		
-		log_recordButton = tk.Button(log_recordButtonFrame, text = 'Record', command = logger.Print)
-		log_stopButton = tk.Button(log_stopButtonFrame, text = 'Stop', command = master.destroy)
+		log_recordButton = tk.Button(log_recordButtonFrame, text = 'Record', command = self.Stop)
+		log_stopButton = tk.Button(log_stopButtonFrame, text = 'Stop', command = self.Stop)
 		
 		log_recordButton.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = 1)
 		log_stopButton.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = 1)
@@ -311,9 +290,9 @@ class loggingThreadClass(threading.Thread):
 			# self.logfile.close()
 			# print file + "is not open"
 		
-	def Stop(self, master):
-		master.quit()     # stops mainloop
-		master.destroy()  # this is necessary on Windows to prevent
+	def Stop(self):
+		self.quit()     # stops mainloop
+		self.destroy()  # this is necessary on Windows to prevent
 							# Fatal Python Error: PyEval_RestoreThread: NULL tstate
 							
 	def logVariables(self, var_Name, var_State):
@@ -326,7 +305,10 @@ class loggingThreadClass(threading.Thread):
 			ivar_Name = self.loggingVariables.index(var_Name)
 			self.loggingVariables.pop(ivar_Name)
 			print self.loggingVariables
-			
+		
+		self.Log_names = self.loggingVariables
+		print "Log names: " + str(self.Log_names)
+		
 	def run(self):
 		pass
 	
@@ -406,14 +388,12 @@ class settingsThreadClass(threading.Thread):
     def __init__(self,master):
         threading.Thread.__init__(self)
         settingsFrame=tk.Frame(master)
-        settingsFrame.grid(row=3,
+        settingsFrame.grid(row=2,
             column=0,
             sticky=tk.N+tk.S+tk.E+tk.W)
         settingsFrame.rowconfigure(0, weight=1)
         settingsFrame.rowconfigure(1, weight=1)
         settingsFrame.rowconfigure(2, weight=1)
-        settingsFrame.rowconfigure(3, weight=1)
-        settingsFrame.rowconfigure(4, weight=1)
         settingsFrame.columnconfigure(0, weight=1)
         # Mapping modes are : SLAM (0) or VICON pos input (1)
         # Flight modes are : Altitude (2) vs Manual Thrust (3) vs POS hold (4)
@@ -732,10 +712,10 @@ class Video(threading.Thread):
         self.vidFrame=tk.Frame(master)
         #stickyelf.vidFrame.config(padx=20)
  
-        self.vidFrame.grid(row=1,
-                      column=1,
-                      rowspan=3,
-                      columnspan=3,
+        self.vidFrame.grid(row=2,
+                      column=2,
+                      rowspan=1,
+                      columnspan=1,
                       sticky=tk.S+tk.N+tk.E+tk.W)
         self.vidLabel=tk.Label(self.vidFrame)
 
@@ -872,7 +852,7 @@ class Video(threading.Thread):
         vidLabel.after(2,self.showVideo,vidLabel,vidFrame) # calls the method after 10 ms
 		
 class Application(tk.Frame):
-    def __init__(self):
+    def __init__(self, Log_names_packet):
 		tk.Frame.__init__(self)
 		self.grid()
 		self.grid(sticky = tk.N + tk.S + tk.E + tk.W)
@@ -896,6 +876,7 @@ class Application(tk.Frame):
 		self.columnconfigure(2, weight=1)
 		self.columnconfigure(3, weight=1)
 		
+		self.Log_names = Log_names_packet
         # Set up the GUI
 		# console = tk.Button(self, text='Done', command=endCommand)
 		# console.grid(row = 5, column = 0, rowspan = 3, columnspan = 2)
@@ -923,21 +904,47 @@ class Application(tk.Frame):
 		
 		print '# active threads are ',threading.enumerate()
 		
-def UDP():
-	UDPlistenThread = listener(6) # sizeOfRingBuffer
-	UDPlistenThread.setDaemon(False) # exit UI even if some listening is going on
+def UDP(Packets):	
+	UDPlistenThread=listener(10) # sizeOfRingBuffer
+	UDPlistenThread.setDaemon(True)
 	
-	UDPloggingThread = logger(UDPlistenThread)
-	UDPloggingThread.setDaemon(False)
+	UDPlogThread=logger(Packets)
+	UDPlogThread.setDaemon(True)
 	
+	print('UDP')
 	UDPlistenThread.start()
-	UDPloggingThread.start()
+	#Listen_child_conn.send([84, None, 'Listen', receviedPacketBuffer])
+	#Listen_child_conn.close()
+	UDPlogThread.start()
+	#Logging_child_conn.send([42, None, 'Logging',receviedPacketBuffer])
+	#Logging_child_conn.close()
 	
 	UDPlistenThread.join()
-	UDPloggingThread.join()
+	UDPlogThread.join()	
+	print 'Pack:' + str(Packets[:])
+	# Declaring global for killUDPprocesscounter
+	"""
+	print "UDP process started"
+
+	i=0
+	while(killUDPprocessCounter):
+		i=i+1
+		sleep(0.05)
+		if i%20==0:
+			print "UDP counter is",killUDPprocessCounter, "i is ", i
+
+	print "Came out of while loop"
+	"""
+	#UDPlistenThread.exit()
+	#UDPlogThread.exit()
+
+def closeProgram():
+    global killUDPprocessCounter
+    killUDPprocessCounter=0
+    print "here I am ", killUDPprocessCounter
 	
-def startTkinter():
-	root = Application()
+def startTkinter(Log_names_packet):
+	root = Application(Log_names_packet)
 	root.master.title("GUI")
 	root.mainloop()
 	
@@ -956,11 +963,34 @@ def killDroneMethod():
     print 'this should send a specific MAVlink packet'
     
     # start tkinter stuff
+	
 def broadcast():
-	# while 1:
-		# print "Sent packets"
-		# sleep (5)
-	pass
+    IPaddr = '8.4.2.1' # IP to send the packets
+    portNmbr = 80 # port number of destination
+
+    # Data content of the UDP packet as hex
+    packetData = 'f1a525da11f6'.decode('hex')
+     
+    # initialize a socket
+    # SOCK_DGRAM specifies that this is UDP
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
+     
+    try:
+        # connect the socket
+        s.connect((IPADDR, PORTNUM))
+     
+        # send the packet
+        s.send(packetData)
+    except:
+        pass
+     
+    # close the socket
+    s.close()
+
+    while 1:
+
+        print "Sent packets"
+        sleep(15)
 	
 class AutoScrollbar(tk.Scrollbar):
     # a scrollbar that hides itself if it's not needed.  only
@@ -977,16 +1007,22 @@ class AutoScrollbar(tk.Scrollbar):
     def place(self, **kw):
         raise TclError, "cannot use place with this widget"
         raise tk.TclError, "cannot use place with this widget"	
-		
-def main():
-	#global udpProcess # try to kill updprocess using startTkinter	
-	udpProcess = multiprocessing.Process(name = 'UDP Process', target = UDP)
-	TkinterProcess = multiprocessing.Process(name = 'Tkinter Process', target = startTkinter)
-	broadcastProcess = multiprocessing.Process(name = 'Broadcasting Process', target = broadcast)
 	
+def main():
+    #global udpProcess # try to kill updprocess using startTkinter
+	lock = Lock()
+	n = Array('i', range(10), lock = lock)
+	Log_names_packet = Array('c','', lock = lock)
+	udpProcess = Process(name = 'UDP Process', target = UDP, args=(n,)) 
+	TkinterProcess = Process(name = 'Tkinter Process', target = startTkinter, args = (Log_names_packet,))
+	#broadcastProcess = Process(name = 'Broadcasting Process', target = broadcast)
 	udpProcess.start()
 	TkinterProcess.start()
-	broadcastProcess.start()
+	#broadcastProcess.start()
+	udpProcess.join()
+	TkinterProcess.join()
+	print 'Packets: ' + str(n[:])
+	print "Log Packet: " + str(Log_names_packet)
 	
 if __name__ == '__main__':
 	main()

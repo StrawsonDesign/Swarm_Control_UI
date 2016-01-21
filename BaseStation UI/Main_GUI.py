@@ -195,18 +195,18 @@ class loggingThreadClass(threading.Thread):
 		loggingFrame.columnconfigure(4, weight = 1)
 		
 		log_attitudeBoxFrame = tk.Frame(loggingFrame)
-		log_attitudeBoxFrame.grid(row = 2, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_attitudeBoxFrame.grid(row = 2, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
 		log_positionBoxFrame = tk.Frame(loggingFrame)
-		log_positionBoxFrame.grid(row = 3, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_positionBoxFrame.grid(row = 3, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
 		log_velocityBoxFrame = tk.Frame(loggingFrame)
-		log_velocityBoxFrame.grid(row = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_velocityBoxFrame.grid(row = 4, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
 		log_batteryBoxFrame = tk.Frame(loggingFrame)
-		log_batteryBoxFrame.grid(row = 5, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_batteryBoxFrame.grid(row = 5, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
 		
 		log_recordButtonFrame = tk.Frame(loggingFrame)
-		log_recordButtonFrame.grid(row = 6, column = 3, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_recordButtonFrame.grid(row = 6, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
 		log_stopButtonFrame = tk.Frame(loggingFrame)
-		log_stopButtonFrame.grid(row = 7, column = 3, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_stopButtonFrame.grid(row = 7, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
 		
 		log_iattitude = tk.IntVar()
 		log_iposition = tk.IntVar()
@@ -484,7 +484,7 @@ class statisticsThreadClass(threading.Thread):
 		statisticsFrame.grid(row = 1,
 								column = 1,
 								rowspan = 5,
-								columnspan = 2)
+								columnspan = 1)
 		statisticsFrame.rowconfigure(1, weight = 1)
 		statisticsFrame.rowconfigure(2, weight = 1)
 		statisticsFrame.rowconfigure(3, weight = 1)
@@ -529,7 +529,7 @@ class statisticsThreadClass(threading.Thread):
 		# y = range(100)
 		# f = Figure(figsize = (3,3), dpi = 50)
 		# a = f.add_subplot(111)
-		fig = plt.figure(figsize = (5,5), dpi = 100)
+		fig = plt.figure(figsize = (7,7), dpi = 125)
 		self.ax = fig.add_subplot(111)
 		# plt.ion()
 		plt.xlabel('Time(s)')
@@ -875,6 +875,7 @@ class Application(tk.Frame):
 		self.columnconfigure(1, weight=1)
 		self.columnconfigure(2, weight=1)
 		self.columnconfigure(3, weight=1)
+		self.columnconfigure(4, weight=1)
 		
 		self.Log_names = Log_names_packet
         # Set up the GUI

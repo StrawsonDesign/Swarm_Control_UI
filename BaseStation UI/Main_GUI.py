@@ -192,6 +192,11 @@ class loggingThreadClass(threading.Thread):
 						columnspan = 1,
 						sticky = tk.S + tk.N + tk.W + tk.E)
 		loggingFrame.rowconfigure(2, weight = 1)
+		loggingFrame.rowconfigure(3, weight = 1)
+		loggingFrame.rowconfigure(4, weight = 1)
+		loggingFrame.rowconfigure(5, weight = 1)
+		loggingFrame.rowconfigure(6, weight = 1)
+		loggingFrame.rowconfigure(7, weight = 1)
 		loggingFrame.columnconfigure(4, weight = 1)
 		
 		log_attitudeBoxFrame = tk.Frame(loggingFrame)
@@ -529,7 +534,7 @@ class statisticsThreadClass(threading.Thread):
 		# y = range(100)
 		# f = Figure(figsize = (3,3), dpi = 50)
 		# a = f.add_subplot(111)
-		fig = plt.figure(figsize = (7,7), dpi = 125)
+		fig = plt.figure(figsize = (5,5), dpi = 75)
 		self.ax = fig.add_subplot(111)
 		# plt.ion()
 		plt.xlabel('Time(s)')
@@ -714,8 +719,8 @@ class Video(threading.Thread):
  
         self.vidFrame.grid(row=2,
                       column=2,
-                      rowspan=1,
-                      columnspan=1,
+                      rowspan=4,
+                      columnspan=3,
                       sticky=tk.S+tk.N+tk.E+tk.W)
         self.vidLabel=tk.Label(self.vidFrame)
 
@@ -820,7 +825,7 @@ class Video(threading.Thread):
         else:
             self.cameraChannelOnVideo=0
             self.vid_cap = cv2.VideoCapture(self.cameraChannelOnVideo) # result to default camera method
-        print 'Displaying Video Feed from Camera Number = ',self.cameraChannelOnVideo 
+        print 'Displaying Video Feed from Camera Number = ',self.cameraChannelOnVideo
         # except:
         #     print 'Hi'
         
@@ -869,8 +874,6 @@ class Application(tk.Frame):
 		self.rowconfigure(5, weight=1)
 		self.rowconfigure(6, weight=1)
 		self.rowconfigure(7, weight=1)
-		self.rowconfigure(8, weight=1)
-		self.rowconfigure(9, weight=1)
 		self.columnconfigure(0, weight=1)
 		self.columnconfigure(1, weight=1)
 		self.columnconfigure(2, weight=1)

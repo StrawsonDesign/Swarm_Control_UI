@@ -330,56 +330,58 @@ class Video(threading.Thread):
         vidLabel.after(2,self.showVideo,vidLabel,vidFrame) # calls the method after 10 ms
         
 class tkinterGUI(tk.Frame):         
-    def __init__(self): 
-        tk.Frame.__init__(self)
-        self.grid()
-        self.grid(sticky=tk.N+tk.S+tk.E+tk.W) #The argument sticky=tk.N+tk.S+tk.E+tk.aW to self.grid() is necessary so that the Application widget will expand to fill its cell of the top-level window's grid
-        # make top level of the application stretchable and space filling 
-        top=self.winfo_toplevel() 
-        top.rowconfigure(0, weight=1)
-        top.columnconfigure(0, weight=1)
-        # make all rows and columns grow with the widget window ; weight signifies relative rate of window growth
-        self.rowconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
-        self.rowconfigure(2, weight=1)
-        self.rowconfigure(3, weight=1)
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
-        self.columnconfigure(2, weight=1)
-        self.columnconfigure(3, weight=1)        
-        
-        Status=tk.Frame(self)
-        Status.grid()
-        Log=tk.Frame(self)
-        Log.grid()
+    def __init__(self, PlotPacket): 
+		tk.Frame.__init__(self)
+		self.grid()
+		self.grid(sticky=tk.N+tk.S+tk.E+tk.W) #The argument sticky=tk.N+tk.S+tk.E+tk.aW to self.grid() is necessary so that the Application widget will expand to fill its cell of the top-level window's grid
+		# make top level of the application stretchable and space filling 
+		top=self.winfo_toplevel() 
+		top.rowconfigure(0, weight=1)
+		top.columnconfigure(0, weight=1)
+		# make all rows and columns grow with the widget window ; weight signifies relative rate of window growth
+		self.rowconfigure(0, weight=1)
+		self.rowconfigure(1, weight=1)
+		self.rowconfigure(2, weight=1)
+		self.rowconfigure(3, weight=1)
+		self.columnconfigure(0, weight=1)
+		self.columnconfigure(1, weight=1)
+		self.columnconfigure(2, weight=1)
+		self.columnconfigure(3, weight=1)        
+
+		Status=tk.Frame(self)
+		Status.grid()
+		Log=tk.Frame(self)
+		Log.grid()
 
 
-        videoThread=Video(self)
-        otherDrones=otherdrones(self)
-        myUAVThread=MyUAV(self,0,0,1,2)
-        settingsThread=settingsThreadClass(self)
+		#videoThread=Video(self)
+		otherDrones=otherdrones(self)
+		myUAVThread=MyUAV(self,0,0,1,2)
+		settingsThread=settingsThreadClass(self)
 
 
-        # Quit even if some operations are remaining to be complete
+		# Quit even if some operations are remaining to be complete
 
-        videoThread.setDaemon(True) 
-        myUAVThread.setDaemon(True)
-        otherDrones.setDaemon(True)
-        settingsThread.setDaemon(True)  
+		#videoThread.setDaemon(True) 
+		myUAVThread.setDaemon(True)
+		otherDrones.setDaemon(True)
+		settingsThread.setDaemon(True)  
 
-        self.createWidgets(Status,'Stats',1,0,2,1)
-        #self.createWidgets(Settings,'Settings',3,0,1,1)
-        self.createWidgets(Log,'Logging',2,4,2,1)
+		self.createWidgets(Status,'Stats',1,0,2,1)
+		#self.createWidgets(Settings,'Settings',3,0,1,1)
+		self.createWidgets(Log,'Logging',2,4,2,1)
 
 
-       
-        videoThread.start() # becomes mainthread
-        myUAVThread.start() # becomes secondard thread
-        otherDrones.start()
-        settingsThread.start()
-        print '# active threads are ',threading.enumerate()
 
-        top.protocol("WM_DELETE_WINDOW", closeProgram) # controls what happens on exit : aim to close other threads
+		#videoThread.start() # becomes mainthread
+		myUAVThread.start() # becomes secondard thread
+		otherDrones.start()
+		settingsThread.start()
+		print '# active threads are ',threading.enumerate()
+		
+		print 'The Packet being plotted is: ' + str(PlotPacket[:]) #This is the packet that would be sent to the Settings Thread for plotting
+		
+		top.protocol("WM_DELETE_WINDOW", closeProgram) # controls what happens on exit : aim to close other threads
 
 
     def createWidgets(self,frame,txt,r,c,rspan,cspan):
@@ -423,18 +425,18 @@ class listener(threading.Thread):
         receviedPacketBuffer= deque([], sizeOfBuffer)
         receviedPacketBufferLock = threading.Lock()
         print "Initialized Ring Buffer as size of", sizeOfBuffer
-        #self.isBufferBusy=0  
+        #self.isBufferBusy=0
         
     
     def run(self):
-        for i in xrange(500): # replace by reading head
+        for i in xrange(1000): # replace by reading head
             #sleep(1)
             try:
                 if receviedPacketBufferLock.acquire(1):
                     #print "Buffer is : ", receviedPacketBuffer, "\n"
                     receviedPacketBuffer.append(i)					
-                #else:
-                    #print "Lock was not ON"
+                else:
+                    print "Lock was not ON"
             finally:
 				receviedPacketBufferLock.release()				
                     
@@ -450,7 +452,7 @@ class logger(threading.Thread):
     def run(self): 
 		tempData=""
 		m=0
-		while m<40: # change this
+		while m<20: # change this
             #sleep(0.01)
 			if receviedPacketBufferLock.acquire(0):
 				try:
@@ -458,11 +460,11 @@ class logger(threading.Thread):
 					#self.Packets.popleft()
 					while(1): # empty the entire list
 					#self.listenerobject.isBufferBusy=1
-						val=receviedPacketBuffer.popleft()
-						self.Packets[i] = val
+						val=receviedPacketBuffer.popleft()						
 						data=strftime("%c") + "\t" + str(val) + "\n"
 						tempData=tempData+data
-						#print "Just popped " + str(val)
+						self.Packets[i] = val
+						print "Just popped " + str(val)
 						#print "Packet: " + str(self.Packets[:])
 						i += 1
 				except:
@@ -470,7 +472,7 @@ class logger(threading.Thread):
 					
 				finally:
 					receviedPacketBufferLock.release()
-					print "Released Packet:" + str(self.Packets[:])
+					print "Released Packet:" + str(self.Packets[:]) #This is the packet that should be released to the plotter
 			m += 1
 			#print "M is", m     
 			if m%50==0:
@@ -485,17 +487,17 @@ def UDP(Packets):
 	UDPlogThread=logger(Packets)
 	UDPlogThread.setDaemon(True)
 	
-	print('UDP')
+	print('UDP process starting')
 	UDPlistenThread.start()
 	#Listen_child_conn.send([84, None, 'Listen', receviedPacketBuffer])
 	#Listen_child_conn.close()
 	UDPlogThread.start()
 	#Logging_child_conn.send([42, None, 'Logging',receviedPacketBuffer])
 	#Logging_child_conn.close()
-	
+	print 'Pack:' + str(Packets[:]) #The Packet which will be outputted to the plotter
 	UDPlistenThread.join()
 	UDPlogThread.join()	
-	print 'Pack:' + str(Packets[:])
+	
 	# Declaring global for killUDPprocesscounter
 	"""
 	print "UDP process started"
@@ -517,8 +519,8 @@ def closeProgram():
     killUDPprocessCounter=0
     print "here I am ", killUDPprocessCounter
 
-def startTkinter():
-    root = tkinterGUI()
+def startTkinter(PlotPacket):
+    root = tkinterGUI(PlotPacket)
     root.master.title("Azog") # Name of current drone, Here it is Azog
     root.mainloop()
 
@@ -560,16 +562,16 @@ def broadcast():
 def main():
     #global udpProcess # try to kill updprocess using startTkinter
 	lock = Lock()
-	n = Array('i', range(10), lock = lock)
+	n = Array('i', range(10), lock = lock) #Packet Storage Array for transfer between processes
 	
-	udpProcess = Process(name = 'UDP Process', target = UDP, args=(n,)) 
-	TkinterProcess = Process(name='Tkinter Process', target=startTkinter)	
+	udpProcess = Process(name = 'UDP Process', target = UDP, args=(n,))
+	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(n,))
     # broadcastProcess = Process(name='Broadcasting Process', target=broadcast)
 	udpProcess.start()
 	TkinterProcess.start()
 	udpProcess.join()
 	TkinterProcess.join()
-	print 'Packets:' + str(n[:])
+	print 'End Packets:' + str(n[:]) #The final packet after both processes have ended
 	
 	
 	# broadcastProcess.start()

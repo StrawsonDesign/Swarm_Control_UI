@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 # matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg #, NavigationToolbar2TkAgg
-#from matplotlib.figure import Figure
+from matplotlib.figure import Figure
 #import matplotlib.animation as animation
 from PIL import ImageTk , Image # for image conversion
 import cv2 # OpenCV for video handling
@@ -148,7 +148,7 @@ class otherdrones(threading.Thread):
         #otherDroneFrame=tk.Frame(master)
         otherDroneCanvas = tk.Canvas(master) # to add scroll bar
         otherDroneCanvas.grid(row=0,
-                        column=2,
+                        column=1,
                         rowspan=1,
                         columnspan=3,
                         sticky=tk.N+tk.S+tk.W+tk.E)
@@ -187,7 +187,7 @@ class loggingThreadClass(threading.Thread):
 		threading.Thread.__init__(self)
 		loggingFrame = tk.Frame(master)
 		loggingFrame.grid(row = 2, 
-						column = 4,
+						column = 3,
 						rowspan = 1,
 						columnspan = 1,
 						sticky = tk.S + tk.N + tk.W + tk.E)
@@ -234,43 +234,8 @@ class loggingThreadClass(threading.Thread):
 		log_recordButton.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = 1)
 		log_stopButton.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = 1)
 		
-		# self.checkbox_names = ['Attitude', 'Position', 'Velocity', 'Battery']
-		# self.button_names = ['Record', 'Stop']
-		# self.vars = []
 		self.loggingVariables = []
-		# counter = 0
-		
-	
-		# for self.checkbox_name in self.checkbox_names:
-			# var = tk.IntVar()
-			# CheckButtonFrame = tk.Frame(loggingFrame)
-			# CheckButtonFrame.grid(row = 1 + counter, sticky = tk.N + tk.S + tk.E + tk.W)
-			# loggingCheckbutton = tk.Checkbutton(CheckButtonFrame, text = self.checkbox_name, variable = var)
-			# loggingCheckbutton.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
-			# loggingCheckbutton.rowconfigure(counter, weight = 1)
-			# loggingCheckbutton.columnconfigure(3, weight = 1)
-			# loggingCheckbutton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
-			# counter += 1
-			
-		# self.vars = []
-		# counter = 0
-		
-		# for self.button_name in self.button_names:
-			# var = tk.IntVar()
-			# ButtonFrame = tk.Frame(loggingFrame)
-			# ButtonFrame.grid(row = 4 + counter, sticky = tk.N + tk.S + tk.W + tk.E)
-			
-			# if self.button_name in ('Record'):
-				# loggingButton = tk.Button(ButtonFrame, text = self.button_name, command = lambda: logger.record_data)
-				
-			# elif self.button_name in ('Stop'):
-				# loggingButton = tk.Button(ButtonFrame, text = self.button_name, command = lambda: logger.stop_recording(loggingButton))
-			
-			# loggingButton.columnconfigure(0 + counter, weight = 1)
-			# loggingButton.rowconfigure(4 + counter, weight = 1)
-			# loggingButton.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = 1)
-			# loggingButton.grid(row = row + counter, column = col + counter, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
-			# counter += 1
+
 	
 	# def record_data(self, listeningThread):
 		
@@ -339,61 +304,11 @@ class statVariables(object):
 	def getYaw(self):
 		return random.randint(75,100)
 		
-# class settingsThreadClass(threading.Thread):
-	
-	# def __init__(self, master):
-		# threading.Thread.__init__(self)		
-		# self.settingsFrame = tk.Frame(master)
-	# def run(self):		
-		# self.settingsFrame.grid(row = 7, 
-								# column = 0, 
-								# rowspan = 1,
-								# columnspan = 2,
-								# sticky = tk.S + tk.N + tk.W + tk.E)
-		# self.settingsFrame.rowconfigure(5, weight = 1)
-		# self.settingsFrame.rowconfigure(6, weight = 1)
-		# self.settingsFrame.columnconfigure(0, weight = 1)
-		
-		# set_positionBoxFrame = tk.Frame(self.settingsFrame)
-		# set_positionBoxFrame.grid(row = 5, sticky = tk.N + tk.S + tk.W + tk.E)
-		# set_attitudeBoxFrame = tk.Frame(self.settingsFrame)
-		# set_attitudeBoxFrame.grid(row = 6, sticky = tk.N + tk.S + tk.W + tk.E)
-		
-		# set_iattitude = tk.IntVar()
-		# set_iposition = tk.IntVar()
-		
-		# set_attitudeCheckButton = tk.Checkbutton(set_attitudeBoxFrame, text = 'Attitude', variable = set_iattitude.get)
-		# set_positionCheckButton = tk.Checkbutton(set_positionBoxFrame, text = 'Position', variable = set_iposition.get)
-		
-		# set_attitudeCheckButton.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-		# set_positionCheckButton.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-		
-		# self.names = ['Position', 'Attitude']
-		# self.vars = []
-		# counter = 0
-		
-		# for self.name in self.names:
-			# var = tk.IntVar()			
-			# CheckBoxFrame = tk.Frame(settingsFrame)
-			# CheckBoxFrame.grid(row = 0 + counter, sticky = tk.N + tk.S + tk.W + tk.E)
-			# settingsCheckButtons = tk.Checkbutton(CheckBoxFrame, text = self.name, variable = var)
-			# settingsCheckButtons.rowconfigure(0 + counter, weight = 1)
-			# settingsCheckButtons.columnconfigure(0, weight = 1)
-			# settingsCheckButtons.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-			# counter += 1
-			# settings.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
-		# return set_iattitude.get(), set_iposition.get()
-# class VideoWidget(Frame):
-# class PlotWindow(tk.Frame):
-	# def __init__(self, master)
-		# tk.Frame.__init__(self,master)
-		# plotFrame.grid
-		
 class settingsThreadClass(threading.Thread):
     def __init__(self,master):
         threading.Thread.__init__(self)
         settingsFrame=tk.Frame(master)
-        settingsFrame.grid(row=2,
+        settingsFrame.grid(row=3,
             column=0,
             sticky=tk.N+tk.S+tk.E+tk.W)
         settingsFrame.rowconfigure(0, weight=1)
@@ -486,17 +401,12 @@ class statisticsThreadClass(threading.Thread):
 	def __init__(self, master):
 		threading.Thread.__init__(self)
 		statisticsFrame = tk.Frame(master)
-		statisticsFrame.grid(row = 1,
-								column = 1,
-								rowspan = 5,
+		statisticsFrame.grid(row = 2,
+								column = 0,
+								rowspan = 2,
 								columnspan = 1)
-		statisticsFrame.rowconfigure(1, weight = 1)
 		statisticsFrame.rowconfigure(2, weight = 1)
-		statisticsFrame.rowconfigure(3, weight = 1)
-		statisticsFrame.rowconfigure(4, weight = 1)
-		statisticsFrame.rowconfigure(5, weight = 1)
-		statisticsFrame.rowconfigure(6, weight = 1)
-		statisticsFrame.columnconfigure(1, weight = 1)
+		statisticsFrame.columnconfigure(0, weight = 1)
 		
 		plotFrame = tk.Frame(master)
 		plotFrame.grid(row = 1,
@@ -504,21 +414,21 @@ class statisticsThreadClass(threading.Thread):
 						rowspan = 1,
 						columnspan = 1,
 						sticky = tk.N + tk.S + tk.W + tk.E)
-		plotFrame.rowconfigure(2, weight = 1)
-		plotFrame.columnconfigure(0, weight = 1)
+		#plotFrame.rowconfigure(2, weight = 1)
+		#plotFrame.columnconfigure(0, weight = 1)
 		
 		stat_velocityBoxFrame = tk.Frame(statisticsFrame)
-		stat_velocityBoxFrame.grid(row = 1, column = 1, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_velocityBoxFrame.grid(row = 0, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_accelerationBoxFrame = tk.Frame(statisticsFrame)
-		stat_accelerationBoxFrame.grid(row = 2, column = 1, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_accelerationBoxFrame.grid(row = 0, column = 1, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_positionBoxFrame = tk.Frame(statisticsFrame)
-		stat_positionBoxFrame.grid(row = 3, column = 1, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_positionBoxFrame.grid(row = 0, column = 2, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_rollBoxFrame = tk.Frame(statisticsFrame)
-		stat_rollBoxFrame.grid(row = 4, column = 1, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_rollBoxFrame.grid(row = 0, column = 3, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_pitchBoxFrame = tk.Frame(statisticsFrame)
-		stat_pitchBoxFrame.grid(row = 5, column = 1, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_pitchBoxFrame.grid(row = 0, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_yawBoxFrame = tk.Frame(statisticsFrame)
-		stat_yawBoxFrame.grid(row = 6, column = 1, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_yawBoxFrame.grid(row = 0, column = 5, sticky = tk.N + tk.S + tk.W + tk.E)
 		
 		stat_ivelocity = tk.IntVar()
 		stat_iacceleration = tk.IntVar()
@@ -527,23 +437,25 @@ class statisticsThreadClass(threading.Thread):
 		stat_ipitch = tk.IntVar()
 		stat_iyaw = tk.IntVar()
 		
-		quad = statVariables()
+		#quad = statVariables()
 		
 		
 		# x = range(100)
 		# y = range(100)
 		# f = Figure(figsize = (3,3), dpi = 50)
 		# a = f.add_subplot(111)
-		fig = plt.figure(figsize = (5,5), dpi = 75)
-		self.ax = fig.add_subplot(111)
-		# plt.ion()
+		self.fig = plt.figure(figsize = (5,5), dpi = 75)
+		#self.ax = self.fig.add_axes( (0.05, .05, .50, .50), axisbg=(.75,.75,.75), frameon=False)
+		self.ax = self.fig.add_subplot(111)
+		plt.title('Live Plot')
 		plt.xlabel('Time(s)')
 		plt.ylabel('Variable Name')
 		# plt.show()
 		
-		canvas = FigureCanvasTkAgg(fig, plotFrame)
-		canvas.show()
+		canvas = FigureCanvasTkAgg(self.fig, plotFrame)
 		canvas.get_tk_widget().pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		canvas.show()
+		
 		
 		self.velocity_line = plt.plot([],[])[0]
 		self.acceleration_line = plt.plot([],[])[0]
@@ -579,34 +491,7 @@ class statisticsThreadClass(threading.Thread):
 		stat_pitchCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		stat_yawCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		
-		
-		# self.names = ['Velocity', 'Acceleration', 'Position', 'Roll', 'Pitch', 'Yaw']
-		# self.vars = []
-		# counter = 0
-		
-		# for i in range(len(self.names)):
-			# var = tk.IntVar()
-			# CheckBoxFrame = tk.Frame(statisticsFrame)
-			# CheckBoxFrame.grid(row = 0 + counter, sticky = tk.N + tk.S + tk.W + tk.E)
-			# if self.name[i] in ('Velocity'):
-				# statisticsCheckButton = tk.Checkbutton(CheckBoxFrame, text = self.name[i], variable = var, command = lambda i=i: self.Plot(self.name[i]))
-			# elif self.name[i] in ('Acceleration'):
-				# statisticsCheckButton = tk.Checkbutton(CheckBoxFrame, text = self.name[i], variable = var, command = lambda i=i: self.Plot(self.name[i]))
-			# elif self.name[i] in ('Position'):
-				# statisticsCheckButton = tk.Checkbutton(CheckBoxFrame, text = self.name[i], variable = var, command = lambda i=i: self.Plot(self.name[i]))
-			# elif self.name[i] in ('Roll'):
-				# statisticsCheckButton = tk.Checkbutton(CheckBoxFrame, text = self.name[i], variable = var, command = lambda i=i: self.Plot(self.name[i]))
-			# elif self.name[i] in ('Pitch'):
-				# statisticsCheckButton = tk.Checkbutton(CheckBoxFrame, text = self.name[i], variable = var, command = lambda i=i: self.Plot(self.name[i]))				
-			# elif self.name[i] in ('Yaw'):
-				# statisticsCheckButton = tk.Checkbutton(CheckBoxFrame, text = self.name[i], variable = var, command = lambda i=i: self.Plot(self.name[i]))	
-			# print 'Name: ' + self.name[i]
-			# statisticsCheckButton.rowconfigure(0+counter, weight = 1)
-			# statisticsCheckButton.columnconfigure(0, weight = 1)
-			# statisticsCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
-			# statistics.grid(row = row + counter, column = col, rowspan = row_span, columnspan = col_span, sticky=tk.N+tk.S+tk.E+tk.W)
-			# counter += 1
-			
+		plt.close(self.fig)			
 			
 	# def AnimatePlot():
 		# pullData = open('').read()
@@ -717,7 +602,7 @@ class Video(threading.Thread):
         self.vidFrame=tk.Frame(master)
         #stickyelf.vidFrame.config(padx=20)
  
-        self.vidFrame.grid(row=2,
+        self.vidFrame.grid(row=1,
                       column=2,
                       rowspan=4,
                       columnspan=3,
@@ -745,7 +630,7 @@ class Video(threading.Thread):
         # Intialize vidControl Frame
         vidControl =tk.Frame(master)
         vidControl.grid(row=1,
-                      column=4,
+                      column=3,
                       rowspan=1,
                       columnspan=1,
                       sticky=tk.N+tk.S+tk.E+tk.W)
@@ -874,11 +759,12 @@ class Application(tk.Frame):
 		self.rowconfigure(5, weight=1)
 		self.rowconfigure(6, weight=1)
 		self.rowconfigure(7, weight=1)
+		self.rowconfigure(8, weight=1)
+		self.rowconfigure(9, weight=1)
 		self.columnconfigure(0, weight=1)
 		self.columnconfigure(1, weight=1)
 		self.columnconfigure(2, weight=1)
 		self.columnconfigure(3, weight=1)
-		self.columnconfigure(4, weight=1)
 		
 		self.Log_names = Log_names_packet
         # Set up the GUI

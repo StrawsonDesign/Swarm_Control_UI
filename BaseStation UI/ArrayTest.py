@@ -418,70 +418,85 @@ class AutoScrollbar(tk.Scrollbar):
         
 
 class listener(threading.Thread):
-    def __init__(self,sizeOfBuffer):
-        threading.Thread.__init__(self)
-        global receviedPacketBuffer # Must declare gloabl varibale prior to assigning values
-        global receviedPacketBufferLock
-        receviedPacketBuffer= deque([], sizeOfBuffer)
-        receviedPacketBufferLock = threading.Lock()
-        print "Initialized Ring Buffer as size of", sizeOfBuffer
-        #self.isBufferBusy=0
+    def __init__(self,sizeOfBuffer, n):
+		threading.Thread.__init__(self)
+		global receviedPacketBuffer # Must declare gloabl varibale prior to assigning values
+		global receviedPacketBufferLock
+		receviedPacketBuffer= deque([], sizeOfBuffer)
+		receviedPacketBufferLock = threading.Lock()
+		print "Initialized Ring Buffer as size of", sizeOfBuffer
+		#self.isBufferBusy=0
+		self.Packets = n
+		self.sizeOfBuffer = sizeOfBuffer
         
     
     def run(self):
-        for i in xrange(1000): # replace by reading head
-            #sleep(1)
-            try:
-                if receviedPacketBufferLock.acquire(1):
-                    #print "Buffer is : ", receviedPacketBuffer, "\n"
-                    receviedPacketBuffer.append(i)					
-                else:
-                    print "Lock was not ON"
-            finally:
-				receviedPacketBufferLock.release()				
-                    
+		i = 0
+		
+        #for i in xrange(1000): # replace by reading head
+		while 1:
+			i = i + 1
+			sleep(1)
+			try:
+				if receviedPacketBufferLock.acquire(1):
+					print "Buffer is : ", receviedPacketBuffer, "\n"
+					receviedPacketBuffer.append(i)					
+				else:
+					print "Lock was not ON"
+			finally:
+				receviedPacketBufferLock.release()
+				self.Packets = receviedPacketBuffer
+				if
+				for x in xrange(self.sizeOfBuffer):
+					val = receviedPacketBuffer.popleft()
+					self.Packets[x] = val
+					print "Just popped " + str(val) + '\n'
+				print 'Packet Buffer: ' + str(self.Packets[:]) + '\n'
+				print 'Call Logger'
+				logger(self, n)
 
 class logger(threading.Thread):
-    def __init__(self,n):
+    def __init__(self, n):
 		threading.Thread.__init__(self)
 		outfile='testfile.txt'
 		self.log_dummy=open(outfile,"w",1) # use a = append mode, buffering set to true
 		print "file", outfile, "is opened"
+		print "The packet delivered is: " + str(n[:])
 		self.Packets = n
         
     def run(self): 
 		tempData=""
 		m=0
-		while m<20: # change this
-            #sleep(0.01)
-			if receviedPacketBufferLock.acquire(0):
-				try:
-					i = 0
-					#self.Packets.popleft()
-					while(1): # empty the entire list
-					#self.listenerobject.isBufferBusy=1
-						val=receviedPacketBuffer.popleft()						
-						data=strftime("%c") + "\t" + str(val) + "\n"
-						tempData=tempData+data
-						self.Packets[i] = val
-						print "Just popped " + str(val)
-						#print "Packet: " + str(self.Packets[:])
-						i += 1
-				except:
-					pass
-					
-				finally:
-					receviedPacketBufferLock.release()
-					print "Released Packet:" + str(self.Packets[:]) #This is the packet that should be released to the plotter
-			m += 1
-			#print "M is", m     
-			if m%50==0:
-				self.log_dummy.write(tempData)
-				print "wrote to disk"
-				tempData=""
+		#while m<20: # change this
+		sleep(1)
+		if receviedPacketBufferLock.acquire(0):
+			try:
+				i = 0
+				#self.Packets.popleft()
+				while i < 10: # empty the entire list
+				#self.listenerobject.isBufferBusy=1
+					val=receviedPacketBuffer.popleft()						
+					data=strftime("%c") + "\t" + str(val) + "\n"
+					tempData=tempData+data
+					self.Packets[i] = val
+					print "Just popped " + str(val) + '\n'
+					#print "Packet: " + str(self.Packets[:])
+					i += 1
+			except:
+				pass
+				
+			finally:
+				receviedPacketBufferLock.release()
+				print "Released Packet:" + str(self.Packets[:]) #This is the packet that should be released to the plotter
+		m += 1
+		#print "M is", m     
+		if m%9==0:
+			self.log_dummy.write(tempData)
+			print "wrote to disk"
+			tempData=""
 
 def UDP(Packets):	
-	UDPlistenThread=listener(10) # sizeOfRingBuffer
+	UDPlistenThread=listener(10,Packets) # sizeOfRingBuffer
 	UDPlistenThread.setDaemon(True)
 	
 	UDPlogThread=logger(Packets)

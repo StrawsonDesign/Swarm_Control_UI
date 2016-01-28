@@ -25,65 +25,69 @@ killUDPprocessCounter=1
 
 class MyUAV(threading.Thread):
     def __init__(self,master,r,c,rspan,cspan):
-        threading.Thread.__init__(self)
-        MyUAV=tk.Frame(master)
-        MyUAV.grid(row=r, 
-                    column=c,
-                    rowspan=rspan,
-                    columnspan=cspan,
-                    sticky=tk.N+tk.S+tk.W+tk.E)#stretch the widget both horizontally and 
-                                # vertically to fill the cell
-        
-        testButton=tk.Button(master,
-                            text='Overwrite',
-                            command=master.OnButton)
-        testButton.grid(row=r, 
-                        column=c,
-                        rowspan=rspan,
-                        columnspan=cspan,
-                        sticky = tk.N+tk.S+tk.W+tk.E)
+		threading.Thread.__init__(self)
+		MyUAV=tk.Frame(master)
+		MyUAV.grid(row=r, 
+					column=c,
+					rowspan=rspan,
+					columnspan=cspan,
+					sticky=tk.N+tk.S+tk.W+tk.E)#stretch the widget both horizontally and 
+								# vertically to fill the cell
 
+		testButton=tk.Button(master,
+							text='Overwrite',
+							command=master.OnButton)
+		testButton.grid(row=r, 
+						column=c,
+						rowspan=rspan,
+						columnspan=cspan,
+						sticky = tk.N+tk.S+tk.W+tk.E)
+		
+		
     def run(self):
-        i=0
-        while i<6:
-            print 'i is =',i
-            # print '# active threads in MyUAV loop are',threading.enumerate()
-            sleep(5)
-            i+= 1
+		i=0		
+		while i<6:
+			print 'i is =',i
+			# print '# active threads in MyUAV loop are',threading.enumerate()
+			sleep(5)
+			i+= 1
 
 class otherdrones(threading.Thread):
-    def __init__(self,master):
-        threading.Thread.__init__(self)
-        #otherDroneFrame=tk.Frame(master)
-        otherDroneCanvas = tk.Canvas(master) # to add scroll bar
-        otherDroneCanvas.grid(row=0,
-                        column=2,
-                        rowspan=1,
-                        columnspan=3,
-                        sticky=tk.N+tk.S+tk.W+tk.E)
-        otherDroneCanvas.rowconfigure(0,weight=1)
-        #self.updateActiveDrones(droneFrame)
-        # Intialize places for
-        i=0 # counter for referencing objects in the list
-        self.allDroneDict=dict() # initalizing empty dictionary 
-        for orc in allDronesList:
-            otherDroneCanvas.columnconfigure(i,weight=1)
-            self.allDroneDict[orc]=tk.Button(otherDroneCanvas,text=orc, bg = "gray14", fg="snow")
-            self.allDroneDict[orc].grid(row=0,column=i,sticky=tk.N+tk.S+tk.E+tk.W)
-            i=i+1
+    def __init__(self,master, PlotPacket):
+		threading.Thread.__init__(self)
+		#otherDroneFrame=tk.Frame(master)
+		otherDroneCanvas = tk.Canvas(master) # to add scroll bar
+		otherDroneCanvas.grid(row=0,
+						column=2,
+						rowspan=1,
+						columnspan=3,
+						sticky=tk.N+tk.S+tk.W+tk.E)
+		otherDroneCanvas.rowconfigure(0,weight=1)
+		#self.updateActiveDrones(droneFrame)
+		# Intialize places for
+		i=0 # counter for referencing objects in the list
+		self.allDroneDict=dict() # initalizing empty dictionary 
+		for orc in allDronesList:
+			otherDroneCanvas.columnconfigure(i,weight=1)
+			self.allDroneDict[orc]=tk.Button(otherDroneCanvas,text=orc, bg = "gray14", fg="snow")
+			self.allDroneDict[orc].grid(row=0,column=i,sticky=tk.N+tk.S+tk.E+tk.W)
+			i=i+1
 
-        scrollBarOtherDrones = AutoScrollbar(otherDroneCanvas,orient=tk.HORIZONTAL)
-        scrollBarOtherDrones.grid(row=1,columnspan=i,sticky=tk.E+tk.W)
+		scrollBarOtherDrones = AutoScrollbar(otherDroneCanvas,orient=tk.HORIZONTAL)
+		scrollBarOtherDrones.grid(row=1,columnspan=i,sticky=tk.E+tk.W)
 
+		self.PlotPacket = PlotPacket
+		
     def run(self):
         sleep(2) # remove this eventually
         i=1
-        while 1:
-            self.updateActiveDrones()
-            if (i%60)==0: # print every 30 seconds - thread is alive
-                print "Updated Active Drones in the vicinity" 
-            i=i+1
-            sleep(0.5) # sleep for 500ms before updating
+        while 1:			
+			self.updateActiveDrones()
+			if (i%20)==0: # print every 30 seconds - thread is alive
+				print "Updated Active Drones in the vicinity" 
+				print 'The Packet being plotted is: ' + str(self.PlotPacket[:]) #This is the packet that would be sent to the Settings Thread for plotting
+			i=i+1
+			sleep(0.5) # sleep for 500ms before updating
 
     def updateActiveDrones(self):
         # add missing key error exceptions here
@@ -355,7 +359,7 @@ class tkinterGUI(tk.Frame):
 
 
 		#videoThread=Video(self)
-		otherDrones=otherdrones(self)
+		otherDrones=otherdrones(self,PlotPacket)
 		myUAVThread=MyUAV(self,0,0,1,2)
 		settingsThread=settingsThreadClass(self)
 
@@ -377,9 +381,7 @@ class tkinterGUI(tk.Frame):
 		myUAVThread.start() # becomes secondard thread
 		otherDrones.start()
 		settingsThread.start()
-		print '# active threads are ',threading.enumerate()
-		
-		print 'The Packet being plotted is: ' + str(PlotPacket[:]) #This is the packet that would be sent to the Settings Thread for plotting
+		print '# active threads are ',threading.enumerate()		
 		
 		top.protocol("WM_DELETE_WINDOW", closeProgram) # controls what happens on exit : aim to close other threads
 
@@ -420,98 +422,127 @@ class AutoScrollbar(tk.Scrollbar):
 class listener(threading.Thread):
     def __init__(self,sizeOfBuffer, n):
 		threading.Thread.__init__(self)
-		global receviedPacketBuffer # Must declare gloabl varibale prior to assigning values
-		global receviedPacketBufferLock
-		receviedPacketBuffer= deque([], sizeOfBuffer)
-		receviedPacketBufferLock = threading.Lock()
+		#global receviedPacketBuffer # Must declare gloabl varibale prior to assigning values
+		#global receviedPacketBufferLock
+		self.receviedPacketBuffer= deque([], sizeOfBuffer)
+		self.receviedPacketBufferLock = threading.Lock()
 		print "Initialized Ring Buffer as size of", sizeOfBuffer
 		#self.isBufferBusy=0
 		self.Packets = n
 		self.sizeOfBuffer = sizeOfBuffer
-        
     
-    def run(self):
-		i = 0
-		
-        #for i in xrange(1000): # replace by reading head
-		while 1:
-			i = i + 1
-			sleep(1)
-			try:
-				if receviedPacketBufferLock.acquire(1):
-					print "Buffer is : ", receviedPacketBuffer, "\n"
-					receviedPacketBuffer.append(i)					
-				else:
-					print "Lock was not ON"
-			finally:
-				receviedPacketBufferLock.release()
-				self.Packets = receviedPacketBuffer
-				if
-				for x in xrange(self.sizeOfBuffer):
-					val = receviedPacketBuffer.popleft()
-					self.Packets[x] = val
-					print "Just popped " + str(val) + '\n'
-				print 'Packet Buffer: ' + str(self.Packets[:]) + '\n'
-				print 'Call Logger'
-				logger(self, n)
-
-class logger(threading.Thread):
-    def __init__(self, n):
-		threading.Thread.__init__(self)
+    def logger(self):
 		outfile='testfile.txt'
 		self.log_dummy=open(outfile,"w",1) # use a = append mode, buffering set to true
 		print "file", outfile, "is opened"
-		print "The packet delivered is: " + str(n[:])
-		self.Packets = n
-        
-    def run(self): 
+
+		print "The packet delivered is: " + str(self.Packets[:])
 		tempData=""
 		m=0
 		#while m<20: # change this
-		sleep(1)
-		if receviedPacketBufferLock.acquire(0):
+		sleep(5)
+		if self.receviedPacketBufferLock.acquire(0):
 			try:
 				i = 0
 				#self.Packets.popleft()
-				while i < 10: # empty the entire list
+				while i < self.sizeOfBuffer: # empty the entire list
 				#self.listenerobject.isBufferBusy=1
-					val=receviedPacketBuffer.popleft()						
-					data=strftime("%c") + "\t" + str(val) + "\n"
+					data=strftime("%c") + "\t" + str(self.Packets[i]) + "\n"
 					tempData=tempData+data
-					self.Packets[i] = val
-					print "Just popped " + str(val) + '\n'
-					#print "Packet: " + str(self.Packets[:])
+					print "Packet: " + str(self.Packets[:])
 					i += 1
-			except:
-				pass
+			except IndexError:
+				print "Index Error occured, couldn't pop left on an empty deque"
 				
 			finally:
-				receviedPacketBufferLock.release()
+				#receviedPacketBufferLock.release()
 				print "Released Packet:" + str(self.Packets[:]) #This is the packet that should be released to the plotter
 		m += 1
 		#print "M is", m     
-		if m%9==0:
+		if m%self.sizeOfBuffer==0:
 			self.log_dummy.write(tempData)
-			print "wrote to disk"
+			print "WROTE TO DISK"
 			tempData=""
+			
+    def run(self):
+		i = 0
+
+		#for i in xrange(1000): # replace by reading head
+		while True:
+			i = i + 1
+			sleep(1)
+			try:
+				if self.receviedPacketBufferLock.acquire(1):
+					#print "Buffer is : ", receviedPacketBuffer, "\n"
+					self.receviedPacketBuffer.append(i)
+				else:
+					print "Lock was not ON"
+				
+			finally:
+				self.receviedPacketBufferLock.release()
+				print "Released Buffer is : ", self.receviedPacketBuffer, "\n"
+				if i%self.sizeOfBuffer==0:
+					for x in xrange(self.sizeOfBuffer):
+						val = self.receviedPacketBuffer.popleft()
+						self.Packets[x] = val
+						print "Just popped " + str(val) + '\n'
+					print 'Packet Buffer: ' + str(self.Packets[:]) + '\n'
+					print 'Call Logger'
+					self.logger()
+					
+# class logger(threading.Thread):
+    # def __init__(self):
+		# threading.Thread.__init__(self)
+		# outfile='testfile.txt'
+		# self.log_dummy=open(outfile,"w",1) # use a = append mode, buffering set to true
+		# print "file", outfile, "is opened"
+		# print "The packet delivered is: " + str(self.Packets[:])
+        
+    # def run(self): 
+		# print "The packet delivered is: " + str(logger.Packets[:])
+		# tempData=""
+		# m=0
+		# while m<20: # change this
+		# sleep(5)
+		# if receviedPacketBufferLock.acquire(0):
+			# try:
+				# i = 0
+				#self.Packets.popleft()
+				# while i < 10: # empty the entire list
+				#self.listenerobject.isBufferBusy=1
+					# val=receviedPacketBuffer.popleft()
+					# data=strftime("%c") + "\t" + str(val) + "\n"
+					# tempData=tempData+data
+					# self.Packets[i] = val
+					# print "Just popped " + str(val) + '\n'
+					#print "Packet: " + str(self.Packets[:])
+					# i += 1
+				
+			# finally:
+				# receviedPacketBufferLock.release()
+				# print "Released Packet:" + str(self.Packets[:]) #This is the packet that should be released to the plotter
+		# m += 1
+		# print "M is", m     
+		# if m%10==0:
+			# self.log_dummy.write(tempData)
+			# print "WROTE TO DISK"
+			# tempData=""
 
 def UDP(Packets):	
 	UDPlistenThread=listener(10,Packets) # sizeOfRingBuffer
 	UDPlistenThread.setDaemon(True)
 	
-	UDPlogThread=logger(Packets)
-	UDPlogThread.setDaemon(True)
+	#UDPlogThread=logger(Packets)
+	#UDPlogThread.setDaemon(True)
 	
 	print('UDP process starting')
 	UDPlistenThread.start()
-	#Listen_child_conn.send([84, None, 'Listen', receviedPacketBuffer])
-	#Listen_child_conn.close()
-	UDPlogThread.start()
-	#Logging_child_conn.send([42, None, 'Logging',receviedPacketBuffer])
-	#Logging_child_conn.close()
+
+	#UDPlogThread.start()
+
 	print 'Pack:' + str(Packets[:]) #The Packet which will be outputted to the plotter
 	UDPlistenThread.join()
-	UDPlogThread.join()	
+	#UDPlogThread.join()
 	
 	# Declaring global for killUDPprocesscounter
 	"""
@@ -577,7 +608,7 @@ def broadcast():
 def main():
     #global udpProcess # try to kill updprocess using startTkinter
 	lock = Lock()
-	n = Array('i', range(10), lock = lock) #Packet Storage Array for transfer between processes
+	n = Array('i', [0]*10, lock = lock) #Packet Storage Array for transfer between processes
 	
 	udpProcess = Process(name = 'UDP Process', target = UDP, args=(n,))
 	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(n,))
@@ -586,7 +617,7 @@ def main():
 	TkinterProcess.start()
 	udpProcess.join()
 	TkinterProcess.join()
-	print 'End Packets:' + str(n[:]) #The final packet after both processes have ended
+	print 'End Packets: ' + str(n[:]) #The final packet after both processes have ended
 	
 	
 	# broadcastProcess.start()

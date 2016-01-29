@@ -334,7 +334,7 @@ class Video(threading.Thread):
         vidLabel.after(2,self.showVideo,vidLabel,vidFrame) # calls the method after 10 ms
         
 class tkinterGUI(tk.Frame):         
-    def __init__(self, PlotPacket): 
+    def __init__(self, PlotPacket, startBool, stopBool): 
 		tk.Frame.__init__(self)
 		self.grid()
 		self.grid(sticky=tk.N+tk.S+tk.E+tk.W) #The argument sticky=tk.N+tk.S+tk.E+tk.aW to self.grid() is necessary so that the Application widget will expand to fill its cell of the top-level window's grid
@@ -350,38 +350,37 @@ class tkinterGUI(tk.Frame):
 		self.columnconfigure(0, weight=1)
 		self.columnconfigure(1, weight=1)
 		self.columnconfigure(2, weight=1)
-		self.columnconfigure(3, weight=1)        
-
+		self.columnconfigure(3, weight=1)
+		
 		Status=tk.Frame(self)
 		Status.grid()
-		Log=tk.Frame(self)
-		Log.grid()
-
+		#Log=tk.Frame(self)
+		#Log.grid()
 
 		#videoThread=Video(self)
-		otherDrones=otherdrones(self,PlotPacket)
-		myUAVThread=MyUAV(self,0,0,1,2)
-		settingsThread=settingsThreadClass(self)
-
+		otherDrones = otherdrones(self,PlotPacket)
+		myUAVThread = MyUAV(self,0,0,1,2)
+		settingsThread = settingsThreadClass(self)
+		loggingThread = loggingThreadClass(self, startBool, stopBool)
 
 		# Quit even if some operations are remaining to be complete
 
-		#videoThread.setDaemon(True) 
+		#videoThread.setDaemon(True)
 		myUAVThread.setDaemon(True)
 		otherDrones.setDaemon(True)
-		settingsThread.setDaemon(True)  
+		settingsThread.setDaemon(True)
+		loggingThread.setDaemon(True)
 
 		self.createWidgets(Status,'Stats',1,0,2,1)
 		#self.createWidgets(Settings,'Settings',3,0,1,1)
-		self.createWidgets(Log,'Logging',2,4,2,1)
-
-
+		#self.createWidgets(Log,'Logging',2,4,2,1)
 
 		#videoThread.start() # becomes mainthread
 		myUAVThread.start() # becomes secondard thread
 		otherDrones.start()
 		settingsThread.start()
-		print '# active threads are ',threading.enumerate()		
+		loggingThread.start()
+		print '# active threads are ',threading.enumerate()
 		
 		top.protocol("WM_DELETE_WINDOW", closeProgram) # controls what happens on exit : aim to close other threads
 
@@ -391,7 +390,7 @@ class tkinterGUI(tk.Frame):
 
         self.qt = tk.Button(self, text=txt,command=self.quit)
         self.qt.grid(row=r, column=c,rowspan=rspan,columnspan=cspan,
-        sticky=tk.N+tk.S+tk.W+tk.E) #stretch the widget both horizontally and 
+        sticky=tk.N+tk.S+tk.W+tk.E) #stretch the widget both horizontally and
 
     def OnButton(self):
         # for testing only
@@ -418,9 +417,129 @@ class AutoScrollbar(tk.Scrollbar):
         raise TclError, "cannot use place with this widget"
         raise tk.TclError, "cannot use place with this widget"
         
+class loggingThreadClass(threading.Thread):
+	
+	def __init__(self, master, startBool, stopBool):
+		threading.Thread.__init__(self)
+		loggingFrame = tk.Frame(master)
+		loggingFrame.grid(row = 2, 
+						column = 3,
+						rowspan = 1,
+						columnspan = 1,
+						sticky = tk.S + tk.N + tk.W + tk.E)
+		loggingFrame.rowconfigure(2, weight = 1)
+		loggingFrame.rowconfigure(3, weight = 1)
+		loggingFrame.rowconfigure(4, weight = 1)
+		loggingFrame.rowconfigure(5, weight = 1)
+		loggingFrame.rowconfigure(6, weight = 1)
+		loggingFrame.rowconfigure(7, weight = 1)
+		loggingFrame.columnconfigure(4, weight = 1)
+		
+		log_attitudeBoxFrame = tk.Frame(loggingFrame)
+		log_attitudeBoxFrame.grid(row = 2, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_positionBoxFrame = tk.Frame(loggingFrame)
+		log_positionBoxFrame.grid(row = 3, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_velocityBoxFrame = tk.Frame(loggingFrame)
+		log_velocityBoxFrame.grid(row = 4, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_batteryBoxFrame = tk.Frame(loggingFrame)
+		log_batteryBoxFrame.grid(row = 5, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		
+		log_startButtonFrame = tk.Frame(loggingFrame)
+		log_startButtonFrame.grid(row = 6, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		log_stopButtonFrame = tk.Frame(loggingFrame)
+		log_stopButtonFrame.grid(row = 7, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		
+		log_iattitude = tk.IntVar()
+		log_iposition = tk.IntVar()
+		log_ivelocity = tk.IntVar()
+		log_ibattery = tk.IntVar()
+		
+		log_attitudeCheckButton = tk.Checkbutton(log_attitudeBoxFrame, text = 'Attitude', variable = log_iattitude, command = lambda : self.logVariables('Attitude', log_iattitude.get()))
+		log_positionCheckButton = tk.Checkbutton(log_positionBoxFrame, text = 'Position', variable = log_iposition, command = lambda : self.logVariables('Position', log_iposition.get()))
+		log_velocityCheckButton = tk.Checkbutton(log_velocityBoxFrame, text = 'Velocity', variable = log_ivelocity, command = lambda : self.logVariables('Velocity', log_ivelocity.get()))
+		log_batteryCheckButton = tk.Checkbutton(log_batteryBoxFrame, text =  'Battery', variable = log_ibattery, command = lambda : self.logVariables('Battery', log_ibattery.get()))
+		
+		log_attitudeCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		log_positionCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		log_velocityCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		log_batteryCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		
+		log_startButton = tk.Button(log_startButtonFrame, text = 'Record', command = self.startRecording)
+		log_stopButton = tk.Button(log_stopButtonFrame, text = 'Stop', command = self.stopRecording)
+		
+		log_startButton.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = 1)
+		log_stopButton.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = 1)
+		
+		self.loggingVariables = []
+		self.startLogging = startBool
+		self.stopLogging = stopBool
+		
+		#global startLogging
+		#global stopLogging
+		#startLogging = False
+		#stopLogging = False
+	
+	# def record_data(self, listeningThread):
+		
+		# file = 'testfile.txt'
+		# self.listenerobject = listeningThread
+		# self.logfile = open(file, 'w',1)
+		# print "The file", file, "has been opened"
+		
+		# try:
+			# while 1:
+				# sleep(0.1)				
+				# if len(self.listenerobject.receviedPacketBuffer)>0:
+					# data=strftime("%c")+"\t"+str(self.listenerobject.receviedPacketBuffer.popleft())+"\n"
+					# self.logfile.write(data)
+					
+		# except IndexError:
+			# print "No elements in the Buffer"
+			
+		# return self.logfile
+		
+	# def stop_recording(self,log_recordButton):	
+			# self.logfile.close()
+			# print file + "is not open"
+		
+	def Stop(self):
+		self.quit()     # stops mainloop
+		self.destroy()  # this is necessary on Windows to prevent
+							# Fatal Python Error: PyEval_RestoreThread: NULL tstate
+
+	def startRecording(self):
+		self.startLogging.value = 1
+		self.stopLogging.value = 0
+		print 'Start Recording Data'
+		#print 'Start Bool: ' + str(self.startLogging.value) + '\n'
+		#print 'Stop Bool: ' + str(self.stopLogging.value) + '\n'
+		
+	def stopRecording(self):
+		self.startLogging.value = 0
+		self.stopLogging.value = 1
+		print 'Stop Recording Data'
+		#print 'Start Bool: ' + str(self.startLogging.value) + '\n'
+		#print 'Stop Bool: ' + str(self.stopLogging.value) + '\n'
+		
+	def logVariables(self, var_Name, var_State):
+	
+		if var_State == 1:
+			self.loggingVariables.append(var_Name)
+			print self.loggingVariables
+			
+		elif var_State == 0:
+			ivar_Name = self.loggingVariables.index(var_Name)
+			self.loggingVariables.pop(ivar_Name)
+			print self.loggingVariables
+		
+		self.Log_names = self.loggingVariables
+		print "Log names: " + str(self.Log_names)
+		
+	def run(self):
+		pass
 
 class listener(threading.Thread):
-    def __init__(self,sizeOfBuffer, n):
+    def __init__(self,sizeOfBuffer, n, startLogging, stopLogging):
 		threading.Thread.__init__(self)
 		#global receviedPacketBuffer # Must declare gloabl varibale prior to assigning values
 		#global receviedPacketBufferLock
@@ -430,7 +549,9 @@ class listener(threading.Thread):
 		#self.isBufferBusy=0
 		self.Packets = n
 		self.sizeOfBuffer = sizeOfBuffer
-    
+		self.startLogging = startLogging
+		self.stopLogging = stopLogging
+		
     def logger(self):
 		outfile='testfile.txt'
 		self.log_dummy=open(outfile,"w",1) # use a = append mode, buffering set to true
@@ -440,25 +561,24 @@ class listener(threading.Thread):
 		tempData=""
 		m=0
 		#while m<20: # change this
-		sleep(5)
-		if self.receviedPacketBufferLock.acquire(0):
-			try:
-				i = 0
-				#self.Packets.popleft()
-				while i < self.sizeOfBuffer: # empty the entire list
-				#self.listenerobject.isBufferBusy=1
-					data=strftime("%c") + "\t" + str(self.Packets[i]) + "\n"
-					tempData=tempData+data
-					print "Packet: " + str(self.Packets[:])
-					i += 1
-			except IndexError:
-				print "Index Error occured, couldn't pop left on an empty deque"
-				
-			finally:
-				#receviedPacketBufferLock.release()
-				print "Released Packet:" + str(self.Packets[:]) #This is the packet that should be released to the plotter
+		#sleep(1)
+		#if self.receviedPacketBufferLock.acquire(0):
+			#try:
+		i = 0
+		for i in xrange(self.sizeOfBuffer): # empty the entire list
+		#self.listenerobject.isBufferBusy=1
+			data=strftime("%c") + "\t" + str(self.Packets[i]) + "\n"
+			tempData=tempData+data
+			print "Packet: " + str(self.Packets[i])
+			i += 1
+	#except IndexError:
+		#print "Index Error occured, couldn't pop left on an empty deque"
+		
+	#finally:
+		#receviedPacketBufferLock.release()
+		print "Released Packet:" + str(self.Packets[:]) #This is the packet that should be released to the plotter
 		m += 1
-		#print "M is", m     
+		#print "M is", m
 		if m%self.sizeOfBuffer==0:
 			self.log_dummy.write(tempData)
 			print "WROTE TO DISK"
@@ -467,13 +587,13 @@ class listener(threading.Thread):
     def run(self):
 		i = 0
 
-		#for i in xrange(1000): # replace by reading head
-		while True:
+		for i in xrange(30): # replace by reading head
+		#while i < 100:
 			i = i + 1
 			sleep(1)
 			try:
 				if self.receviedPacketBufferLock.acquire(1):
-					#print "Buffer is : ", receviedPacketBuffer, "\n"
+					#print "Buffer is : ", self.receviedPacketBuffer, "\n"
 					self.receviedPacketBuffer.append(i)
 				else:
 					print "Lock was not ON"
@@ -485,10 +605,14 @@ class listener(threading.Thread):
 					for x in xrange(self.sizeOfBuffer):
 						val = self.receviedPacketBuffer.popleft()
 						self.Packets[x] = val
-						print "Just popped " + str(val) + '\n'
+						#print "Just popped " + str(val) + '\n'
 					print 'Packet Buffer: ' + str(self.Packets[:]) + '\n'
-					print 'Call Logger'
-					self.logger()
+					print 'Call Logger'					
+					
+					if self.startLogging.value == 1 and self.stopLogging.value == 0:
+						self.logger()
+					else:
+						print "Don't need to record data yet"
 					
 # class logger(threading.Thread):
     # def __init__(self):
@@ -528,8 +652,8 @@ class listener(threading.Thread):
 			# print "WROTE TO DISK"
 			# tempData=""
 
-def UDP(Packets):	
-	UDPlistenThread=listener(10,Packets) # sizeOfRingBuffer
+def UDP(Packets, startLogging, stopLogging):
+	UDPlistenThread=listener(10,Packets, startLogging, stopLogging) # sizeOfRingBuffer
 	UDPlistenThread.setDaemon(True)
 	
 	#UDPlogThread=logger(Packets)
@@ -565,8 +689,8 @@ def closeProgram():
     killUDPprocessCounter=0
     print "here I am ", killUDPprocessCounter
 
-def startTkinter(PlotPacket):
-    root = tkinterGUI(PlotPacket)
+def startTkinter(PlotPacket,startBool,stopBool):
+    root = tkinterGUI(PlotPacket,startBool,stopBool)
     root.master.title("Azog") # Name of current drone, Here it is Azog
     root.mainloop()
 
@@ -609,9 +733,12 @@ def main():
     #global udpProcess # try to kill updprocess using startTkinter
 	lock = Lock()
 	n = Array('i', [0]*10, lock = lock) #Packet Storage Array for transfer between processes
-	
-	udpProcess = Process(name = 'UDP Process', target = UDP, args=(n,))
-	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(n,))
+	startLogging = Value('i', 0, lock = lock)
+	stopLogging = Value('i', 1, lock = lock)
+	print 'Start Bool: ' + str(startLogging.value) + '\n'
+	print 'Stop Bool: ' + str(stopLogging.value) + '\n'
+	udpProcess = Process(name = 'UDP Process', target = UDP, args=(n,startLogging,stopLogging))
+	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(n,startLogging,stopLogging))
     # broadcastProcess = Process(name='Broadcasting Process', target=broadcast)
 	udpProcess.start()
 	TkinterProcess.start()

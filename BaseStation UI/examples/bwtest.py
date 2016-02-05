@@ -13,7 +13,7 @@ parser = ArgumentParser(description=__doc__)
 
 parser.add_argument("--baudrate", type=int,
                   help="master port baud rate", default=115200)
-parser.add_argument("--device", required=True, help="serial device")
+parser.add_argument("--device udpin://192.168.7.2:22", required=True, help="serial device")
 args = parser.parse_args()
 
 # create a mavlink serial instance

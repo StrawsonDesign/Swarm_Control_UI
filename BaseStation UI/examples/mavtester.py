@@ -5,17 +5,16 @@ test mavlink messages
 '''
 
 import sys, struct, time, os
-sys.path.insert(0, "C:\Users\Dronelab 4\Documents\GitHub\Swarm_Control_UI\BaseStation UI\mavlink-master\pymavlink")
 from curses import ascii
-
-from pymavlink import mavtest, mavutil
+import mavtest
+from pymavlink import mavutil
 
 from argparse import ArgumentParser
 parser = ArgumentParser(description=__doc__)
 
 parser.add_argument("--baudrate", type=int,
                   help="master port baud rate", default=115200)
-parser.add_argument("--device", required=True, help="serial device")
+parser.add_argument("--device udpin://192.168.7.2:22", required=True, help="serial device")
 parser.add_argument("--source-system", dest='SOURCE_SYSTEM', type=int,
                   default=255, help='MAVLink source system for this GCS')
 args = parser.parse_args()

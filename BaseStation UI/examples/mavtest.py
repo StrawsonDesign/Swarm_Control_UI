@@ -3,8 +3,9 @@
 import sys, os
 
 #from pymavlink import mavlinkv10 as mavlink
-#from pymavlink.dialects.v10 import slugs as mavlink
-import MAVLink_Messages as mavlink
+from pymavlink.dialects.v10 import examples as mavlink
+#import MAVLink_Messages as mavlink
+
 class fifo(object):
     def __init__(self):
         self.buf = []

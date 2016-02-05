@@ -1,0 +1,52 @@
+<?xml version='1.0'?>
+<!-- MESSAGE IDs 150 - 240: Space for custom messages in individual projectname_messages.xml files -->
+<mavlink>
+<include>common.xml</include>
+	<messages>
+		<message id="150" name="Mapping_Mode">
+			<description>Mapping Mode Update</description>
+			<field type="uint8_t" name="Slam"> Slam Mapping Mode </field>
+			<field type="int8_t[4]" name="Vicon Position"> Vicon Position Mapping Mode </field>
+		</message>
+		<message id="151" name="Flight_Mode">
+			<description>Flight Mode Update</description>
+			<field type="uint32_t[4]" name="Altitude"> Altitude Flight Mode </field>
+			<field type="uint32_t[4]" name="Manual Thrust"> Manual Thrust Flight Mode </field>
+			<field type="uint32_t[4]" name="Loiter"> Loiter Flight Mode </field>
+		</message>
+		<message id="153" name="Pilot_Reference_Mode">
+			<description>Pilot Reference Mode Update</description>
+			<field type="uint8_t" name="Global"> Global Pilot Reference Mode </field>
+			<field type="uint32_t[4]" name="First Person View (FPV)"> First Person View Mode </field>
+			<field type="uint32_t[4]" name="PPV"> PPV Pilot Reference Mode </field>
+		</message>
+		<message id="154" name="Control_Mode">
+			<description>Control Mode Updates</description>
+			<field type="uint32_t[4]" name="User"> User Control Mode </field>
+			<field type="uint8_t" name="Auto_Land"> Auto Land Control Mode </field>
+			<field type="uint8_t" name="Return_Home"> Return Home Contrl Mode </field>
+			<field type="uint8_t" name="Hover"> Hover Contrl Mode </field>
+		</message>
+		<message id="155" name="Joystick_IO">
+			<description>Floating point values from Joystick I/O pins (which would be converted
+to velocity set points using mixing on board)</description>
+			<field type="char[5]" name="c1"> Joystick Input </field>
+			<field type="char[5]" name="c2"> Joystick Output </field>
+		</message>
+		<message id="156" name="ARRAY_TEST_6">
+			<description>Array test #6.</description>
+			<field type="uint8_t"		name="v1">Stub field</field>
+			<field type="uint16_t"		name="v2">Stub field</field>
+			<field type="uint32_t"		name="v3">Stub field</field>
+			<field type="uint32_t[2]"	name="ar_u32">Value array</field>
+			<field type="int32_t[2]"	name="ar_i32">Value array</field>
+			<field type="uint16_t[2]"	name="ar_u16">Value array</field>
+			<field type="int16_t[2]"	name="ar_i16">Value array</field>
+			<field type="uint8_t[2]"	name="ar_u8">Value array</field>
+			<field type="int8_t[2]"		name="ar_i8">Value array</field>
+			<field type="char[32]"		name="ar_c">Value array</field>
+			<field type="double[2]"		name="ar_d">Value array</field>
+			<field type="float[2]"		name="ar_f">Value array</field>
+		</message>
+	</messages>
+</mavlink>

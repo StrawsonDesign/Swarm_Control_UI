@@ -3,7 +3,7 @@
 import sys, os
 
 #from pymavlink import mavlinkv10 as mavlink
-from pymavlink.dialects.v10 import examples as mavlink
+from pymavlink.dialects.v10 import common as mavlink
 #import MAVLink_Messages as mavlink
 
 class fifo(object):
@@ -27,7 +27,7 @@ mav.param_set_send(7, 1, "WP_RADIUS", 101, mavlink.MAV_PARAM_TYPE_REAL32)
 # alternatively, produce a MAVLink_param_set object 
 # this can be sent via your own transport if you like
 m = mav.param_set_encode(7, 1, "WP_RADIUS", 101, mavlink.MAV_PARAM_TYPE_REAL32)
-
+print m
 # get the encoded message as a buffer
 b = m.get_msgbuf()
 

@@ -2,72 +2,32 @@
 <!-- MESSAGE IDs 150 - 240: Space for custom messages in individual projectname_messages.xml files -->
 <mavlink>
 	<include></include>
-	<enums>
-		<enum name="EKF_STATUS_FLAGS">
-				<description>Flags in EKF_STATUS message</description>
-				<entry name="EKF_ATTITUDE" value="1">
-					<description>set if EKF's attitude estimate is good</description>
-				</entry>
-
-				<entry name="EKF_VELOCITY_HORIZ" value="2">
-					<description>set if EKF's horizontal velocity estimate is good</description>
-				</entry>
-
-				<entry name="EKF_VELOCITY_VERT" value="4">
-					<description>set if EKF's vertical velocity estimate is good</description>
-				</entry>
-
-				<entry name="EKF_POS_HORIZ_REL" value="8">
-					<description>set if EKF's horizontal position (relative) estimate is good</description>
-				</entry>
-
-				<entry name="EKF_POS_HORIZ_ABS" value="16">
-					<description>set if EKF's horizontal position (absolute) estimate is good</description>
-				</entry>
-
-				<entry name="EKF_POS_VERT_ABS" value="32">
-					<description>set if EKF's vertical position (absolute) estimate is good</description>
-				</entry>
-
-				<entry name="EKF_POS_VERT_AGL" value="64">
-					<description>set if EKF's vertical position (above ground) estimate is good</description>
-				</entry>
-
-				<entry name="EKF_CONST_POS_MODE" value="128">
-					<description>EKF is in constant position mode and does not know it's absolute or relative position</description>
-				</entry>
-
-				<entry name="EKF_PRED_POS_HORIZ_REL" value="256">
-					<description>set if EKF's predicted horizontal position (relative) estimate is good</description>
-				</entry>
-
-				<entry name="EKF_PRED_POS_HORIZ_ABS" value="512">
-					<description>set if EKF's predicted horizontal position (absolute) estimate is good</description>
-				</entry>
-		</enum>
-	</enums>
 	<messages>
 		<message id="150" name="Joystick_IO">
 			<description> Floating point values from Joystick I/O pins (which would be converted to velocity set points using mixing on board) </description>
-			<field type="uint16_t" name="chan1_raw"> Joystick Channel 1 </field>
-			<field type="uint16_t" name="chan2_raw"> Joystick Channel 2 </field>
-			<field type="uint16_t" name="chan3_raw"> Joystick Channel 3 </field>
-			<field type="uint16_t" name="chan4_raw"> Joystick Channel 4 </field>
+			<field type="uint16_t" name="Joystick_chan1_raw"> Joystick Channel 1 </field>
+			<field type="uint16_t" name="Joystick_chan2_raw"> Joystick Channel 2 </field>
+			<field type="uint16_t" name="Joystick_chan3_raw"> Joystick Channel 3 </field>
+			<field type="uint16_t" name="Joystick_chan4_raw"> Joystick Channel 4 </field>
+			<field type="uint16_t" name="Joystick_chan5_raw"> Joystick Channel 5 </field>
+			<field type="uint16_t" name="Joystick_chan6_raw"> Joystick Channel 6 </field>
+			<field type="uint16_t" name="Joystick_chan7_raw"> Joystick Channel 7 </field>
+			<field type="uint16_t" name="Joystick_chan8_raw"> Joystick Channel 8 </field>
 		</message>
-		<message id="151" name="Modes">
+		<message id="151" name="ctl_mode_packet">
 			<description> Twelve different modes for the hexarotor. </description>
-			<field type="uint16_t"		name="chan1_raw"> Slam Mapping Mode </field>
-			<field type="uint16_t"		name="chan2_raw"> Vicon Position Mapping Mode </field>
-			<field type="uint16_t"		name="chan3_raw"> Altitude Flight Mode </field>
-			<field type="uint16_t"		name="chan4_raw"> Manual Thrust Flight Mode </field>
-			<field type="uint16_t"		name="chan5_raw"> Loiter Flight Mode </field>
-			<field type="uint16_t"		name="chan6_raw"> Global Pilot Reference Mode </field>
-			<field type="uint16_t"		name="chan7_raw"> First Person View Mode </field>
-			<field type="uint16_t"		name="chan8_raw"> PPV Pilot Reference Mode </field>
-			<field type="uint16_t"		name="chan9_raw"> User Control Mode </field>
-			<field type="uint16_t"		name="chan10_raw"> Auto Land Control Mode </field>
-			<field type="uint16_t"		name="chan11_raw"> Return Home Contrl Mode </field>
-			<field type="uint16_t"		name="chan12_raw"> Hover Control Mode </field>
+			<field type="uint16_t"		name="Slam_Mode_chan1_raw"> Slam Mapping Mode </field>
+			<field type="uint16_t"		name="Vicon_Mode_chan2_raw"> Vicon Position Mapping Mode </field>
+			<field type="uint16_t"		name="Altitude_Mode_chan3_raw"> Altitude Flight Mode </field>
+			<field type="uint16_t"		name="Manual_Mode_chan4_raw"> Manual Thrust Flight Mode </field>
+			<field type="uint16_t"		name="Loiter_Mode_chan5_raw"> Loiter Flight Mode </field>
+			<field type="uint16_t"		name="Global_Mode_chan6_raw"> Global Pilot Reference Mode </field>
+			<field type="uint16_t"		name="FPV_Mode_chan7_raw"> First Person View Mode </field>
+			<field type="uint16_t"		name="PPV_Mode_chan8_raw"> PPV Pilot Reference Mode </field>
+			<field type="uint16_t"		name="User_Mode_chan9_raw"> User Control Mode </field>
+			<field type="uint16_t"		name="Autoc_Mode_chan10_raw"> Auto Land Control Mode </field>
+			<field type="uint16_t"		name="Return_Mode_chan11_raw"> Return Home Contrl Mode </field>
+			<field type="uint16_t"		name="Hover_Mode_chan12_raw"> Hover Control Mode </field>
 		</message>
 	</messages>
 </mavlink>

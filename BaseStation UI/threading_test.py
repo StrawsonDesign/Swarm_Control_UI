@@ -7,32 +7,31 @@ import cv2 # OpenCV for video handling
 import tkFont # for fonts
 from time import strftime,sleep # for sleep
 from collections import deque # for ring buffer
-import socket # for sending across UDP packets 
+#import socket # for sending across UDP packets 
+from pymavlink import mavutil # MAVlink library
+from sys import exit # Used for exiting the UDP port
 
-allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','More Orcs','Orc1','Orc2','Orc3','Orc4']
+allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','More Orcs','Orc1','Orc2','Orc3','Orc4','Orc1','Orc2','Orc3','Orc4','Orc5','Orc6','Orc7']
 activeDronesList=['Othrod','Ugluk','Bolg','Orcobal'] 
 # move these lists to the respective buffer /data structures eventually 
 killUDPprocessCounter=1
 
 class MyUAV(threading.Thread):
-    def __init__(self,master,r,c,rspan,cspan):
+    def __init__(self,master): #,x_pos,y_pos,xspan,yspan):
         threading.Thread.__init__(self)
         MyUAV=tk.Frame(master)
-        MyUAV.grid(row=r, 
-                    column=c,
-                    rowspan=rspan,
-                    columnspan=cspan,
-                    sticky=tk.N+tk.S+tk.W+tk.E)#stretch the widget both horizontally and 
-                                # vertically to fill the cell
+        MyUAV.place(x=0,y=0,width=w,height=h)
+        # MyUAV.grid(row=r, 
+        #             column=c,
+        #             rowspan=rspan,
+        #             columnspan=cspan,
+        #             sticky=tk.N+tk.S+tk.W+tk.E)#stretch the widget both horizontally and 
+        #                         # vertically to fill the cell
         
         testButton=tk.Button(master,
                             text='Overwrite',
                             command=master.OnButton)
-        testButton.grid(row=r, 
-                        column=c,
-                        rowspan=rspan,
-                        columnspan=cspan,
-                        sticky = tk.N+tk.S+tk.W+tk.E)
+        testButton.place(x=0,y=0,width=w,height=h)
 
     def run(self):
         i=0
@@ -45,26 +44,24 @@ class MyUAV(threading.Thread):
 class otherdrones(threading.Thread):
     def __init__(self,master):
         threading.Thread.__init__(self)
-        #otherDroneFrame=tk.Frame(master)
-        otherDroneCanvas = tk.Canvas(master) # to add scroll bar
-        otherDroneCanvas.grid(row=0,
-                        column=2,
-                        rowspan=1,
-                        columnspan=3,
-                        sticky=tk.N+tk.S+tk.W+tk.E)
-        otherDroneCanvas.rowconfigure(0,weight=1)
-        #self.updateActiveDrones(droneFrame)
-        # Intialize places for
+        
+        otherDroneCanvas=tk.Canvas(master)
+        otherDroneCanvas.place(x=w,y=0,width=screenW-w,height=h)
+        
+        # scrollBarOtherDrones = AutoScrollbar(otherDroneFrame,orient=tk.HORIZONTAL)
+
         i=0 # counter for referencing objects in the list
         self.allDroneDict=dict() # initalizing empty dictionary 
         for orc in allDronesList:
-            otherDroneCanvas.columnconfigure(i,weight=1)
+            #   otherDroneCanvas.columnconfigure(i,weight=1)
             self.allDroneDict[orc]=tk.Button(otherDroneCanvas,text=orc, bg = "gray14", fg="snow")
-            self.allDroneDict[orc].grid(row=0,column=i,sticky=tk.N+tk.S+tk.E+tk.W)
+            self.allDroneDict[orc].pack(side=tk.LEFT,fill=tk.Y)
+            #self.allDroneDict[orc].grid(row=0,column=i,sticky=tk.N+tk.S+tk.E+tk.W)
             i=i+1
 
-        scrollBarOtherDrones = AutoScrollbar(otherDroneCanvas,orient=tk.HORIZONTAL)
-        scrollBarOtherDrones.grid(row=1,columnspan=i,sticky=tk.E+tk.W)
+        # Color active drones in green during intialization
+        self.updateActiveDrones()
+
 
     def run(self):
         sleep(2) # remove this eventually
@@ -85,30 +82,42 @@ class settingsThreadClass(threading.Thread):
     def __init__(self,master):
         threading.Thread.__init__(self)
         settingsFrame=tk.Frame(master)
-        settingsFrame.grid(row=3,
-            column=0,
-            sticky=tk.N+tk.S+tk.E+tk.W)
-        settingsFrame.rowconfigure(0, weight=1)
-        settingsFrame.rowconfigure(1, weight=1)
-        settingsFrame.rowconfigure(2, weight=1)
-        settingsFrame.rowconfigure(3, weight=1)
-        settingsFrame.rowconfigure(4, weight=1)
-        settingsFrame.columnconfigure(0, weight=1)
+        h_dash=int((screenH-h-int(0.66*vidH))/5)-5# height of each setting box
+        settingsFrame.place(x=0,y=h+int(0.66*vidH),width=w,height=screenH-h-int(0.66*vidH))
+        print h+int(0.66*vidH),screenH-h-int(0.66*vidH), h_dash,screenH-h-int(0.66*vidH)-4*h_dash
+        # settingsFrame.grid(row=3,
+        #     column=0,
+        #     sticky=tk.N+tk.S+tk.E+tk.W)
+        ## Grid Methods
+        # settingsFrame.rowconfigure(0, weight=1)
+        # settingsFrame.columnconfigure(0, weight=1)
+        # settingsFrame.rowconfigure(1, weight=1)
+        # settingsFrame.rowconfigure(2, weight=1)
+        # settingsFrame.rowconfigure(3, weight=1)
+        # settingsFrame.rowconfigure(4, weight=1)
+
         # Mapping modes are : SLAM (0) or VICON pos input (1)
         # Flight modes are : Altitude (2) vs Manual Thrust (3) vs POS hold (4)
         # Pilot reference mode: global (5), First Person View (6), PPV (7)
         # Control mode: User (8) , Auto land (9), Come back home (10), Circle Mode (11) 
 
         killButton=tk.Button(settingsFrame, text="Kill Drone", command = killDroneMethod, bg ="red")
-        killButton.grid(row=0,sticky=tk.N+tk.S+tk.E+tk.W)
         mappingModeFrame=tk.Frame(settingsFrame)
-        mappingModeFrame.grid(row=1,sticky=tk.N+tk.S+tk.E+tk.W)
         flightModeFrame=tk.Frame(settingsFrame)
-        flightModeFrame.grid(row=2,sticky=tk.N+tk.S+tk.E+tk.W)
         pilotReferenceModeFrame=tk.Frame(settingsFrame)
-        pilotReferenceModeFrame.grid(row=3,sticky=tk.N+tk.S+tk.E+tk.W)
         controlModeFrame=tk.Frame(settingsFrame)
-        controlModeFrame.grid(row=4,sticky=tk.N+tk.S+tk.E+tk.W)
+
+        killButton.place(x=0,y=0,width=w,height=h_dash)
+        mappingModeFrame.place(x=0,y=h_dash,width=w,height=h_dash)
+        flightModeFrame.place(x=0,y=2*h_dash,width=w,height=h_dash)
+        pilotReferenceModeFrame.place(x=0,y=3*h_dash,width=w,height=h_dash)
+        controlModeFrame.place(x=0,y=4*h_dash,width=w,height=h_dash)
+
+        # killButton.pack(fill=tk.BOTH)
+        # mappingModeFrame.pack(fill=tk.BOTH)
+        # flightModeFrame.pack(fill=tk.BOTH)
+        # pilotReferenceModeFrame.pack(fill=tk.BOTH)
+        # controlModeFrame.pack(fill=tk.BOTH)
 
         m=tk.IntVar()
         f=tk.IntVar()
@@ -176,16 +185,13 @@ class settingsThreadClass(threading.Thread):
         controlModeRadioButton11.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
 
 class Video(threading.Thread):
+    # Manages video streaming and Video Controls
     def __init__(self,master):
         threading.Thread.__init__(self)
-        self.vidFrame=tk.Frame(master)
+        self.vidFrame=tk.Frame(master,bg='green')
         #stickyelf.vidFrame.config(padx=20)
  
-        self.vidFrame.grid(row=1,
-                      column=1,
-                      rowspan=3,
-                      columnspan=3,
-                      sticky=tk.S+tk.N+tk.E+tk.W)
+        self.vidFrame.place(x=w,y=h,width=vidW,height=vidH)
         self.vidLabel=tk.Label(self.vidFrame)
 
         # self.vidLabel.grid(row=1,
@@ -205,36 +211,28 @@ class Video(threading.Thread):
 
         #self.vidFrame.bind("<Configure>",enforceAspectRatio)
         
-
         # Intialize vidControl Frame
         vidControl =tk.Frame(master)
-        vidControl.grid(row=1,
-                      column=4,
-                      rowspan=1,
-                      columnspan=1,
-                      sticky=tk.N+tk.S+tk.E+tk.W)
+        vidControl.place(x=w+vidW,y=h,width=screenW-vidW-w,height=int(0.33*screenH))
         self.recordButton = tk.Button(vidControl, 
                                         text="Record", 
                                         bd = 1,
                                         bg= "Red",
                                         command= self.recordVideo)
-        self.recordButton.pack(fill=tk.BOTH,
-                                expand=1)
+        h_dash=int(0.25*(int(0.33*screenH)))
+        self.recordButton.place(x=0,y=0,width=screenW-vidW-w,height=h_dash)
         toggleCameraButton = tk.Button(vidControl, 
                                             text = "Camera Toggle", 
                                             command=self.toggleCamera)
-        toggleCameraButton.pack(fill=tk.BOTH,
-                                    expand=1)
+        toggleCameraButton.place(x=0,y=h_dash,width=screenW-vidW-w,height=h_dash)
         screenshotButton = tk.Button(vidControl, 
                                             text = "Screen Capture",
                                             command=self.screenshot)
-        screenshotButton.pack(fill=tk.BOTH,
-                                   expand=1)
+        screenshotButton.place(x=0,y=2*h_dash,width=screenW-vidW-w,height=h_dash)
         depthToggleButton = tk.Button(vidControl,
                                         text = "Show Depth",
                                         command=self.depthToggle)
-        depthToggleButton.pack(fill=tk.BOTH,
-                                    expand=1)
+        depthToggleButton.place(x=0,y=3*h_dash,width=screenW-vidW-w,height=int(0.33*screenH)-3*h_dash)
 
     def run(self):
         self.saveVideoToggle=0 # Intialize videocapture toggle to zero
@@ -322,45 +320,55 @@ class Video(threading.Thread):
         
 class tkinterGUI(tk.Frame):         
     def __init__(self): 
-        tk.Frame.__init__(self)
-        self.grid()
-        self.grid(sticky=tk.N+tk.S+tk.E+tk.W) #The argument sticky=tk.N+tk.S+tk.E+tk.aW to self.grid() is necessary so that the Application widget will expand to fill its cell of the top-level window's grid
-        # make top level of the application stretchable and space filling 
-        top=self.winfo_toplevel() 
-        top.rowconfigure(0, weight=1)
-        top.columnconfigure(0, weight=1)
-        # make all rows and columns grow with the widget window ; weight signifies relative rate of window growth
-        self.rowconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
-        self.rowconfigure(2, weight=1)
-        self.rowconfigure(3, weight=1)
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
-        self.columnconfigure(2, weight=1)
-        self.columnconfigure(3, weight=1)        
+        tk.Frame.__init__(self) # Intialize Root Frame
+
+        top=self.winfo_toplevel() # window info of outer frame
+
+        global screenH, screenW       
+        screenH= top.winfo_screenheight()-25 # take 25 pixels to account for top bar
+        screenW =top.winfo_screenwidth()
+        # Defining gemotery of outermost Frame 
+        geom_string = "%dx%d+0+0" % (screenW,screenH)
+        # Assigning max height and width to outer Frame - Maximize Frame Size
+        top.wm_geometry(geom_string)
+        self.place(x=0, y=0,width=screenW,height=screenH)
+
+        global vidH, vidW, h, w
+
+        [vidH, vidW, h, w]=self.masterWidgetSizes()
+
+        print vidH, h, screenH, vidW, w,screenW
         
-        Status=tk.Frame(self)
-        Status.grid()
-        Log=tk.Frame(self)
-        Log.grid()
+        ##-------------For implementing Grid Method-------------------##
+        # top.rowconfigure(0, weight=1)
+        # top.columnconfigure(0, weight=1)
+        # make all rows and columns grow with the widget window ; weight signifies relative rate of window growth
+        # self.rowconfigure(0, weight=1)
+        # self.rowconfigure(1, weight=1)
+        # self.rowconfigure(2, weight=1)
+        # self.rowconfigure(3, weight=1)
+        # self.columnconfigure(0, weight=1)
+        # self.columnconfigure(1, weight=1)
+        # self.columnconfigure(2, weight=1)
+        # self.columnconfigure(3, weight=1)        
+        
 
-
-        videoThread=Video(self)
+        myUAVThread=MyUAV(self)
         otherDrones=otherdrones(self)
-        myUAVThread=MyUAV(self,0,0,1,2)
+        videoThread=Video(self)
         settingsThread=settingsThreadClass(self)
 
 
-        # Quit even if some operations are remaining to be complete
+        # # Quit even if some operations are remaining to be complete
 
         videoThread.setDaemon(True) 
         myUAVThread.setDaemon(True)
         otherDrones.setDaemon(True)
         settingsThread.setDaemon(True)  
 
-        self.createWidgets(Status,'Stats',1,0,2,1)
+        #self.createWidgets(myUAVThread,'Stats',0,0,100,200)
         #self.createWidgets(Settings,'Settings',3,0,1,1)
-        self.createWidgets(Log,'Logging',2,4,2,1)
+        self.createWidgets('Logging',w+vidW,h+int(0.33*vidH),screenW-vidW-w,screenH-h-int(0.33*vidH)-25)
 
 
        
@@ -368,17 +376,76 @@ class tkinterGUI(tk.Frame):
         myUAVThread.start() # becomes secondard thread
         otherDrones.start()
         settingsThread.start()
-        print '# active threads are ',threading.enumerate()
-
-        top.protocol("WM_DELETE_WINDOW", closeProgram) # controls what happens on exit : aim to close other threads
+        #print '# active threads are ',threading.enumerate()
 
 
-    def createWidgets(self,frame,txt,r,c,rspan,cspan):
+        #top.protocol("WM_DELETE_WINDOW", closeProgram) # controls what happens on exit : aim to close other threads
+
+    #  Method for calculating correct widget sizes
+    def masterWidgetSizes(self):
+        # Obtain Screen Height and Width in pixel units
+        screenH=self.winfo_screenheight()
+        screenW=self.winfo_screenwidth()
+
+        '''
+        Get Video Dimensions from Primary Camera
+        CAUTION : If primary and Secondary Cameras have different 
+        dimensions then scaling happens with respect to primary camera
+        '''  
+        temp = cv2.VideoCapture(0) # Assign channel to video capture
+        vidW=temp.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH) # Frame Height
+        vidH=temp.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT) # Camera Frame Height
+        temp.release() # Release camera object
+
+        camAspectRatio= vidW/vidH
+
+        if screenH - vidH < 100: # Not enough height for other widgets
+            # Reduce video height
+            vidH=screenH-100
+            vidW=int(vidH*camAspectRatio)
+            h= 100
+            w= int(0.5*(screenW-vidW))
+
+        if screenW - vidW < 200:# Not enough width for other widgets
+            vidW=screenW-200
+            vidH=int(vidW/camAspectRatio)
+            h= screenH-vidH
+            w= 100
+
+        else: # Enough width and Height for all widgets
+            h= (screenH-vidH)
+            w= int(0.5*(screenW-vidW))
+
+        return vidH, vidW, h, w
+
+
+        '''
+        h= (screenH-vidH)
+        w= 0.5*(screenW-vidW)
+         ___________________________________________________________
+        |             |                                             |
+        |   myDrone   |             otherDrones                     |        
+        |     w, h    |            w+VidW, h                        |
+        |_____________|_____________________________________________|
+        |             |                             |               |
+        |    Status   |              Video          |   vidControl  |
+        |     w,      |         Native Camera       |  w, 1/3*vidH  |
+        |   2/3*vidH  |            Resolution       |_______________|
+        |             |           vidW*vidH         |               |
+        |             |                             |     Logging   |
+        |             |                             |  w, 2/3*vidH  |
+        |_____________|                             |               |
+        |    modes    |                             |               |
+        |      w,     |                             |               |
+        |  1/3*vidH   |                             |               |
+        |_____________|_____________________________|_______________|
+        '''
+
+    def createWidgets(self,txt,x_loc,y_loc,xspan,yspan):
         # for testing
-
         self.qt = tk.Button(self, text=txt,command=self.quit)
-        self.qt.grid(row=r, column=c,rowspan=rspan,columnspan=cspan,
-        sticky=tk.N+tk.S+tk.W+tk.E) #stretch the widget both horizontally and 
+        self.qt.place(x=x_loc, y=y_loc,
+        width=xspan,height=yspan) #stretch the widget both horizontally and 
 
     def OnButton(self):
         # for testing only
@@ -398,15 +465,14 @@ class AutoScrollbar(tk.Scrollbar):
             self.tk.call("grid", "remove", self)
         else:
             self.grid()
-        Scrollbar.set(self, lo, hi)
+        tk.Scrollbar.set(self, lo, hi)
     def pack(self, **kw):
         raise TclError, "cannot use pack with this widget"
     def place(self, **kw):
         raise TclError, "cannot use place with this widget"
-        raise tk.TclError, "cannot use place with this widget"
 
 class listener(threading.Thread):
-    def __init__(self,sizeOfBuffer):
+    def __init__(self,sizeOfBuffer,mavSerialPort):
         threading.Thread.__init__(self)
         global receviedPacketBuffer # Must declare gloabl varibale prior to assigning values
         global receviedPacketBufferLock
@@ -421,6 +487,7 @@ class listener(threading.Thread):
             try:
                 if receviedPacketBufferLock.acquire(1):
                    #print "Buffer is : ", receviedPacketBuffer
+
                     receviedPacketBuffer.append(i)
                 #else:
                     #print "Lock was not ON"
@@ -437,35 +504,53 @@ class logger(threading.Thread):
     def run(self): 
         tempData=""
         m=0
-        while m<100: # change this
-            #sleep(0.01)
+        while m<1000: # change this
             if receviedPacketBufferLock.acquire(0):
                 try:
                     while(1): # empty the entire list
-                    #self.listenerobject.isBufferBusy=1
                         val=receviedPacketBuffer.popleft()
                         data=strftime("%c")+"\t"+str(val)+"\n"
                         tempData=tempData+data
-                        # print "Just popped ",val
                 except:
                     pass
                 finally:
                     receviedPacketBufferLock.release()
-            m += 1   
-            #print "M is", m     
+            m += 1     
             if m%50==0:
                 self.log_dummy.write(tempData)
                 print "wrote to disk"                
                 tempData="" 
 
+        print "reached end of m loop in logger thread" 
+
 
 def UDP():
-    UDPlistenThread=listener(10) # sizeOfRingBuffer
+
+    mavmaster = mavutil.mavlink_connection("udp:localhost:14551") # mavmaster variable is mavlink serial "a serial mavlink port" object
+
+    # Check for heartbeart for 
+    fail_counter = 0
+    while True:
+        if mavmaster.wait_heartbeat(blocking=False) is not None:
+            break
+        fail_counter += 1
+        if fail_counter > 100:                                 # wait for 1000 lops to hear back from mavlink
+            print "Didn't get heartbeat"
+            break
+            #exit(1)                                                # exit UDP proess if there is no heartbeat 
+        sleep(0.005)
+
+    print "UDP Connection Established"
+
+    # Create listening  object
+    UDPlistenThread=listener(10,mavmaster) # sizeOfRingBuffer=10
     UDPlistenThread.setDaemon(True)
 
+    # Create logger object
     UDPlogThread=logger()
     UDPlogThread.setDaemon(True)
     
+    # Start Listener and logger threads
     UDPlistenThread.start()
     UDPlogThread.start()
     
@@ -478,13 +563,14 @@ def UDP():
     i=0
     while(killUDPprocessCounter):
         i=i+1
-        sleep(0.05)
+        sleep(0.005)
         if i%20==0:
             print "UDP counter is",killUDPprocessCounter, "i is ", i
+            break
     
     print "Came out of while loop"
-    UDPlistenThread.exit()
-    UDPlogThread.exit()
+    # UDPlistenThread.exit()
+    # UDPlogThread.exit()
 
 def closeProgram():
     global killUDPprocessCounter
@@ -493,6 +579,7 @@ def closeProgram():
 
 def startTkinter():
     root = tkinterGUI()
+    
     root.master.title("Azog") # Name of current drone, Here it is Azog
     root.mainloop()
 
@@ -504,39 +591,50 @@ def sendSettingPacket(m,f,p,c):
     print "New Settings received :",'Mapping Mode',m,'\tFlight Mode :',f,'\tPilot Reference Mode',p,'\tControl Mode',c
 
 def broadcast():
-    IPaddr = '8.4.2.1' # IP to send the packets
-    portNmbr = 80 # port number of destination
 
-    # Data content of the UDP packet as hex
-    packetData = 'f1a525da11f6'.decode('hex')
-     
-    # initialize a socket
-    # SOCK_DGRAM specifies that this is UDP
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
-     
-    try:
-        # connect the socket
-        s.connect((IPADDR, PORTNUM))
-     
-        # send the packet
-        s.send(packetData)
-    except:
-        pass
-     
-    # close the socket
-    s.close()
+    mavmaster.mav.request_data_stream_send(mavmaster.target_system, mavmaster.target_component, mavutil.mavlink.MAV_DATA_STREAM_POSITION, stream_rate, 1) # stream-rate is in hertz
 
-    while 1:
+    print "Data requested"
 
-        print "Sent packets"
-        sleep(15)
+    while True:
+        msg = mavmaster.recv_match(blocking=True, timeout=10)
+        if msg is not None:
+            if msg.get_type() == "GLOBAL_POSITION_INT":
+                print msg.lat, msg.lon
+
+    # IPaddr = '8.4.2.1' # IP to send the packets
+    # portNmbr = 80 # port number of destination
+
+    # # Data content of the UDP packet as hex
+    # packetData = 'f1a525da11f6'.decode('hex')
+     
+    # # initialize a socket
+    # # SOCK_DGRAM specifies that this is UDP
+    # s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
+     
+    # try:
+    #     # connect the socket
+    #     s.connect((IPADDR, PORTNUM))
+     
+    #     # send the packet
+    #     s.send(packetData)
+    # except:
+    #     pass
+     
+    # # close the socket
+    # s.close()
+
+    # while 1:
+
+    #     print "Sent packets"
+    #     sleep(15)
 
 def main():
     #global udpProcess # try to kill updprocess using startTkinter  
-    udpProcess=multiprocessing.Process(name='UDP Process', target=UDP)
+    #udpProcess=multiprocessing.Process(name='UDP Process', target=UDP)
     TkinterProcess=multiprocessing.Process(name='Tkinter Process', target=startTkinter)
     # broadcastProcess=multiprocessing.Process(name='Broadcasting Process', target=broadcast)
-    udpProcess.start()
+    #udpProcess.start()
     TkinterProcess.start()
     # broadcastProcess.start()
 

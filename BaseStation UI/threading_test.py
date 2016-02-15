@@ -14,13 +14,13 @@ from sys import exit # Used for exiting the UDP port
 allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','More Orcs','Orc1','Orc2','Orc3','Orc4','Orc1','Orc2','Orc3','Orc4','Orc5','Orc6','Orc7']
 activeDronesList=['Othrod','Ugluk','Bolg','Orcobal'] 
 # move these lists to the respective buffer /data structures eventually 
-killUDPprocessCounter=1
 
 class MyUAV(threading.Thread):
     def __init__(self,master): #,x_pos,y_pos,xspan,yspan):
         threading.Thread.__init__(self)
         MyUAV=tk.Frame(master)
         MyUAV.place(x=0,y=0,width=w,height=h)
+        ## For Implementing Grid Method
         # MyUAV.grid(row=r, 
         #             column=c,
         #             rowspan=rspan,
@@ -202,12 +202,12 @@ class Video(threading.Thread):
 
         self.vidLabel.pack(fill=tk.BOTH,expand=1)
 
-        def enforceAspectRatio(event):
-            dw=int(0.7*event.width)
-            dh=int(0.75*event.width)
-            print "w,h is ",event.width, event.height,dw,dh
-            self.vidLabel.config(width=dw,height=dh)
-            print "frame size is", self.vidFrame.winfo_width(), self.vidFrame.winfo_height()  
+        # def enforceAspectRatio(event):
+        #     dw=int(0.7*event.width)
+        #     dh=int(0.75*event.width)
+        #     print "w,h is ",event.width, event.height,dw,dh
+        #     self.vidLabel.config(width=dw,height=dh)
+        #     print "frame size is", self.vidFrame.winfo_width(), self.vidFrame.winfo_height()  
 
         #self.vidFrame.bind("<Configure>",enforceAspectRatio)
         
@@ -219,20 +219,21 @@ class Video(threading.Thread):
                                         bd = 1,
                                         bg= "Red",
                                         command= self.recordVideo)
-        h_dash=int(0.25*(int(0.33*screenH)))
-        self.recordButton.place(x=0,y=0,width=screenW-vidW-w,height=h_dash)
+        w_dash=int(0.5*(screenW-vidW-w))
+        h_dash=int(0.5*(int(0.33*vidH)))
+        self.recordButton.place(x=0,y=0,width=w_dash,height=h_dash)
         toggleCameraButton = tk.Button(vidControl, 
                                             text = "Camera Toggle", 
                                             command=self.toggleCamera)
-        toggleCameraButton.place(x=0,y=h_dash,width=screenW-vidW-w,height=h_dash)
+        toggleCameraButton.place(x=0,y=h_dash,width=w_dash,height=h_dash)
         screenshotButton = tk.Button(vidControl, 
                                             text = "Screen Capture",
                                             command=self.screenshot)
-        screenshotButton.place(x=0,y=2*h_dash,width=screenW-vidW-w,height=h_dash)
+        screenshotButton.place(x=w_dash,y=0,width=screenW-vidW-w-w_dash,height=h_dash)
         depthToggleButton = tk.Button(vidControl,
                                         text = "Show Depth",
                                         command=self.depthToggle)
-        depthToggleButton.place(x=0,y=3*h_dash,width=screenW-vidW-w,height=int(0.33*screenH)-3*h_dash)
+        depthToggleButton.place(x=w_dash,y=h_dash,width=screenW-vidW-w-w_dash,height=(int(0.33*vidH)-h_dash))
 
     def run(self):
         self.saveVideoToggle=0 # Intialize videocapture toggle to zero
@@ -256,7 +257,7 @@ class Video(threading.Thread):
                                         fg ="snow",
                                         command=self.stopVideoRecord)
         except:
-            print "Something bad happened with recordVideo"
+            print "Something bad happened with recordVideo :("
 
     def stopVideoRecord(self):
         self.saveVideoToggle=0
@@ -305,15 +306,15 @@ class Video(threading.Thread):
         if self.saveVideoToggle==1:
            self.vidWriter.write(frame)
 
-        frameAspectRatio = (float(vidFrame.winfo_width())/float(vidFrame.winfo_height()))
-        if frameAspectRatio > (1.333): # Frame is wider than it needs to be
-           new_height= int(10*(vidFrame.winfo_height()/10)) # round image size to nearest
-           new_width=int(1.33*new_height)
-        else: # Frame is taller than it needs to be
-            new_width= int(10*(vidFrame.winfo_width()/10))
-            new_height =int(0.75* new_width)
-        img_resize= img.resize([new_width,new_height]) #resizing image
-        imgtk = ImageTk.PhotoImage(image=img_resize)
+        # frameAspectRatio = (float(vidFrame.winfo_width())/float(vidFrame.winfo_height()))
+        # if frameAspectRatio > (1.333): # Frame is wider than it needs to be
+        #    new_height= int(10*(vidFrame.winfo_height()/10)) # round image size to nearest
+        #    new_width=int(1.33*new_height)
+        # else: # Frame is taller than it needs to be
+        #     new_width= int(10*(vidFrame.winfo_width()/10))
+        #     new_height =int(0.75* new_width)
+        # img_resize= img.resize([new_width,new_height]) #resizing image
+        imgtk = ImageTk.PhotoImage(image=img)
         vidLabel.imgarbage = imgtk # for python to exclude image from garbage collection
         vidLabel.configure(image=imgtk)
         vidLabel.after(2,self.showVideo,vidLabel,vidFrame) # calls the method after 10 ms
@@ -324,20 +325,17 @@ class tkinterGUI(tk.Frame):
 
         top=self.winfo_toplevel() # window info of outer frame
 
-        global screenH, screenW       
+        global screenH, screenW,vidH, vidW, h, w       
         screenH= top.winfo_screenheight()-25 # take 25 pixels to account for top bar
         screenW =top.winfo_screenwidth()
+        
         # Defining gemotery of outermost Frame 
         geom_string = "%dx%d+0+0" % (screenW,screenH)
         # Assigning max height and width to outer Frame - Maximize Frame Size
         top.wm_geometry(geom_string)
         self.place(x=0, y=0,width=screenW,height=screenH)
-
-        global vidH, vidW, h, w
-
+        # Retrive scalled dimensions according to schema 
         [vidH, vidW, h, w]=self.masterWidgetSizes()
-
-        print vidH, h, screenH, vidW, w,screenW
         
         ##-------------For implementing Grid Method-------------------##
         # top.rowconfigure(0, weight=1)
@@ -351,33 +349,28 @@ class tkinterGUI(tk.Frame):
         # self.columnconfigure(1, weight=1)
         # self.columnconfigure(2, weight=1)
         # self.columnconfigure(3, weight=1)        
-        
 
+        # Intialize all windows and Frames
         myUAVThread=MyUAV(self)
         otherDrones=otherdrones(self)
         videoThread=Video(self)
         settingsThread=settingsThreadClass(self)
 
-
         # # Quit even if some operations are remaining to be complete
-
         videoThread.setDaemon(True) 
         myUAVThread.setDaemon(True)
         otherDrones.setDaemon(True)
         settingsThread.setDaemon(True)  
 
-        #self.createWidgets(myUAVThread,'Stats',0,0,100,200)
-        #self.createWidgets(Settings,'Settings',3,0,1,1)
+        self.createWidgets('Plot Space',0,h,w,int(0.66*vidH))
         self.createWidgets('Logging',w+vidW,h+int(0.33*vidH),screenW-vidW-w,screenH-h-int(0.33*vidH)-25)
-
 
        
         videoThread.start() # becomes mainthread
         myUAVThread.start() # becomes secondard thread
         otherDrones.start()
         settingsThread.start()
-        #print '# active threads are ',threading.enumerate()
-
+        print '# active threads are ',threading.enumerate()
 
         #top.protocol("WM_DELETE_WINDOW", closeProgram) # controls what happens on exit : aim to close other threads
 
@@ -442,7 +435,7 @@ class tkinterGUI(tk.Frame):
         '''
 
     def createWidgets(self,txt,x_loc,y_loc,xspan,yspan):
-        # for testing
+        # for testing only - to be removed later stages
         self.qt = tk.Button(self, text=txt,command=self.quit)
         self.qt.place(x=x_loc, y=y_loc,
         width=xspan,height=yspan) #stretch the widget both horizontally and 

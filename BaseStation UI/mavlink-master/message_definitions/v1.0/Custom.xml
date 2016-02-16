@@ -2,17 +2,64 @@
 <!-- MESSAGE IDs 150 - 240: Space for custom messages in individual projectname_messages.xml files -->
 <mavlink>
 	<include></include>
+	<enums>
+          <enum name="MAV_CTRL_MODE">
+               <description>Different control settings the MAV state could be in.</description>
+               <entry value="0" name="MAV_CTRL_MODE_MANUAL">
+                    <description>User has control over the MAV</description>
+               </entry>
+               <entry value="1" name="MAV_CTRL_MODE_ALTITUDE">
+                    <description>Using a controller which maintains the set altitiude of the MAV.</description>
+               </entry>
+               <entry value="2" name="MAV_CTRL_MODE_ATTITUDE">
+                    <description>Using a controller which maintains the set attitude of the MAV.</description>
+               </entry>
+               <entry value="3" name="MAV_CTRL_MODE_POS_LOCAL">
+                    <description>Using a controller which maintains the current location of the MAV.</description>
+               </entry>
+               <entry value="4" name="MAV_CTRL_MODE_POS_GLOBAL">
+                    <description>????</description>
+               </entry>
+               <entry value="5" name="MAV_CTRL_MODE_POS_RADIAL">
+                    <description>????</description>
+               </entry>               
+          </enum>
+		  <enum name="MAV_AUTO_MODE">
+               <description>A series of MAV states which the MAV could be in based on the user input.</description>
+               <entry value="0" name="MAV_AUTO_MODE_MANUAL">
+                    <description>Generic autopilot, full support for everything</description>
+               </entry>
+               <entry value="1" name="MAV_AUTO_MODE_EMERGENCY_LAND">
+                    <description>The MAV will initiate an Emergency landing at its current location.</description>
+               </entry>
+               <entry value="2" name="MAV_AUTO_MODE_RETURN_TO_HOME">
+                    <description>The MAV will return from its current position back to the set HOME position at the start of the flight.</description>
+               </entry>
+               <entry value="3" name="MAV_AUTO_MODE_WANDER">
+                    <description>The MAV will travel through the pre-determined waypoints.</description>
+               </entry>              
+          </enum>
+		  <enum name="MAV_KILL">
+               <description>Emergency setting to cut off all the power to the MAV if the user chooses to.</description>
+               <entry value="0" name="MAV_KILL_SWITCH_OFF">
+                    <description>The KILL SWITCH OFF state, which allows the MAV to continue to fly.</description>
+               </entry>
+               <entry value="1" name="MAV_KILL_NOW">
+                    <description>The KILL SWITCH ON state, which forces the MAV drop from the sky.</description>
+               </entry>
+          </enum>
+	</enums>
 	<messages>
 		<message id="150" name="Joystick_IO">
 			<description> Floating point values from Joystick I/O pins (which would be converted to velocity set points using mixing on board) </description>
-			<field type="uint16_t" name="Joystick_chan1_raw"> Joystick Channel 1 </field>
-			<field type="uint16_t" name="Joystick_chan2_raw"> Joystick Channel 2 </field>
-			<field type="uint16_t" name="Joystick_chan3_raw"> Joystick Channel 3 </field>
-			<field type="uint16_t" name="Joystick_chan4_raw"> Joystick Channel 4 </field>
-			<field type="uint16_t" name="Joystick_chan5_raw"> Joystick Channel 5 </field>
-			<field type="uint16_t" name="Joystick_chan6_raw"> Joystick Channel 6 </field>
-			<field type="uint16_t" name="Joystick_chan7_raw"> Joystick Channel 7 </field>
-			<field type="uint16_t" name="Joystick_chan8_raw"> Joystick Channel 8 </field>
+			<field type="float" name="Joystick_chan1_raw"> Joystick Channel 1 </field>
+			<field type="float" name="Joystick_chan2_raw"> Joystick Channel 2 </field>
+			<field type="float" name="Joystick_chan3_raw"> Joystick Channel 3 </field>
+			<field type="float" name="Joystick_chan4_raw"> Joystick Channel 4 </field>
+			<field type="float" name="Joystick_chan5_raw"> Joystick Channel 5 </field>
+			<field type="float" name="Joystick_chan6_raw"> Joystick Channel 6 </field>
+			<field type="float" name="Joystick_chan7_raw"> Joystick Channel 7 </field>
+			<field type="float" name="Joystick_chan8_raw"> Joystick Channel 8 </field>
 		</message>
 		<message id="151" name="ctl_mode_packet">
 			<description> Twelve different modes for the hexarotor. </description>

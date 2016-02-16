@@ -11,7 +11,7 @@ parser = ArgumentParser(description=__doc__)
 
 parser.add_argument("--baudrate", type=int,
                   help="master port baud rate", default=115200)
-parser.add_argument("--device", required=True, help="serial device")
+parser.add_argument("--device", default = 'localhost', required=True, help="serial device")
 parser.add_argument("--rate", default=4, type=int, help="requested stream rate")
 parser.add_argument("--source-system", dest='SOURCE_SYSTEM', type=int,
                   default=255, help='MAVLink source system for this GCS')

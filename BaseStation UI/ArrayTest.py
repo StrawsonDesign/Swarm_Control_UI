@@ -174,10 +174,10 @@ class settingsThreadClass(threading.Thread):
         controlModeRadioButton8=tk.Radiobutton(controlModeFrame, text="User", variable=c,
                                             value=8,indicatoron=0,
                                             command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-        controlModeRadioButton9=tk.Radiobutton(controlModeFrame, text="Auto Land", variable=c,
+        controlModeRadioButton9=tk.Radiobutton(controlModeFrame, text="Auto Emergency Land", variable=c,
                                             value=9,indicatoron=0,
                                             command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-        controlModeRadioButton10=tk.Radiobutton(controlModeFrame, text="Return Home", variable=c,
+        controlModeRadioButton10=tk.Radiobutton(controlModeFrame, text="Auto Return Home", variable=c,
                                             value=10,indicatoron=0,
                                             command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
         controlModeRadioButton11=tk.Radiobutton(controlModeFrame, text="Hover", variable=c,
@@ -613,44 +613,6 @@ class listener(threading.Thread):
 						self.logger()
 					else:
 						print "Don't need to record data yet"
-					
-# class logger(threading.Thread):
-    # def __init__(self):
-		# threading.Thread.__init__(self)
-		# outfile='testfile.txt'
-		# self.log_dummy=open(outfile,"w",1) # use a = append mode, buffering set to true
-		# print "file", outfile, "is opened"
-		# print "The packet delivered is: " + str(self.Packets[:])
-        
-    # def run(self): 
-		# print "The packet delivered is: " + str(logger.Packets[:])
-		# tempData=""
-		# m=0
-		# while m<20: # change this
-		# sleep(5)
-		# if receviedPacketBufferLock.acquire(0):
-			# try:
-				# i = 0
-				#self.Packets.popleft()
-				# while i < 10: # empty the entire list
-				#self.listenerobject.isBufferBusy=1
-					# val=receviedPacketBuffer.popleft()
-					# data=strftime("%c") + "\t" + str(val) + "\n"
-					# tempData=tempData+data
-					# self.Packets[i] = val
-					# print "Just popped " + str(val) + '\n'
-					#print "Packet: " + str(self.Packets[:])
-					# i += 1
-				
-			# finally:
-				# receviedPacketBufferLock.release()
-				# print "Released Packet:" + str(self.Packets[:]) #This is the packet that should be released to the plotter
-		# m += 1
-		# print "M is", m     
-		# if m%10==0:
-			# self.log_dummy.write(tempData)
-			# print "WROTE TO DISK"
-			# tempData=""
 
 def UDP(Packets, startLogging, stopLogging):
 	UDPlistenThread=listener(10,Packets, startLogging, stopLogging) # sizeOfRingBuffer

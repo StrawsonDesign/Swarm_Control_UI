@@ -15,6 +15,10 @@ from multiprocessing.sharedctypes import Value, Array
 from ctypes import Structure, c_double, c_short, c_long
 from multiprocessing import Process, Lock #multiprocessing
 
+from argparse import ArgumentParser
+
+from pymavlink import mavutil
+
 allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','More Orcs','Orc1','Orc2','Orc3','Orc4']
 activeDronesList=['Othrod','Ugluk','Bolg','Orcobal'] 
 
@@ -808,7 +812,44 @@ class tkinterGUI(tk.Frame):
 		otherDrones.start()
 		
 		print '# active threads are ',threading.enumerate()
+
+class udpCommunication(threading.Thread):
+	def __init__(self)
+		threading.Thread.__init__(self) 
+		IPaddress = '8.4.2.1' # IP to send the packets
+		portNum = 80 # port number of destination
+		UDPaddr = 'udpin://' + IPaddress + ':' + portNum
 		
+		parser = ArgumentParser(description=__doc__)
+		parser.add_argument("--baudrate", type=int,
+						  help="master port baud rate", default=57600)
+		parser.add_argument("--device", default=UDPaddr,required=True, help="serial device")
+		parser.add_argument("--rate", default=4, type=int, help="requested stream rate")
+		parser.add_argument("--source-system", dest='SOURCE_SYSTEM', type=int,
+						  default=255, help='MAVLink source system for this GCS')
+		parser.add_argument("--showmessages", action='store_true',
+						  help="show incoming messages", default=False)
+		args = parser.parse_args()
+		# create a mavlink serial instance
+		master = mavutil.mavlink_connection(args.device, baud=args.baudrate)
+
+		# wait for the heartbeat msg to find the system ID
+		wait_heartbeat(master)
+
+	def wait_heartbeat(m):
+		'''wait for a heartbeat so we know the target system IDs'''
+		print("Waiting for APM heartbeat")
+		m.wait_heartbeat()
+		print("Heartbeat from APM (system %u component %u)" % (m.target_system, m.target_system))
+		
+	def run(self):
+		print("Sending all stream request for rate %u" % args.rate)
+		for i in range(0, 3):
+			master.mav.request_data_stream_send(master.target_system, master.target_component,
+												mavutil.mavlink.MAV_DATA_STREAM_ALL, args.rate, 1)
+		if args.showmessages:
+			show_messages(master)
+	
 def UDP(Packets, startLogging, stopLogging):
 	UDPlistenThread=listener(10,Packets, startLogging, stopLogging) # sizeOfRingBuffer
 	UDPlistenThread.setDaemon(True)
@@ -867,32 +908,33 @@ def killDroneMethod():
     # start tkinter stuff
 	
 def broadcast():
-    IPaddr = '8.4.2.1' # IP to send the packets
-    portNmbr = 80 # port number of destination
+	
+
+    
 
     # Data content of the UDP packet as hex
-    packetData = 'f1a525da11f6'.decode('hex')
+    # packetData = 'f1a525da11f6'.decode('hex')
      
     # initialize a socket
     # SOCK_DGRAM specifies that this is UDP
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
+    # s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
      
-    try:
+    # try:
         # connect the socket
-        s.connect((IPADDR, PORTNUM))
+        # s.connect((IPADDR, PORTNUM))
      
         # send the packet
-        s.send(packetData)
-    except:
-        pass
+        # s.send(packetData)
+    # except:
+        # pass
      
     # close the socket
-    s.close()
+    # s.close()
 
-    while 1:
+    # while 1:
 
-        print "Sent packets"
-        sleep(15)
+        # print "Sent packets"
+        # sleep(15)
 	
 class AutoScrollbar(tk.Scrollbar):
     # a scrollbar that hides itself if it's not needed.  only

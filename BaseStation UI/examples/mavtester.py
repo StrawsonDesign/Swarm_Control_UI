@@ -5,8 +5,8 @@ test mavlink messages
 '''
 
 import sys, struct, time, os
-from curses import ascii
-#import mavtest
+#from curses import ascii
+import mavtest
 from pymavlink import mavutil
 
 from argparse import ArgumentParser
@@ -32,5 +32,5 @@ master = mavutil.mavlink_connection(args.device, baud=args.baudrate, source_syst
 wait_heartbeat(master)
 
 print("Sending all message types")
-#mavtest.generate_outputs(master.mav)
+mavtest.generate_outputs(master.mav)
 

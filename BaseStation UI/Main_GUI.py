@@ -334,7 +334,7 @@ class settingsThreadClass(threading.Thread):
         # Mapping modes are : SLAM (0) or VICON pos input (1)
         # Flight modes are : Altitude (2) vs Manual Thrust (3) vs POS hold (4)
         # Pilot reference mode: global (5), First Person View (6), PPV (7)
-        # Control mode: User (8) , Auto land (9), Come back home (10), Circle Mode (11) 
+        # Control mode: User (8) , Auto land (9), Come back home (10), Circle Mode (11)
 
         killButton=tk.Button(settingsFrame, text="Kill Drone", command = killDroneMethod, bg ="red")
         killButton.grid(row=0,sticky=tk.N+tk.S+tk.E+tk.W)
@@ -816,14 +816,15 @@ class tkinterGUI(tk.Frame):
 class udpCommunication(threading.Thread):
 	def __init__(self)
 		threading.Thread.__init__(self) 
-		IPaddress = '8.4.2.1' # IP to send the packets
-		portNum = 80 # port number of destination
-		UDPaddr = 'udpin://' + IPaddress + ':' + portNum
+		IPaddress = '127.0.0.1' # IP to send the packets
+		portNum = 5005 # port number of destination
+		device = 'udpin://' + str(IPaddress) + ':' + str(portNum)
+		baudrate = 57600
 		
 		parser = ArgumentParser(description=__doc__)
-		parser.add_argument("--baudrate", type=int,
-						  help="master port baud rate", default=57600)
-		parser.add_argument("--device", default=UDPaddr,required=True, help="serial device")
+		#parser.add_argument("--baudrate", type=int,
+		#				  help="master port baud rate", default=57600)
+		#parser.add_argument("--device", default=UDPaddr,required=True, help="serial device")
 		parser.add_argument("--rate", default=4, type=int, help="requested stream rate")
 		parser.add_argument("--source-system", dest='SOURCE_SYSTEM', type=int,
 						  default=255, help='MAVLink source system for this GCS')
@@ -831,7 +832,7 @@ class udpCommunication(threading.Thread):
 						  help="show incoming messages", default=False)
 		args = parser.parse_args()
 		# create a mavlink serial instance
-		master = mavutil.mavlink_connection(args.device, baud=args.baudrate)
+		master = mavutil.mavlink_connection(device, baud=baudrate)
 
 		# wait for the heartbeat msg to find the system ID
 		wait_heartbeat(master)
@@ -908,9 +909,12 @@ def killDroneMethod():
     # start tkinter stuff
 	
 def broadcast():
+	UDPCommunicationThread = udpCommunication()
+	UDPCommunicationThread.setDaemon(True)
 	
-
-    
+	UDPCommunicationThread.start()
+	
+	UDPCommunicationThread.join()    
 
     # Data content of the UDP packet as hex
     # packetData = 'f1a525da11f6'.decode('hex')

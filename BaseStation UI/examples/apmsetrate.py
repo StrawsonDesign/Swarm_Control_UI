@@ -9,9 +9,9 @@ import sys, struct, time, os
 from argparse import ArgumentParser
 parser = ArgumentParser(description=__doc__)
 
-parser.add_argument("--baudrate", type=int,
-                  help="master port baud rate", default=115200)
-parser.add_argument("--device", default = 'localhost', required=True, help="serial device")
+#parser.add_argument("--baudrate", type=int,
+#                  help="master port baud rate", default=115200)
+#parser.add_argument("--device", default = 'localhost', required=True, help="serial device")
 parser.add_argument("--rate", default=4, type=int, help="requested stream rate")
 parser.add_argument("--source-system", dest='SOURCE_SYSTEM', type=int,
                   default=255, help='MAVLink source system for this GCS')
@@ -20,7 +20,8 @@ parser.add_argument("--showmessages", action='store_true',
 args = parser.parse_args()
 
 from pymavlink import mavutil
-
+device = 'udpout://127.0.0.1:57121'
+baudrate = 57600
 def wait_heartbeat(m):
     '''wait for a heartbeat so we know the target system IDs'''
     print("Waiting for APM heartbeat")
@@ -41,8 +42,9 @@ def show_messages(m):
             print(msg)
 
 # create a mavlink serial instance
-master = mavutil.mavlink_connection(args.device, baud=args.baudrate)
+#master = mavutil.mavlink_connection(args.device, baud=args.baudrate)
 
+master = mavutil.mavlink_connection(device, baud=baudrate)
 # wait for the heartbeat msg to find the system ID
 wait_heartbeat(master)
 

@@ -8,17 +8,19 @@ import sys, struct, time, os
 
 from pymavlink import mavutil
 
-from argparse import ArgumentParser
-parser = ArgumentParser(description=__doc__)
+#from argparse import ArgumentParser
+#parser = ArgumentParser(description=__doc__)
 
-parser.add_argument("--baudrate", type=int,
-                  help="master port baud rate", default=115200)
-parser.add_argument('--device', required=True)
-args = parser.parse_args()
+#parser.add_argument("--baudrate", type=int,
+#                  help="master port baud rate", default=115200)
+#parser.add_argument('--device', required=True)
+#args = parser.parse_args()
 
 # create a mavlink serial instance
-master = mavutil.mavlink_connection(args.device, baud=args.baudrate)
-
+#master = mavutil.mavlink_connection(args.device, baud=args.baudrate)
+device = 'udpout://127.0.0.1:5005'
+baudrate = 57600
+master = mavutil.mavlink_connection(device, baud=baudrate)
 t1 = time.time()
 
 counts = {}
@@ -27,12 +29,12 @@ bytes_sent = 0
 bytes_recv = 0
 
 while True:
-    master.mav.heartbeat_send(1, 1)
-    master.mav.sys_status_send(1, 2, 3, 4, 5, 6, 7)
-    master.mav.gps_raw_send(1, 2, 3, 4, 5, 6, 7, 8, 9)
+    master.mav.heartbeat_send(1,  2, 3, 4, 5, 6)
+    master.mav.sys_status_send(1, 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11, 12,13)
+    #master.mav.gps_raw_send(1, 2, 3, 4, 5, 6, 7, 8, 9)
     master.mav.attitude_send(1, 2, 3, 4, 5, 6, 7)
     master.mav.vfr_hud_send(1, 2, 3, 4, 5, 6)
-    while master.port.inWaiting() > 0:
+    while 1:
         m = master.recv_msg()
         if m == None: break
         if m.get_type() not in counts:

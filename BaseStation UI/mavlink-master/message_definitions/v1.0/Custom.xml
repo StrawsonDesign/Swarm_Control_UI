@@ -4,49 +4,55 @@
 	<include></include>
 	<enums>
           <enum name="MAV_CTRL_MODE">
-               <description>Different control settings the MAV state could be in.</description>
-               <entry value="0" name="MAV_CTRL_MODE_MANUAL">
-                    <description>User has control over the MAV</description>
-               </entry>
-               <entry value="1" name="MAV_CTRL_MODE_ALTITUDE">
-                    <description>Using a controller which maintains the set altitiude of the MAV.</description>
-               </entry>
-               <entry value="2" name="MAV_CTRL_MODE_ATTITUDE">
-                    <description>Using a controller which maintains the set attitude of the MAV.</description>
-               </entry>
-               <entry value="3" name="MAV_CTRL_MODE_POS_LOCAL">
-                    <description>Using a controller which maintains the current location of the MAV.</description>
-               </entry>
-               <entry value="4" name="MAV_CTRL_MODE_POS_GLOBAL">
-                    <description>????</description>
-               </entry>
-               <entry value="5" name="MAV_CTRL_MODE_POS_RADIAL">
-                    <description>????</description>
-               </entry>               
+				<description>Different control settings the MAV state could be in.</description>
+				<entry value="0" name="MAV_CTRL_MODE_MANUAL">
+					<description>User has control over the MAV</description>
+				</entry>
+				<entry value="1" name="MAV_CTRL_MODE_ALTITUDE">
+					<description>Using a controller which maintains the set altitiude of the MAV.</description>
+				</entry>
+				<entry value="2" name="MAV_CTRL_MODE_ATTITUDE">
+					<description>Using a controller which maintains the set attitude of the MAV.</description>
+				</entry>
+				<entry value="3" name="MAV_CTRL_MODE_POS_LOCAL">
+					<description>TThe user is flying in FPV mode using the onboard camera.</description>
+				</entry>
+				<entry value="4" name="MAV_CTRL_MODE_POS_GLOBAL">
+					<description>Uses global co-ordinate system to fly the MAV</description>
+				</entry>
+				<entry value="5" name="MAV_CTRL_MODE_POS_RADIAL">
+					<description> The co-ordinates used to fly the MAV is relative to the user</description>
+				</entry>   
+				<entry value="6" name="MAV_CTRL_MODE_POS_SPHERICAL">
+					<description>The MAV will stay within a set radius around a predefined location</description>
+				</entry>  
+				<entry value="7" name="MAV_CTRL_MODE_POS_FOLLOW_ME">
+					<description>The MAV will follow the GPS</description>
+				</entry>  			   
           </enum>
 		  <enum name="MAV_AUTO_MODE">
-               <description>A series of MAV states which the MAV could be in based on the user input.</description>
-               <entry value="0" name="MAV_AUTO_MODE_MANUAL">
-                    <description>Generic autopilot, full support for everything</description>
-               </entry>
-               <entry value="1" name="MAV_AUTO_MODE_EMERGENCY_LAND">
-                    <description>The MAV will initiate an Emergency landing at its current location.</description>
-               </entry>
-               <entry value="2" name="MAV_AUTO_MODE_RETURN_TO_HOME">
-                    <description>The MAV will return from its current position back to the set HOME position at the start of the flight.</description>
-               </entry>
-               <entry value="3" name="MAV_AUTO_MODE_WANDER">
-                    <description>The MAV will travel through the pre-determined waypoints.</description>
-               </entry>              
+				<description>A series of MAV states which the MAV could be in based on the user input.</description>
+				<entry value="0" name="MAV_AUTO_MODE_MANUAL">
+					<description>Generic autopilot, full support for everything</description>
+				</entry>
+				<entry value="1" name="MAV_AUTO_MODE_EMERGENCY_LAND">
+					<description>The MAV will initiate an Emergency landing at its current location.</description>
+				</entry>
+				<entry value="2" name="MAV_AUTO_MODE_RETURN_TO_HOME">
+					<description>The MAV will return from its current position back to the set HOME position at the start of the flight.</description>
+				</entry>
+				<entry value="3" name="MAV_AUTO_MODE_WANDER">
+					<description>The MAV will travel through the pre-determined waypoints.</description>
+				</entry>              
           </enum>
 		  <enum name="MAV_KILL">
-               <description>Emergency setting to cut off all the power to the MAV if the user chooses to.</description>
-               <entry value="0" name="MAV_KILL_SWITCH_OFF">
-                    <description>The KILL SWITCH OFF state, which allows the MAV to continue to fly.</description>
-               </entry>
-               <entry value="1" name="MAV_KILL_NOW">
-                    <description>The KILL SWITCH ON state, which forces the MAV drop from the sky.</description>
-               </entry>
+				<description>Emergency setting to cut off all the power to the MAV if the user chooses to.</description>
+				<entry value="0" name="MAV_KILL_SWITCH_OFF">
+					<description>The KILL SWITCH OFF state, which allows the MAV to continue to fly.</description>
+				</entry>
+				<entry value="1" name="MAV_KILL_NOW">
+					<description>The KILL SWITCH ON state, which forces the MAV drop from the sky.</description>
+				</entry>
           </enum>
 	</enums>
 	<messages>
@@ -60,21 +66,6 @@
 			<field type="float" name="Joystick_chan6_raw"> Joystick Channel 6 </field>
 			<field type="float" name="Joystick_chan7_raw"> Joystick Channel 7 </field>
 			<field type="float" name="Joystick_chan8_raw"> Joystick Channel 8 </field>
-		</message>
-		<message id="151" name="ctl_mode_packet">
-			<description> Twelve different modes for the hexarotor. </description>
-			<field type="uint16_t"		name="Slam_Mode_chan1_raw"> Slam Mapping Mode </field>
-			<field type="uint16_t"		name="Vicon_Mode_chan2_raw"> Vicon Position Mapping Mode </field>
-			<field type="uint16_t"		name="Altitude_Mode_chan3_raw"> Altitude Flight Mode </field>
-			<field type="uint16_t"		name="Manual_Mode_chan4_raw"> Manual Thrust Flight Mode </field>
-			<field type="uint16_t"		name="Loiter_Mode_chan5_raw"> Loiter Flight Mode </field>
-			<field type="uint16_t"		name="Global_Mode_chan6_raw"> Global Pilot Reference Mode </field>
-			<field type="uint16_t"		name="FPV_Mode_chan7_raw"> First Person View Mode </field>
-			<field type="uint16_t"		name="PPV_Mode_chan8_raw"> PPV Pilot Reference Mode </field>
-			<field type="uint16_t"		name="User_Mode_chan9_raw"> User Control Mode </field>
-			<field type="uint16_t"		name="Autoc_Mode_chan10_raw"> Auto Land Control Mode </field>
-			<field type="uint16_t"		name="Return_Mode_chan11_raw"> Return Home Contrl Mode </field>
-			<field type="uint16_t"		name="Hover_Mode_chan12_raw"> Hover Control Mode </field>
 		</message>
 	</messages>
 </mavlink>

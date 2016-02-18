@@ -21,7 +21,7 @@ from pymavlink import mavutil
 
 allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','More Orcs','Orc1','Orc2','Orc3','Orc4']
 activeDronesList=['Othrod','Ugluk','Bolg','Orcobal'] 
-
+		
 class listener(threading.Thread):
     def __init__(self,sizeOfBuffer, Packets, startLogging, stopLogging):
 		threading.Thread.__init__(self)
@@ -99,20 +99,20 @@ class listener(threading.Thread):
 						print "Don't need to record data yet"
 
 class myUAVThreadClass(threading.Thread):
-
 	def __init__(self,master):
 		threading.Thread.__init__(self)
 		myUAVFrame = tk.Frame(master)
-		myUAVFrame.grid(row = 0,
-						column = 0,
-						rowspan = 1,
-						columnspan = 1,
-						sticky = tk.S + tk.N + tk.W + tk.E)
-		myUAVFrame.rowconfigure(0, weight = 1)
-		myUAVFrame.columnconfigure(0, weight = 1)
-		myUAVFrame.columnconfigure(1, weight = 1)
-		myUAVFrame.columnconfigure(2, weight = 1)
-		myUAVFrame.columnconfigure(3, weight = 1)
+		myUAVFrame.place(x=0,y=0,width=w,height=h)
+		# myUAVFrame.grid(row = 0,
+						# column = 0,
+						# rowspan = 1,
+						# columnspan = 1,
+						# sticky = tk.S + tk.N + tk.W + tk.E)
+		# myUAVFrame.rowconfigure(0, weight = 1)
+		# myUAVFrame.columnconfigure(0, weight = 1)
+		# myUAVFrame.columnconfigure(1, weight = 1)
+		# myUAVFrame.columnconfigure(2, weight = 1)
+		# myUAVFrame.columnconfigure(3, weight = 1)
 		
 		batteryLife = 75
 		signalStrength = 86
@@ -162,27 +162,29 @@ class myUAVThreadClass(threading.Thread):
 			
 class otherdrones(threading.Thread):
     def __init__(self,master):
-        threading.Thread.__init__(self)
-        #otherDroneFrame=tk.Frame(master)
-        otherDroneCanvas = tk.Canvas(master) # to add scroll bar
-        otherDroneCanvas.grid(row=0,
-                        column=1,
-                        rowspan=1,
-                        columnspan=3,
-                        sticky=tk.N+tk.S+tk.W+tk.E)
-        otherDroneCanvas.rowconfigure(0,weight=1)
-        #self.updateActiveDrones(droneFrame)
-        # Intialize places for
-        i=0 # counter for referencing objects in the list
-        self.allDroneDict=dict() # initalizing empty dictionary 
-        for orc in allDronesList:
-            otherDroneCanvas.columnconfigure(i,weight=1)
-            self.allDroneDict[orc]=tk.Button(otherDroneCanvas,text=orc, bg = "gray14", fg="snow")
-            self.allDroneDict[orc].grid(row=0,column=i,sticky=tk.N+tk.S+tk.E+tk.W)
-            i=i+1
+		threading.Thread.__init__(self)
+		#otherDroneFrame=tk.Frame(master)
+		otherDroneCanvas = tk.Canvas(master) # to add scroll bar
+		otherDroneCanvas.place(x=w,y=0,width=screenW-w,height=h)
+		# otherDroneCanvas.grid(row=0,
+						# column=1,
+						# rowspan=1,
+						# columnspan=3,
+						# sticky=tk.N+tk.S+tk.W+tk.E)
+		# otherDroneCanvas.rowconfigure(0,weight=1)
+		#self.updateActiveDrones(droneFrame)
+		# Intialize places for
+		i=0 # counter for referencing objects in the list
+		self.allDroneDict=dict() # initalizing empty dictionary 
+		for orc in allDronesList:
+			# otherDroneCanvas.columnconfigure(i,weight=1)
+			self.allDroneDict[orc]=tk.Button(otherDroneCanvas,text=orc, bg = "gray14", fg="snow")
+			self.allDroneDict[orc].pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+			# self.allDroneDict[orc].grid(row=0,column=i,sticky=tk.N+tk.S+tk.E+tk.W)
+			i=i+1
 
-        scrollBarOtherDrones = AutoScrollbar(otherDroneCanvas,orient=tk.HORIZONTAL)
-        scrollBarOtherDrones.grid(row=1,columnspan=i,sticky=tk.E+tk.W)
+		# scrollBarOtherDrones = AutoScrollbar(otherDroneCanvas,orient=tk.HORIZONTAL)
+		# scrollBarOtherDrones.grid(row=1,columnspan=i,sticky=tk.E+tk.W)
 
     def run(self):
         sleep(2) # remove this eventually
@@ -197,39 +199,49 @@ class otherdrones(threading.Thread):
     def updateActiveDrones(self):
         # add missing key error exceptions here
         for orc in activeDronesList:
-            self.allDroneDict[orc].configure(bg='medium spring green', fg='black')
+            self.allDroneDict[orc].configure(bg='green', fg='black')
 			
 class loggingThreadClass(threading.Thread):
 	
 	def __init__(self, master, startBool, stopBool):
 		threading.Thread.__init__(self)
 		loggingFrame = tk.Frame(master)
-		loggingFrame.grid(row = 2, 
-						column = 3,
-						rowspan = 1,
-						columnspan = 1,
-						sticky = tk.S + tk.N + tk.W + tk.E)
-		loggingFrame.rowconfigure(2, weight = 1)
-		loggingFrame.rowconfigure(3, weight = 1)
-		loggingFrame.rowconfigure(4, weight = 1)
-		loggingFrame.rowconfigure(5, weight = 1)
-		loggingFrame.rowconfigure(6, weight = 1)
-		loggingFrame.rowconfigure(7, weight = 1)
-		loggingFrame.columnconfigure(4, weight = 1)
+		h_dash=int((screenH-h-int(0.33*vidH))/5)-5# height of each setting box
+		loggingFrame.place(x=w+vidW,y=h+int(0.33*vidH),width=screenW-vidW-w,height=screenH-h-int(0.33*vidH)-25)
+		# loggingFrame.grid(row = 2, 
+						# column = 3,
+						# rowspan = 1,
+						# columnspan = 1,
+						# sticky = tk.S + tk.N + tk.W + tk.E)
+		# loggingFrame.rowconfigure(2, weight = 1)
+		# loggingFrame.rowconfigure(3, weight = 1)
+		# loggingFrame.rowconfigure(4, weight = 1)
+		# loggingFrame.rowconfigure(5, weight = 1)
+		# loggingFrame.rowconfigure(6, weight = 1)
+		# loggingFrame.rowconfigure(7, weight = 1)
+		# loggingFrame.columnconfigure(4, weight = 1)
 		
 		log_attitudeBoxFrame = tk.Frame(loggingFrame)
-		log_attitudeBoxFrame.grid(row = 2, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		# log_attitudeBoxFrame.grid(row = 2, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
 		log_positionBoxFrame = tk.Frame(loggingFrame)
-		log_positionBoxFrame.grid(row = 3, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		# log_positionBoxFrame.grid(row = 3, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
 		log_velocityBoxFrame = tk.Frame(loggingFrame)
-		log_velocityBoxFrame.grid(row = 4, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		# log_velocityBoxFrame.grid(row = 4, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
 		log_batteryBoxFrame = tk.Frame(loggingFrame)
-		log_batteryBoxFrame.grid(row = 5, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		# log_batteryBoxFrame.grid(row = 5, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
 		
 		log_startButtonFrame = tk.Frame(loggingFrame)
-		log_startButtonFrame.grid(row = 6, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		# log_startButtonFrame.grid(row = 6, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
 		log_stopButtonFrame = tk.Frame(loggingFrame)
-		log_stopButtonFrame.grid(row = 7, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		# log_stopButtonFrame.grid(row = 7, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		
+		log_attitudeBoxFrame.place(x=0, y=0,width=w, height=h_dash)
+		log_positionBoxFrame.place(x=0, y=h_dash, width=w, height=h_dash)
+		log_velocityBoxFrame.place(x=0, y=2*h_dash, width=w, height=h_dash)
+		log_batteryBoxFrame.place(x=0, y=3*h_dash, width=w, height=h_dash)
+		
+		log_startButtonFrame.place(x=0, y=4*h_dash, width=w, height=h_dash)
+		log_stopButtonFrame.place(x=0, y=5*h_dash, width=w, height=h_dash)
 		
 		log_iattitude = tk.IntVar()
 		log_iposition = tk.IntVar()
@@ -322,140 +334,160 @@ class loggingThreadClass(threading.Thread):
 		
 class settingsThreadClass(threading.Thread):
     def __init__(self,master):
-        threading.Thread.__init__(self)
-        settingsFrame=tk.Frame(master)
-        settingsFrame.grid(row=3,
-            column=0,
-            sticky=tk.N+tk.S+tk.E+tk.W)
-        settingsFrame.rowconfigure(0, weight=1)
-        settingsFrame.rowconfigure(1, weight=1)
-        settingsFrame.rowconfigure(2, weight=1)
-        settingsFrame.columnconfigure(0, weight=1)
-        # Mapping modes are : SLAM (0) or VICON pos input (1)
-        # Flight modes are : Altitude (2) vs Manual Thrust (3) vs POS hold (4)
-        # Pilot reference mode: global (5), First Person View (6), PPV (7)
-        # Control mode: User (8) , Auto land (9), Come back home (10), Circle Mode (11)
+		threading.Thread.__init__(self)
+		settingsFrame=tk.Frame(master)
+		h_dash=int((screenH-h-int(0.66*vidH))/5)-5# height of each setting box
+		settingsFrame.place(x=0,y=h+int(0.66*vidH),width=w,height=screenH-h-int(0.66*vidH))
+		print h+int(0.66*vidH),screenH-h-int(0.66*vidH), h_dash,screenH-h-int(0.66*vidH)-4*h_dash
+		# settingsFrame.grid(row=3,
+			# column=0,
+			# sticky=tk.N+tk.S+tk.E+tk.W)
+		# settingsFrame.rowconfigure(0, weight=1)
+		# settingsFrame.rowconfigure(1, weight=1)
+		# settingsFrame.rowconfigure(2, weight=1)
+		# settingsFrame.columnconfigure(0, weight=1)
 
-        killButton=tk.Button(settingsFrame, text="Kill Drone", command = killDroneMethod, bg ="red")
-        killButton.grid(row=0,sticky=tk.N+tk.S+tk.E+tk.W)
-        mappingModeFrame=tk.Frame(settingsFrame)
-        mappingModeFrame.grid(row=1,sticky=tk.N+tk.S+tk.E+tk.W)
-        flightModeFrame=tk.Frame(settingsFrame)
-        flightModeFrame.grid(row=2,sticky=tk.N+tk.S+tk.E+tk.W)
-        pilotReferenceModeFrame=tk.Frame(settingsFrame)
-        pilotReferenceModeFrame.grid(row=3,sticky=tk.N+tk.S+tk.E+tk.W)
-        controlModeFrame=tk.Frame(settingsFrame)
-        controlModeFrame.grid(row=4,sticky=tk.N+tk.S+tk.E+tk.W)
+		# Mapping modes are : SLAM (0) or VICON pos input (1)
+		# Flight modes are : Altitude (2) vs Manual Thrust (3) vs POS hold (4)
+		# Pilot reference mode: global (5), First Person View (6), PPV (7)
+		# Control mode: User (8) , Auto land (9), Come back home (10), Circle Mode (11)
 
-        m=tk.IntVar()
-        f=tk.IntVar()
-        p=tk.IntVar()   
-        c=tk.IntVar()   
+		killButton=tk.Button(settingsFrame, text="Kill Drone", command = killDroneMethod, bg ="red")
+		# killButton.grid(row=0,sticky=tk.N+tk.S+tk.E+tk.W)
+		mappingModeFrame=tk.Frame(settingsFrame)
+		# mappingModeFrame.grid(row=1,sticky=tk.N+tk.S+tk.E+tk.W)
+		flightModeFrame=tk.Frame(settingsFrame)
+		# flightModeFrame.grid(row=2,sticky=tk.N+tk.S+tk.E+tk.W)
+		pilotReferenceModeFrame=tk.Frame(settingsFrame)
+		# pilotReferenceModeFrame.grid(row=3,sticky=tk.N+tk.S+tk.E+tk.W)
+		controlModeFrame=tk.Frame(settingsFrame)
+		# controlModeFrame.grid(row=4,sticky=tk.N+tk.S+tk.E+tk.W)
 
-        # default flight modes
-        m.set(0) #mappingMode = 0    
-        f.set(4) #flightMode = 4
-        p.set(5) #pilotReferenceMode=5
-        c.set(8) #controlMode= 8
+		killButton.place(x=0,y=0,width=w,height=h_dash)
+		mappingModeFrame.place(x=0,y=h_dash,width=w,height=h_dash)
+		flightModeFrame.place(x=0,y=2*h_dash,width=w,height=h_dash)
+		pilotReferenceModeFrame.place(x=0,y=3*h_dash,width=w,height=h_dash)
+		controlModeFrame.place(x=0,y=4*h_dash,width=w,height=h_dash)
 
-        mappingModeRadioButton0=tk.Radiobutton(mappingModeFrame, text="SLAM", variable=m, 
-                                value=0,indicatoron=0,
-                                state=tk.ACTIVE, command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-        mappingModeRadioButton1=tk.Radiobutton(mappingModeFrame, text="VICON position input", 
-                                variable=m,
-                                value=1,indicatoron=0,
-                                command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-        mappingModeRadioButton0.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-        mappingModeRadioButton1.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		m=tk.IntVar()
+		f=tk.IntVar()
+		p=tk.IntVar()   
+		c=tk.IntVar()   
 
-        flightModeRadioButton2=tk.Radiobutton(flightModeFrame, text="Altitude", variable=f, value=2,
-                                indicatoron=0,
-                                state=tk.ACTIVE, # set as default
-                                command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-        flightModeRadioButton3=tk.Radiobutton(flightModeFrame, text="Manual Thrust", variable=f, value=3,
-                                indicatoron=0,command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-        flightModeRadioButton4=tk.Radiobutton(flightModeFrame, text="POS hold", variable=f, value=4,
-                                indicatoron=0,
-                                command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-        flightModeRadioButton2.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-        flightModeRadioButton3.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-        flightModeRadioButton4.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		# default flight modes
+		m.set(0) #mappingMode = 0    
+		f.set(4) #flightMode = 4
+		p.set(5) #pilotReferenceMode=5
+		c.set(8) #controlMode= 8
 
-        pilotReferenceModeRadioButton5=tk.Radiobutton(pilotReferenceModeFrame, text="Global", variable=p, value=5,
-                                            indicatoron=0,
-                                            state=tk.ACTIVE,
-                                            command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-        pilotReferenceModeRadioButton6=tk.Radiobutton(pilotReferenceModeFrame, text="First Person View",
-                                            variable=p, value=6,indicatoron=0,
-                                            command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-        pilotReferenceModeRadioButton7=tk.Radiobutton(pilotReferenceModeFrame, text="PPV", variable=p,
-                                            value=7,indicatoron=0,
-                                            command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-        pilotReferenceModeRadioButton5.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-        pilotReferenceModeRadioButton6.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-        pilotReferenceModeRadioButton7.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		mappingModeRadioButton0=tk.Radiobutton(mappingModeFrame, text="SLAM", variable=m, 
+								value=0,indicatoron=0,
+								state=tk.ACTIVE, command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		mappingModeRadioButton1=tk.Radiobutton(mappingModeFrame, text="VICON position input", 
+								variable=m,
+								value=1,indicatoron=0,
+								command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		mappingModeRadioButton0.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		mappingModeRadioButton1.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
 
-        controlModeRadioButton8=tk.Radiobutton(controlModeFrame, text="User", variable=c,
-                                            value=8,indicatoron=0,
-                                            command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-        controlModeRadioButton9=tk.Radiobutton(controlModeFrame, text="Auto Land", variable=c,
-                                            value=9,indicatoron=0,
-                                            command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-        controlModeRadioButton10=tk.Radiobutton(controlModeFrame, text="Return Home", variable=c,
-                                            value=10,indicatoron=0,
-                                            command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-        controlModeRadioButton11=tk.Radiobutton(controlModeFrame, text="Hover", variable=c,
-                                            value=11,indicatoron=0,
-                                            command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-        controlModeRadioButton8.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-        controlModeRadioButton9.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-        controlModeRadioButton10.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-        controlModeRadioButton11.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		flightModeRadioButton2=tk.Radiobutton(flightModeFrame, text="Altitude", variable=f, value=2,
+								indicatoron=0,
+								state=tk.ACTIVE, # set as default
+								command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		flightModeRadioButton3=tk.Radiobutton(flightModeFrame, text="Manual Thrust", variable=f, value=3,
+								indicatoron=0,command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		flightModeRadioButton4=tk.Radiobutton(flightModeFrame, text="POS hold", variable=f, value=4,
+								indicatoron=0,
+								command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		flightModeRadioButton2.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		flightModeRadioButton3.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		flightModeRadioButton4.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+
+		pilotReferenceModeRadioButton5=tk.Radiobutton(pilotReferenceModeFrame, text="Global", variable=p, value=5,
+											indicatoron=0,
+											state=tk.ACTIVE,
+											command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		pilotReferenceModeRadioButton6=tk.Radiobutton(pilotReferenceModeFrame, text="First Person View",
+											variable=p, value=6,indicatoron=0,
+											command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		pilotReferenceModeRadioButton7=tk.Radiobutton(pilotReferenceModeFrame, text="PPV", variable=p,
+											value=7,indicatoron=0,
+											command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		pilotReferenceModeRadioButton5.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		pilotReferenceModeRadioButton6.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		pilotReferenceModeRadioButton7.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+
+		controlModeRadioButton8=tk.Radiobutton(controlModeFrame, text="User", variable=c,
+											value=8,indicatoron=0,
+											command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		controlModeRadioButton9=tk.Radiobutton(controlModeFrame, text="Auto Land", variable=c,
+											value=9,indicatoron=0,
+											command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		controlModeRadioButton10=tk.Radiobutton(controlModeFrame, text="Return Home", variable=c,
+											value=10,indicatoron=0,
+											command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		controlModeRadioButton11=tk.Radiobutton(controlModeFrame, text="Hover", variable=c,
+											value=11,indicatoron=0,
+											command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		controlModeRadioButton8.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		controlModeRadioButton9.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		controlModeRadioButton10.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		controlModeRadioButton11.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
 		
 class statisticsThreadClass(threading.Thread):
 	
 	def __init__(self, master, PlotPacket):
 		threading.Thread.__init__(self)
 		statisticsFrame = tk.Frame(master)
-		statisticsFrame.grid(row = 2,
-								column = 0,
-								rowspan = 2,
-								columnspan = 1)
-		statisticsFrame.rowconfigure(2, weight = 1)
-		statisticsFrame.columnconfigure(0, weight = 1)
-		
+		h_dash=int((screenH-h-int(0.16*vidH))/5)-5# height of each setting box
+		statisticsFrame.place(x=0,y=h,width=w,height=int(0.16*vidH))
+		# statisticsFrame.grid(row = 2,
+								# column = 0,
+								# rowspan = 2,
+								# columnspan = 1)
+		# statisticsFrame.rowconfigure(2, weight = 1)
+		# statisticsFrame.columnconfigure(0, weight = 1)
+
 		plotFrame = tk.Frame(master)
-		plotFrame.grid(row = 1,
-						column = 0,
-						rowspan = 1,
-						columnspan = 1,
-						sticky = tk.N + tk.S + tk.W + tk.E)
+		plotFrame.place(x=0,y=h,width=w,height=int(0.5*vidH))
+		# plotFrame.grid(row = 1,
+						# column = 0,
+						# rowspan = 1,
+						# columnspan = 1,
+						# sticky = tk.N + tk.S + tk.W + tk.E)
 		#plotFrame.rowconfigure(2, weight = 1)
 		#plotFrame.columnconfigure(0, weight = 1)
-		
+
 		stat_velocityBoxFrame = tk.Frame(statisticsFrame)
-		stat_velocityBoxFrame.grid(row = 0, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		# stat_velocityBoxFrame.grid(row = 0, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_accelerationBoxFrame = tk.Frame(statisticsFrame)
-		stat_accelerationBoxFrame.grid(row = 0, column = 1, sticky = tk.N + tk.S + tk.W + tk.E)
+		# stat_accelerationBoxFrame.grid(row = 0, column = 1, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_positionBoxFrame = tk.Frame(statisticsFrame)
-		stat_positionBoxFrame.grid(row = 0, column = 2, sticky = tk.N + tk.S + tk.W + tk.E)
+		# stat_positionBoxFrame.grid(row = 0, column = 2, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_rollBoxFrame = tk.Frame(statisticsFrame)
-		stat_rollBoxFrame.grid(row = 0, column = 3, sticky = tk.N + tk.S + tk.W + tk.E)
+		# stat_rollBoxFrame.grid(row = 0, column = 3, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_pitchBoxFrame = tk.Frame(statisticsFrame)
-		stat_pitchBoxFrame.grid(row = 0, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		# stat_pitchBoxFrame.grid(row = 0, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_yawBoxFrame = tk.Frame(statisticsFrame)
-		stat_yawBoxFrame.grid(row = 0, column = 5, sticky = tk.N + tk.S + tk.W + tk.E)
-		
+		# stat_yawBoxFrame.grid(row = 0, column = 5, sticky = tk.N + tk.S + tk.W + tk.E)
+
+		stat_velocityBoxFrame.place(x=0,y=0,width=w,height=h_dash)
+		stat_accelerationBoxFrame.place(x=w,y=0,width=w,height=h_dash)
+		stat_positionBoxFrame.place(x=2*w,y=0,width=w,height=h_dash)
+		stat_rollBoxFrame.place(x=3*w,y=0,width=w,height=h_dash)
+		stat_pitchBoxFrame.place(x=4*w,y=0,width=w,height=h_dash)
+		stat_yawBoxFrame.place(x=5*w,y=0,width=w,height=h_dash)
+
 		stat_ivelocity = tk.IntVar()
 		stat_iacceleration = tk.IntVar()
 		stat_iposition = tk.IntVar()
 		stat_iroll = tk.IntVar()
 		stat_ipitch = tk.IntVar()
 		stat_iyaw = tk.IntVar()
-		
+
 		#quad = statVariables()
-		
-		
+
+
 		# x = range(100)
 		# y = range(100)
 		# f = Figure(figsize = (3,3), dpi = 50)
@@ -467,79 +499,79 @@ class statisticsThreadClass(threading.Thread):
 		plt.xlabel('Time(s)')
 		plt.ylabel('Variable Name')
 		# plt.show()
-		
+
 		canvas = FigureCanvasTkAgg(self.fig, plotFrame)
 		canvas.get_tk_widget().pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		canvas.show()
-		
-		
+
+
 		self.velocity_line = plt.plot([],[])[0]
 		self.acceleration_line = plt.plot([],[])[0]
 		self.position_line = plt.plot([],[])[0]
 		self.roll_line = plt.plot([],[])[0]
 		self.pitch_line = plt.plot([],[])[0]
 		self.yaw_line = plt.plot([],[])[0]
-		
+
 		self.velocity_line.set_data([],[])
 		self.acceleration_line.set_data([],[])
 		self.position_line.set_data([],[])
 		self.roll_line.set_data([],[])
 		self.pitch_line.set_data([],[])
 		self.yaw_line.set_data([],[])
-		
+
 		self.PlotPacket = PlotPacket
-		
+
 		# velocity_line = canvas.create_line(0,0,0,0, fill = 'red')
 		# acceleration_line = canvas.create_line(0,0,0,0, fill = 'blue')'
 		# position_line = canvas,create_line(0,0,0,0, fill = 'green')
 		# roll_line = canvas.create_line(0,0,0,0, fill = 'black')
 		# pitch_line = canvas.create_line(0,0,0,0, fill = ')		
-		
+
 		stat_velocityCheckButton = tk.Checkbutton(stat_velocityBoxFrame, text = 'Velocity', variable = stat_ivelocity, command = lambda : self.Plot('Velocity', stat_ivelocity.get(), canvas))
 		stat_accelerationCheckButton = tk.Checkbutton(stat_accelerationBoxFrame, text = 'Acceleration', variable = stat_iacceleration, command = lambda : self.Plot('Acceleration', stat_iacceleration.get(), canvas))
 		stat_positionCheckButton = tk.Checkbutton(stat_positionBoxFrame, text = 'Position', variable = stat_iposition, command = lambda : self.Plot('Position', stat_iposition.get(), canvas))
 		stat_rollCheckButton = tk.Checkbutton(stat_rollBoxFrame, text = 'Roll', variable = stat_iroll, command = lambda : self.Plot('Roll', stat_iroll.get(), canvas))
 		stat_pitchCheckButton = tk.Checkbutton(stat_pitchBoxFrame, text = 'Pitch', variable = stat_ipitch, command = lambda : self.Plot('Pitch', stat_ipitch.get(), canvas))
 		stat_yawCheckButton = tk.Checkbutton(stat_yawBoxFrame, text = 'Yaw', variable = stat_iyaw, command = lambda : self.Plot('Yaw', stat_iyaw.get(), canvas))
-		
+
 		stat_velocityCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		stat_accelerationCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		stat_positionCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		stat_rollCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		stat_pitchCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		stat_yawCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
-		
+
 		plt.close(self.fig)			
 			
-	# def AnimatePlot():
+		# def AnimatePlot():
 		# pullData = open('').read()
 		# dataList = pullData.split('\n')
 		# xList = []
 		# yList = []
 		# zList =  []
-		
+
 		# for eachLine in dataList
 			# if len(eachLine) > 1:
 				# x, y = eachLine.split(',')
 				# xList.append(int(x))
 				# yList.append(int(y))
 				# zList.append(int(z))
-		
+
 		# a.clear()
 		# a.plot(xList,yList)
-		
+
 		# updated_data, = plt.plot([], [])
-		
+
 		#Whenever new data is received run this function to update the data array
-	# def update_line(new_data,ax, data):
+		# def update_line(new_data,ax, data):
 		# updated_data_x = data.set_xdata(np.append(data.get_xdata(), new_data))
 		# updated_data_y = data.set_ydata(np.append(data.get_ydata(), new_data))
 		# return updated_data_x, updated_data_y
 		# ax.relim()
 		# ax.autoscale_view()
 		# plt.draw
-	
-	# def animate():		
+
+		# def animate():		
 		# anim = animation.FuncAnimation(fig, animate, init_func = init, frames = 360, interval = 5, blit = True)
 		
 	def Plot(self,var_name, var_state, canvas):
@@ -617,16 +649,13 @@ class statisticsThreadClass(threading.Thread):
 			plt.pause(.001)
 			
 class Video(threading.Thread):
+    # Manages video streaming and Video Controls
     def __init__(self,master):
         threading.Thread.__init__(self)
-        self.vidFrame=tk.Frame(master)
+        self.vidFrame=tk.Frame(master,bg='green')
         #stickyelf.vidFrame.config(padx=20)
  
-        self.vidFrame.grid(row=1,
-                      column=2,
-                      rowspan=4,
-                      columnspan=3,
-                      sticky=tk.S+tk.N+tk.E+tk.W)
+        self.vidFrame.place(x=w,y=h,width=vidW,height=vidH)
         self.vidLabel=tk.Label(self.vidFrame)
 
         # self.vidLabel.grid(row=1,
@@ -637,45 +666,38 @@ class Video(threading.Thread):
 
         self.vidLabel.pack(fill=tk.BOTH,expand=1)
 
-        def enforceAspectRatio(event):
-            dw=int(0.7*event.width)
-            dh=int(0.75*event.width)
-            print "w,h is ",event.width, event.height,dw,dh
-            self.vidLabel.config(width=dw,height=dh)
-            print "frame size is", self.vidFrame.winfo_width(), self.vidFrame.winfo_height()
+        # def enforceAspectRatio(event):
+        #     dw=int(0.7*event.width)
+        #     dh=int(0.75*event.width)
+        #     print "w,h is ",event.width, event.height,dw,dh
+        #     self.vidLabel.config(width=dw,height=dh)
+        #     print "frame size is", self.vidFrame.winfo_width(), self.vidFrame.winfo_height()  
 
         #self.vidFrame.bind("<Configure>",enforceAspectRatio)
         
-
         # Intialize vidControl Frame
         vidControl =tk.Frame(master)
-        vidControl.grid(row=1,
-                      column=3,
-                      rowspan=1,
-                      columnspan=1,
-                      sticky=tk.N+tk.S+tk.E+tk.W)
+        vidControl.place(x=w+vidW,y=h,width=screenW-vidW-w,height=int(0.33*screenH))
         self.recordButton = tk.Button(vidControl, 
                                         text="Record", 
                                         bd = 1,
                                         bg= "Red",
                                         command= self.recordVideo)
-        self.recordButton.pack(fill=tk.BOTH,
-                                expand=1)
+        w_dash=int(0.5*(screenW-vidW-w))
+        h_dash=int(0.5*(int(0.33*vidH)))
+        self.recordButton.place(x=0,y=0,width=w_dash,height=h_dash)
         toggleCameraButton = tk.Button(vidControl, 
                                             text = "Camera Toggle", 
                                             command=self.toggleCamera)
-        toggleCameraButton.pack(fill=tk.BOTH,
-                                    expand=1)
+        toggleCameraButton.place(x=0,y=h_dash,width=w_dash,height=h_dash)
         screenshotButton = tk.Button(vidControl, 
                                             text = "Screen Capture",
                                             command=self.screenshot)
-        screenshotButton.pack(fill=tk.BOTH,
-                                   expand=1)
+        screenshotButton.place(x=w_dash,y=0,width=screenW-vidW-w-w_dash,height=h_dash)
         depthToggleButton = tk.Button(vidControl,
                                         text = "Show Depth",
                                         command=self.depthToggle)
-        depthToggleButton.pack(fill=tk.BOTH,
-                                    expand=1)
+        depthToggleButton.place(x=w_dash,y=h_dash,width=screenW-vidW-w-w_dash,height=(int(0.33*vidH)-h_dash))
 
     def run(self):
         self.saveVideoToggle=0 # Intialize videocapture toggle to zero
@@ -686,8 +708,8 @@ class Video(threading.Thread):
 
     def recordVideo(self):
         try:
-            w=int(self.vid_cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH ))
-            h=int(self.vid_cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT ))
+            w=int(self.vid_cap.get(3))
+            h=int(self.vid_cap.get(4))
             fourcc = cv2.cv.CV_FOURCC('D','I','V','X')
             outputFPS = 20.0
             self.vidWriter = cv2.VideoWriter('Video_'+str(self.cameraChannelOnVideo)+
@@ -699,7 +721,7 @@ class Video(threading.Thread):
                                         fg ="snow",
                                         command=self.stopVideoRecord)
         except:
-            print "Something bad happened with recordVideo"
+            print "Something bad happened with recordVideo :("
 
     def stopVideoRecord(self):
         self.saveVideoToggle=0
@@ -730,7 +752,7 @@ class Video(threading.Thread):
         else:
             self.cameraChannelOnVideo=0
             self.vid_cap = cv2.VideoCapture(self.cameraChannelOnVideo) # result to default camera method
-        print 'Displaying Video Feed from Camera Number = ',self.cameraChannelOnVideo
+        print 'Displaying Video Feed from Camera Number = ',self.cameraChannelOnVideo 
         # except:
         #     print 'Hi'
         
@@ -748,73 +770,146 @@ class Video(threading.Thread):
         if self.saveVideoToggle==1:
            self.vidWriter.write(frame)
 
-        frameAspectRatio = (float(vidFrame.winfo_width())/float(vidFrame.winfo_height()))
-        if frameAspectRatio > (1.333): # Frame is wider than it needs to be
-           new_height= int(10*(vidFrame.winfo_height()/10)) # round image size to nearest
-           new_width=int(1.33*new_height)
-        else: # Frame is taller than it needs to be
-            new_width= int(10*(vidFrame.winfo_width()/10))
-            new_height =int(0.75* new_width)
-        img_resize= img.resize([new_width,new_height]) #resizing image
-        imgtk = ImageTk.PhotoImage(image=img_resize)
+        # frameAspectRatio = (float(vidFrame.winfo_width())/float(vidFrame.winfo_height()))
+        # if frameAspectRatio > (1.333): # Frame is wider than it needs to be
+        #    new_height= int(10*(vidFrame.winfo_height()/10)) # round image size to nearest
+        #    new_width=int(1.33*new_height)
+        # else: # Frame is taller than it needs to be
+        #     new_width= int(10*(vidFrame.winfo_width()/10))
+        #     new_height =int(0.75* new_width)
+        # img_resize= img.resize([new_width,new_height]) #resizing image
+        imgtk = ImageTk.PhotoImage(image=img)
         vidLabel.imgarbage = imgtk # for python to exclude image from garbage collection
         vidLabel.configure(image=imgtk)
         vidLabel.after(2,self.showVideo,vidLabel,vidFrame) # calls the method after 10 ms
 		
 class tkinterGUI(tk.Frame):
-    def __init__(self, PlotPacket, startBool, stopBool):
+	def __init__(self, PlotPacket, startBool, stopBool):
 		tk.Frame.__init__(self)
-		self.grid()
-		self.grid(sticky = tk.N + tk.S + tk.E + tk.W)
+		# self.grid()
+		# self.grid(sticky = tk.N + tk.S + tk.E + tk.W)
 		# make top level of the application stretchable and space filling
 		top=self.winfo_toplevel()
-		top.rowconfigure(0, weight=1)
-		top.columnconfigure(0, weight=1)
+
+		global screenH, screenW,vidH, vidW, h, w       
+		screenH= top.winfo_screenheight()-25 # take 25 pixels to account for top bar
+		screenW =top.winfo_screenwidth()
+
+		# Defining gemotery of outermost Frame 
+		geom_string = "%dx%d+0+0" % (screenW,screenH)
+		# Assigning max height and width to outer Frame - Maximize Frame Size
+		top.wm_geometry(geom_string)
+		self.place(x=0, y=0,width=screenW,height=screenH)
+		# Retrive scalled dimensions according to schema 
+		[vidH, vidW, h, w]=self.masterWidgetSizes()
+
+		##-------------For implementing Grid Method-------------------##
+		# top.rowconfigure(0, weight=1)
+		# top.columnconfigure(0, weight=1)
 		# make all rows and columns grow with the widget window ; weight signifies relative rate of window growth
-		self.rowconfigure(0, weight=1)
-		self.rowconfigure(1, weight=1)
-		self.rowconfigure(2, weight=1)
-		self.rowconfigure(3, weight=1)
-		self.rowconfigure(4, weight=1)
-		self.rowconfigure(5, weight=1)
-		self.rowconfigure(6, weight=1)
-		self.rowconfigure(7, weight=1)
-		self.rowconfigure(8, weight=1)
-		self.rowconfigure(9, weight=1)
-		self.columnconfigure(0, weight=1)
-		self.columnconfigure(1, weight=1)
-		self.columnconfigure(2, weight=1)
-		self.columnconfigure(3, weight=1)
-		
-        # Set up the GUI
+		# self.rowconfigure(0, weight=1)
+		# self.rowconfigure(1, weight=1)
+		# self.rowconfigure(2, weight=1)
+		# self.rowconfigure(3, weight=1)
+		# self.rowconfigure(4, weight=1)
+		# self.rowconfigure(5, weight=1)
+		# self.rowconfigure(6, weight=1)
+		# self.rowconfigure(7, weight=1)
+		# self.rowconfigure(8, weight=1)
+		# self.rowconfigure(9, weight=1)
+		# self.columnconfigure(0, weight=1)
+		# self.columnconfigure(1, weight=1)
+		# self.columnconfigure(2, weight=1)
+		# self.columnconfigure(3, weight=1)
+
+		# Set up the GUI
 		# console = tk.Button(self, text='Done', command=endCommand)
 		# console.grid(row = 5, column = 0, rowspan = 3, columnspan = 2)
-		
-		#videoThread=Video(self)
+
+		videoThread=Video(self)
 		settingsThread = settingsThreadClass(self)
 		loggingThread = loggingThreadClass(self, startBool, stopBool)
 		statisticsThread = statisticsThreadClass(self, PlotPacket)
 		myUAVThread = myUAVThreadClass(self)
 		otherDrones=otherdrones(self)
-		
-		#videoThread.setDaemon(True) 
+
+		videoThread.setDaemon(True) 
 		settingsThread.setDaemon(True)
 		loggingThread.setDaemon(True)
 		statisticsThread.setDaemon(True)
 		myUAVThread.setDaemon(True)
 		otherDrones.setDaemon(True)
-		
-		#videoThread.start() # becomes mainthread
+
+		videoThread.start() # becomes mainthread
 		settingsThread.start()
 		loggingThread.start()
 		statisticsThread.start()
 		myUAVThread.start()
 		otherDrones.start()
-		
-		print '# active threads are ',threading.enumerate()
 
+		print '# active threads are ',threading.enumerate()
+		
+	def masterWidgetSizes(self):
+		# Obtain Screen Height and Width in pixel units
+		screenH=self.winfo_screenheight()
+		screenW=self.winfo_screenwidth()
+
+		'''
+		Get Video Dimensions from Primary Camera
+		CAUTION : If primary and Secondary Cameras have different 
+		dimensions then scaling happens with respect to primary camera
+		'''  
+		temp = cv2.VideoCapture(0) # Assign channel to video capture
+		vidW=temp.get(3) # Frame Height
+		vidH=temp.get(4) # Camera Frame Height
+		temp.release() # Release camera object
+
+		print vidW,vidH
+		camAspectRatio= vidW/vidH
+
+		if screenH - vidH < 100: # Not enough height for other widgets
+			# Reduce video height
+			vidH=screenH-100
+			vidW=int(vidH*camAspectRatio)
+			h= 100
+			w= int(0.5*(screenW-vidW))
+
+		if screenW - vidW < 200:# Not enough width for other widgets
+			vidW=screenW-200
+			vidH=int(vidW/camAspectRatio)
+			h= screenH-vidH
+			w= 100
+
+		else: # Enough width and Height for all widgets
+			h= (screenH-vidH)
+			w= int(0.5*(screenW-vidW))
+
+		return vidH, vidW, h, w
+
+
+		'''
+		h= (screenH-vidH)
+		w= 0.5*(screenW-vidW)
+		 ___________________________________________________________
+		|             |                                             |
+		|   myDrone   |             otherDrones                     |        
+		|     w, h    |            w+VidW, h                        |
+		|_____________|_____________________________________________|
+		|             |                             |               |
+		|    Status   |              Video          |   vidControl  |
+		|     w,      |         Native Camera       |  w, 1/3*vidH  |
+		|   2/3*vidH  |            Resolution       |_______________|
+		|             |           vidW*vidH         |               |
+		|             |                             |     Logging   |
+		|             |                             |  w, 2/3*vidH  |
+		|_____________|                             |               |
+		|    modes    |                             |               |
+		|      w,     |                             |               |
+		|  1/3*vidH   |                             |               |
+		|_____________|_____________________________|_______________|
+		'''
 class udpCommunication(threading.Thread):
-	def __init__(self)
+	def __init__(self):
 		threading.Thread.__init__(self) 
 		IPaddress = '127.0.0.1' # IP to send the packets
 		portNum = 5005 # port number of destination
@@ -949,12 +1044,11 @@ class AutoScrollbar(tk.Scrollbar):
             self.tk.call("grid", "remove", self)
         else:
             self.grid()
-        Scrollbar.set(self, lo, hi)
+        tk.Scrollbar.set(self, lo, hi)
     def pack(self, **kw):
         raise TclError, "cannot use pack with this widget"
     def place(self, **kw):
         raise TclError, "cannot use place with this widget"
-        raise tk.TclError, "cannot use place with this widget"	
 	
 def main():
     #global udpProcess # try to kill updprocess using startTkinter
@@ -964,12 +1058,12 @@ def main():
 	stopLogging = Value('i', 1, lock = lock)
 	print 'Start Bool: ' + str(startLogging.value) + '\n'
 	print 'Stop Bool: ' + str(stopLogging.value) + '\n'
-	udpProcess = Process(name = 'UDP Process', target = UDP, args=(n,startLogging,stopLogging))
+	#udpProcess = Process(name = 'UDP Process', target = UDP, args=(n,startLogging,stopLogging))
 	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(n,startLogging,stopLogging))
     # broadcastProcess = Process(name='Broadcasting Process', target=broadcast)
-	udpProcess.start()
+	#udpProcess.start()
 	TkinterProcess.start()
-	udpProcess.join()
+	#udpProcess.join()
 	TkinterProcess.join()
 	
 if __name__ == '__main__':

@@ -78,7 +78,7 @@ class otherdrones(threading.Thread):
     def updateActiveDrones(self):
         # add missing key error exceptions here
         for orc in activeDronesList:
-            self.allDroneDict[orc].configure(bg='medium spring green', fg='black')
+            self.allDroneDict[orc].configure(bg='green', fg='black')
 
 class settingsThreadClass(threading.Thread):
     def __init__(self,master):

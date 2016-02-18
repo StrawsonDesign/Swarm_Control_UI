@@ -11,8 +11,8 @@ from collections import deque # for ring buffer
 from pymavlink import mavutil # MAVlink library
 from sys import exit # Used for exiting the UDP port
 
-allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','More Orcs','Orc1','Orc2','Orc3','Orc4','Orc1','Orc2','Orc3','Orc4','Orc5','Orc6','Orc7']
-activeDronesList=['Othrod','Ugluk','Bolg','Orcobal'] 
+allDronesList=['Drone1','Drone2','Drone3','Drone4','Drone6','Drone6','Drone7','Drone8']
+activeDronesList=['Drone4','Drone6','Drone3'] 
 killUDPprocessCounter=1
 # move these lists to the respective buffer /data structures eventually 
 
@@ -30,7 +30,7 @@ class MyUAV(threading.Thread):
         #                         # vertically to fill the cell
         
         testButton=tk.Button(master,
-                            text='Overwrite',
+                            text='Current Drone Status',
                             command=master.OnButton)
         testButton.place(x=0,y=0,width=w,height=h)
 
@@ -48,6 +48,7 @@ class otherdrones(threading.Thread):
         
         otherDroneCanvas=tk.Canvas(master)
         otherDroneCanvas.place(x=w,y=0,width=screenW-w,height=h)
+
         
         # scrollBarOtherDrones = AutoScrollbar(otherDroneFrame,orient=tk.HORIZONTAL)
 
@@ -56,12 +57,12 @@ class otherdrones(threading.Thread):
         for orc in allDronesList:
             #   otherDroneCanvas.columnconfigure(i,weight=1)
             self.allDroneDict[orc]=tk.Button(otherDroneCanvas,text=orc, bg = "gray14", fg="snow")
-            self.allDroneDict[orc].pack(side=tk.LEFT,fill=tk.Y)
+            self.allDroneDict[orc].pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
             #self.allDroneDict[orc].grid(row=0,column=i,sticky=tk.N+tk.S+tk.E+tk.W)
             i=i+1
 
         # Color active drones in green during intialization
-        self.updateActiveDrones()
+        #self.updateActiveDrones()
 
 
     def run(self):
@@ -391,6 +392,7 @@ class tkinterGUI(tk.Frame):
         vidH=temp.get(4) # Camera Frame Height
         temp.release() # Release camera object
 
+        print vidW,vidH
         camAspectRatio= vidW/vidH
 
         if screenH - vidH < 100: # Not enough height for other widgets

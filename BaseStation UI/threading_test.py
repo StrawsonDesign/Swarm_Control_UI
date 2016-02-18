@@ -13,6 +13,7 @@ from sys import exit # Used for exiting the UDP port
 
 allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','More Orcs','Orc1','Orc2','Orc3','Orc4','Orc1','Orc2','Orc3','Orc4','Orc5','Orc6','Orc7']
 activeDronesList=['Othrod','Ugluk','Bolg','Orcobal'] 
+killUDPprocessCounter=1
 # move these lists to the respective buffer /data structures eventually 
 
 class MyUAV(threading.Thread):
@@ -244,8 +245,8 @@ class Video(threading.Thread):
 
     def recordVideo(self):
         try:
-            w=int(self.vid_cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH ))
-            h=int(self.vid_cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT ))
+            w=int(self.vid_cap.get(3))
+            h=int(self.vid_cap.get(4))
             fourcc = cv2.cv.CV_FOURCC('D','I','V','X')
             outputFPS = 20.0
             self.vidWriter = cv2.VideoWriter('Video_'+str(self.cameraChannelOnVideo)+
@@ -386,8 +387,8 @@ class tkinterGUI(tk.Frame):
         dimensions then scaling happens with respect to primary camera
         '''  
         temp = cv2.VideoCapture(0) # Assign channel to video capture
-        vidW=temp.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH) # Frame Height
-        vidH=temp.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT) # Camera Frame Height
+        vidW=temp.get(3) # Frame Height
+        vidH=temp.get(4) # Camera Frame Height
         temp.release() # Release camera object
 
         camAspectRatio= vidW/vidH
@@ -550,7 +551,7 @@ def UDP():
     UDPlistenThread.join()
     UDPlogThread.join()
 
-    # Declaring global for killUDPprocesscounter
+    # Declaring global for killUDPprocessCounter
     print "UDP process started"
     
     i=0

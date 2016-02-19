@@ -18,7 +18,7 @@ from pymavlink import mavutil
 
 # create a mavlink serial instance
 #master = mavutil.mavlink_connection(args.device, baud=args.baudrate)
-device = 'udpout://127.0.0.1:5005'
+device = 'udp:192.168.7.1:14551'
 baudrate = 57600
 master = mavutil.mavlink_connection(device, baud=baudrate)
 t1 = time.time()

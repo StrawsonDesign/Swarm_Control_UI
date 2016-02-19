@@ -439,8 +439,9 @@ class statisticsThreadClass(threading.Thread):
 	def __init__(self, master, PlotPacket):
 		threading.Thread.__init__(self)
 		statisticsFrame = tk.Frame(master)
-		h_dash=int((screenH-h-int(0.16*vidH))/5)-5# height of each setting box
-		statisticsFrame.place(x=0,y=h,width=w,height=int(0.16*vidH))
+		#h_dash=int((screenH-h-int(0.16*vidH))/5)-5# height of each setting box
+		statisticsFrame.place(x=0,y=h,width=w,height=int(0.66*vidH))
+		statisticsFrame.configure(bg='green')
 		# statisticsFrame.grid(row = 2,
 								# column = 0,
 								# rowspan = 2,
@@ -448,35 +449,42 @@ class statisticsThreadClass(threading.Thread):
 		# statisticsFrame.rowconfigure(2, weight = 1)
 		# statisticsFrame.columnconfigure(0, weight = 1)
 
-		plotFrame = tk.Frame(master)
-		plotFrame.place(x=0,y=h,width=w,height=int(0.5*vidH))
-		# plotFrame.grid(row = 1,
-						# column = 0,
-						# rowspan = 1,
-						# columnspan = 1,
-						# sticky = tk.N + tk.S + tk.W + tk.E)
-		#plotFrame.rowconfigure(2, weight = 1)
-		#plotFrame.columnconfigure(0, weight = 1)
-
+		plotFrame = tk.Frame(statisticsFrame)
+		
+		#plotFrame.place(x=0,y=h,width=w,height=int(0.5*vidH))
+		plotFrame.grid(row = 0,
+						column = 0,
+						sticky = tk.N + tk.S + tk.W + tk.E)
+		plotFrame.rowconfigure(1, weight = 1)
+		plotFrame.rowconfigure(0, weight = 1)
+		
+		plotFrame.columnconfigure(0, weight = 1)
+		plotFrame.columnconfigure(1, weight = 1)
+		plotFrame.columnconfigure(2, weight = 1)
+		plotFrame.columnconfigure(3, weight = 1)
+		plotFrame.columnconfigure(4, weight = 1)
+		plotFrame.columnconfigure(5, weight = 1)
+			
+		
 		stat_velocityBoxFrame = tk.Frame(statisticsFrame)
-		# stat_velocityBoxFrame.grid(row = 0, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_velocityBoxFrame.grid(row = 1, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_accelerationBoxFrame = tk.Frame(statisticsFrame)
-		# stat_accelerationBoxFrame.grid(row = 0, column = 1, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_accelerationBoxFrame.grid(row = 1, column = 1, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_positionBoxFrame = tk.Frame(statisticsFrame)
-		# stat_positionBoxFrame.grid(row = 0, column = 2, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_positionBoxFrame.grid(row = 1, column = 2, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_rollBoxFrame = tk.Frame(statisticsFrame)
-		# stat_rollBoxFrame.grid(row = 0, column = 3, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_rollBoxFrame.grid(row = 1, column = 3, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_pitchBoxFrame = tk.Frame(statisticsFrame)
-		# stat_pitchBoxFrame.grid(row = 0, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_pitchBoxFrame.grid(row = 1, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_yawBoxFrame = tk.Frame(statisticsFrame)
-		# stat_yawBoxFrame.grid(row = 0, column = 5, sticky = tk.N + tk.S + tk.W + tk.E)
+		stat_yawBoxFrame.grid(row = 1, column = 5, sticky = tk.N + tk.S + tk.W + tk.E)
 
-		stat_velocityBoxFrame.place(x=0,y=0,width=w,height=h_dash)
-		stat_accelerationBoxFrame.place(x=w,y=0,width=w,height=h_dash)
-		stat_positionBoxFrame.place(x=2*w,y=0,width=w,height=h_dash)
-		stat_rollBoxFrame.place(x=3*w,y=0,width=w,height=h_dash)
-		stat_pitchBoxFrame.place(x=4*w,y=0,width=w,height=h_dash)
-		stat_yawBoxFrame.place(x=5*w,y=0,width=w,height=h_dash)
+		#stat_velocityBoxFrame.place(x=0,y=0,width=w,height=h_dash)
+		#stat_accelerationBoxFrame.place(x=0,y=0,width=w,height=h_dash)
+		#stat_positionBoxFrame.place(x=2*w,y=0,width=w,height=h_dash)
+		#stat_rollBoxFrame.place(x=3*w,y=0,width=w,height=h_dash)
+		#stat_pitchBoxFrame.place(x=4*w,y=0,width=w,height=h_dash)
+		#stat_yawBoxFrame.place(x=5*w,y=0,width=w,height=h_dash)
 
 		stat_ivelocity = tk.IntVar()
 		stat_iacceleration = tk.IntVar()

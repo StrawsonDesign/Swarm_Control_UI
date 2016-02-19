@@ -6,15 +6,15 @@ test mavlink messages
 
 import sys, struct, time, os
 #from curses import ascii
-import mavtest
+#import mavtest
 from pymavlink import mavutil
 
 from argparse import ArgumentParser
 parser = ArgumentParser(description=__doc__)
 
-parser.add_argument("--baudrate", type=int,
-                  help="master port baud rate", default=115200)
-parser.add_argument("--device", required=True, help="serial device")
+device = 'udpout://192.168.7.1:14551'
+baudrate = 57600
+
 parser.add_argument("--source-system", dest='SOURCE_SYSTEM', type=int,
                   default=22, help='MAVLink source system for this GCS')
 args = parser.parse_args()
@@ -26,11 +26,11 @@ def wait_heartbeat(m):
 	print("Heartbeat from APM (system %u component %u)" % (m.target_system, m.target_system))
 
 # create a mavlink serial instance
-master = mavutil.mavlink_connection(args.device, baud=args.baudrate, source_system=args.SOURCE_SYSTEM)
+master = mavutil.mavlink_connection(device, baud=baudrate, source_system=args.SOURCE_SYSTEM)
 
 # wait for the heartbeat msg to find the system ID
 wait_heartbeat(master)
 
 print("Sending all message types")
-mavtest.generate_outputs(master.mav)
+#mavtest.generate_outputs(master.mav)
 

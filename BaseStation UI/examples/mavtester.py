@@ -12,7 +12,7 @@ from pymavlink import mavutil
 from argparse import ArgumentParser
 parser = ArgumentParser(description=__doc__)
 
-device = 'udpout://192.168.7.1:14551'
+device = 'udp:192.168.7.1:14551'
 baudrate = 57600
 
 parser.add_argument("--source-system", dest='SOURCE_SYSTEM', type=int,

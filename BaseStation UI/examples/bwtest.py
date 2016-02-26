@@ -49,7 +49,7 @@ while True:
             master.mav.total_receive_errors,
             0.001*(master.mav.total_bytes_received-bytes_recv)/(t2-t1),
             0.001*(master.mav.total_bytes_sent-bytes_sent)/(t2-t1)))
-        print("\nReceived packet: MSG ID: %d\n", master.)
+        print("\nReceived packet: MSG ID: %d\n", m.get_msgId())
         bytes_sent = master.mav.total_bytes_sent
         bytes_recv = master.mav.total_bytes_received
         t1 = t2

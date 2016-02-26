@@ -18,7 +18,7 @@ from pymavlink import mavutil
 
 # create a mavlink serial instance
 #master = mavutil.mavlink_connection(args.device, baud=args.baudrate)
-device = 'udp:192.168.7.1:14551'
+device = 'udpout:192.168.1.107:14551'
 baudrate = 57600
 master = mavutil.mavlink_connection(device, baud=baudrate)
 t1 = time.time()
@@ -34,6 +34,7 @@ while True:
     #master.mav.gps_raw_send(1, 2, 3, 4, 5, 6, 7, 8, 9)
     master.mav.attitude_send(1, 2, 3, 4, 5, 6, 7)
     master.mav.vfr_hud_send(1, 2, 3, 4, 5, 6)
+    time.sleep(1)
     while 1:
         m = master.recv_msg()
         if m == None: break
@@ -48,6 +49,7 @@ while True:
             master.mav.total_receive_errors,
             0.001*(master.mav.total_bytes_received-bytes_recv)/(t2-t1),
             0.001*(master.mav.total_bytes_sent-bytes_sent)/(t2-t1)))
+        print("\nReceived packet: MSG ID: %d\n", master.)
         bytes_sent = master.mav.total_bytes_sent
         bytes_recv = master.mav.total_bytes_received
         t1 = t2

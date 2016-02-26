@@ -3,7 +3,7 @@
 import sys, os
 
 #from pymavlink import mavlinkv10 as mavlink
-from pymavlink.dialects.v10 import common as mavlink
+from pymavlink.dialects.v10 import ardupilotmega as mavlink
 #import MAVLink_Messages as mavlink
 
 class fifo(object):
@@ -22,12 +22,14 @@ f = fifo()
 mav = mavlink.MAVLink(f)
 
 # set the WP_RADIUS parameter on the MAV at the end of the link
-mav.param_set_send(7, 1, "WP_RADIUS", 101, mavlink.MAV_PARAM_TYPE_REAL32)
+#mav.param_set_send(7, 1, "WP_RADIUS", 101, mavlink.MAV_PARAM_TYPE_REAL32)
+mav.heartbeat_send(1,  2, 3, 4, 5, 6)
 
 # alternatively, produce a MAVLink_param_set object 
 # this can be sent via your own transport if you like
-m = mav.param_set_encode(7, 1, "WP_RADIUS", 101, mavlink.MAV_PARAM_TYPE_REAL32)
-print m
+#m = mav.param_set_encode(7, 1, "WP_RADIUS", 101, mavlink.MAV_PARAM_TYPE_REAL32)
+m = mav.heartbeat_encode(1, 2, 3, 4, 5, 6)
+
 # get the encoded message as a buffer
 b = m.get_msgbuf()
 

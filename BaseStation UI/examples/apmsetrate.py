@@ -20,7 +20,7 @@ parser.add_argument("--showmessages", action='store_true',
 args = parser.parse_args()
 
 from pymavlink import mavutil
-device = 'udp:127.0.0.1:14551'
+device = 'udpout:192.168.1.107:14551'
 baudrate = 57600
 def wait_heartbeat(m):
     '''wait for a heartbeat so we know the target system IDs'''

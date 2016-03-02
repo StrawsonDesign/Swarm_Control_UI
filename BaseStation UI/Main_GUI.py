@@ -23,7 +23,7 @@ allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','Mo
 activeDronesList=['Othrod','Ugluk','Bolg','Orcobal'] 
 		
 class listener(threading.Thread):
-    def __init__(self,sizeOfBuffer, Packets, startLogging, stopLogging):
+    def __init__(self,sizeOfBuffer, Packets, startLogging, stopLogging, UDPmaster, msgIDs):
 		threading.Thread.__init__(self)
 		#global receviedPacketBuffer # Must declare gloabl varibale prior to assigning values
 		#global receviedPacketBufferLock
@@ -35,6 +35,8 @@ class listener(threading.Thread):
 		self.sizeOfBuffer = sizeOfBuffer
 		self.startLogging = startLogging
 		self.stopLogging = stopLogging
+		self.UDPmaster = UDPmaster
+		self.msgIDs = msgIDs
 		
     def logger(self):
 		outfile='testfile.txt'
@@ -78,21 +80,29 @@ class listener(threading.Thread):
 			try:
 				if self.receviedPacketBufferLock.acquire(1):
 					#print "Buffer is : ", self.receviedPacketBuffer, "\n"
-					self.receviedPacketBuffer.append(i)
+					#self.receviedPacketBuffer.append(i)
+					msg = self.UDPmaster.recv_msg() #This should recv the message then parse it
+					#self.receviedPacketBuffer.append(msg)
+					self.receviedPacketBuffer += msg
+					#self.receviedPacketBufferMsgId.append(msg.get_msgId())
+					self.receviedPacketBufferMsgId += msg.get_msgId()
 				else:
 					print "Lock was not ON"
 				
 			finally:
 				self.receviedPacketBufferLock.release()
-				print "Released Buffer is : ", self.receviedPacketBuffer, "\n"
+				print "Released Buffer is: ", self.receviedPacketBuffer, "\n"
+				print "Released Buffer msg IDs is: ", self.receviedPacketBufferMsgId, "\n"
 				if i%self.sizeOfBuffer==0:
 					for x in xrange(self.sizeOfBuffer):
 						val = self.receviedPacketBuffer.popleft()
 						self.Packets[x] = val
+						self.msgIDs[x] = self.receviedPacketBufferMsgId.popleft()
 						#print "Just popped " + str(val) + '\n'
 					print 'Packet Buffer: ' + str(self.Packets[:]) + '\n'
-					print 'Call Logger'					
-					
+					print 'MSGIds: ' + str(self.msgIDs[:]) +'\n'
+					print 'Call Logger'
+										
 					if self.startLogging.value == 1 and self.stopLogging.value == 0:
 						self.logger()
 					else:
@@ -792,7 +802,7 @@ class Video(threading.Thread):
         vidLabel.after(2,self.showVideo,vidLabel,vidFrame) # calls the method after 10 ms
 		
 class tkinterGUI(tk.Frame):
-	def __init__(self, PlotPacket, startBool, stopBool):
+	def __init__(self, PlotPacket, startBool, stopBool, msgIDs):
 		tk.Frame.__init__(self)
 		# self.grid()
 		# self.grid(sticky = tk.N + tk.S + tk.E + tk.W)
@@ -837,7 +847,7 @@ class tkinterGUI(tk.Frame):
 		videoThread=Video(self)
 		settingsThread = settingsThreadClass(self)
 		loggingThread = loggingThreadClass(self, startBool, stopBool)
-		statisticsThread = statisticsThreadClass(self, PlotPacket)
+		statisticsThread = statisticsThreadClass(self, PlotPacket, msgIDs)
 		myUAVThread = myUAVThreadClass(self)
 		otherDrones=otherdrones(self)
 
@@ -916,46 +926,39 @@ class tkinterGUI(tk.Frame):
 		|  1/3*vidH   |                             |               |
 		|_____________|_____________________________|_______________|
 		'''
-class udpCommunication(threading.Thread):
-	def __init__(self):
-		threading.Thread.__init__(self) 
-		IPaddress = '127.0.0.1' # IP to send the packets
-		portNum = 5005 # port number of destination
-		device = 'udpin://' + str(IPaddress) + ':' + str(portNum)
-		baudrate = 57600
 		
-		parser = ArgumentParser(description=__doc__)
-		#parser.add_argument("--baudrate", type=int,
-		#				  help="master port baud rate", default=57600)
-		#parser.add_argument("--device", default=UDPaddr,required=True, help="serial device")
-		parser.add_argument("--rate", default=4, type=int, help="requested stream rate")
-		parser.add_argument("--source-system", dest='SOURCE_SYSTEM', type=int,
-						  default=255, help='MAVLink source system for this GCS')
-		parser.add_argument("--showmessages", action='store_true',
-						  help="show incoming messages", default=False)
-		args = parser.parse_args()
-		# create a mavlink serial instance
-		master = mavutil.mavlink_connection(device, baud=baudrate)
+def udpConnection():
+	IPaddress = '192.168.1.107' # IP to send the packets
+	portNum = 14551 # port number of destination
+	device = 'udpout:' + str(IPaddress) + ':' + str(portNum)
+	baudrate = 57600
+	
+	parser = ArgumentParser(description=__doc__)
+	#parser.add_argument("--baudrate", type=int,
+	#				  help="master port baud rate", default=57600)
+	#parser.add_argument("--device", default=UDPaddr,required=True, help="serial device")
+	parser.add_argument("--rate", default=4, type=int, help="requested stream rate")
+	parser.add_argument("--source-system", dest='SOURCE_SYSTEM', type=int,
+					  default=255, help='MAVLink source system for this GCS')
+	parser.add_argument("--showmessages", action='store_true',
+					  help="show incoming messages", default=False)
+	args = parser.parse_args()
+	# create a mavlink serial instance
+	master = mavutil.mavlink_connection(device, baud=baudrate)
 
-		# wait for the heartbeat msg to find the system ID
-		wait_heartbeat(master)
+	# wait for the heartbeat msg to find the system ID
+	wait_heartbeat(master)
 
 	def wait_heartbeat(m):
 		'''wait for a heartbeat so we know the target system IDs'''
 		print("Waiting for APM heartbeat")
 		m.wait_heartbeat()
 		print("Heartbeat from APM (system %u component %u)" % (m.target_system, m.target_system))
-		
-	def run(self):
-		print("Sending all stream request for rate %u" % args.rate)
-		for i in range(0, 3):
-			master.mav.request_data_stream_send(master.target_system, master.target_component,
-												mavutil.mavlink.MAV_DATA_STREAM_ALL, args.rate, 1)
-		if args.showmessages:
-			show_messages(master)
 	
-def UDP(Packets, startLogging, stopLogging):
-	UDPlistenThread=listener(10,Packets, startLogging, stopLogging) # sizeOfRingBuffer
+	return master
+	
+def UDP(Packets, startLogging, stopLogging,UDPmaster, msgIDs):
+	UDPlistenThread=listener(10, Packets, startLogging, stopLogging, UDPmaster, msgIDs) # sizeOfRingBuffer
 	UDPlistenThread.setDaemon(True)
 	
 	#UDPlogThread=logger(Packets)
@@ -991,8 +994,8 @@ def closeProgram():
     killUDPprocessCounter=0
     print "here I am ", killUDPprocessCounter
 	
-def startTkinter(PlotPacket,startBool,stopBool):
-    root = tkinterGUI(PlotPacket,startBool,stopBool)
+def startTkinter(PlotPacket,startBool,stopBool, msgIDs):
+    root = tkinterGUI(PlotPacket,startBool,stopBool, msgIDs)
     root.master.title("Azog") # Name of current drone, Here it is Azog
     root.mainloop()
 	
@@ -1012,12 +1015,12 @@ def killDroneMethod():
     # start tkinter stuff
 	
 def broadcast():
-	UDPCommunicationThread = udpCommunication()
-	UDPCommunicationThread.setDaemon(True)
+	UDPConnectionThread = udpConnection()
+	UDPConnectionThread.setDaemon(True)
 	
-	UDPCommunicationThread.start()
+	UDPConnectionThread.start()
 	
-	UDPCommunicationThread.join()    
+	UDPConnectionThread.join()    
 
     # Data content of the UDP packet as hex
     # packetData = 'f1a525da11f6'.decode('hex')
@@ -1057,17 +1060,19 @@ class AutoScrollbar(tk.Scrollbar):
         raise TclError, "cannot use pack with this widget"
     def place(self, **kw):
         raise TclError, "cannot use place with this widget"
-	
+
 def main():
     #global udpProcess # try to kill updprocess using startTkinter
 	lock = Lock()
 	n = Array('i', [0]*10, lock = lock) #Packet Storage Array for transfer between processes
+	msgIDs = Array('i', [0]*10, lock = lock) #Message ID Storage Array for transfer between processes
 	startLogging = Value('i', 0, lock = lock)
 	stopLogging = Value('i', 1, lock = lock)
 	print 'Start Bool: ' + str(startLogging.value) + '\n'
 	print 'Stop Bool: ' + str(stopLogging.value) + '\n'
-	#udpProcess = Process(name = 'UDP Process', target = UDP, args=(n,startLogging,stopLogging))
-	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(n,startLogging,stopLogging))
+	UDPmaster = udpConnection();
+	#udpProcess = Process(name = 'UDP Process', target = UDP, args=(n,startLogging,stopLogging,UDPmaster,msgIDs))
+	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(n,startLogging,stopLogging,msgIDs))
     # broadcastProcess = Process(name='Broadcasting Process', target=broadcast)
 	#udpProcess.start()
 	TkinterProcess.start()

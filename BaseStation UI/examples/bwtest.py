@@ -34,7 +34,7 @@ while True:
     #master.mav.gps_raw_send(1, 2, 3, 4, 5, 6, 7, 8, 9)
     master.mav.attitude_send(1, 2, 3, 4, 5, 6, 7)
     master.mav.vfr_hud_send(1, 2, 3, 4, 5, 6)
-    time.sleep(1)
+    #time.sleep(1)
     while 1:
         m = master.recv_msg()
         if m == None: break

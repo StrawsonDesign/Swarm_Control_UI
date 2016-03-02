@@ -23,7 +23,7 @@ mav = mavlink.MAVLink(f)
 
 # set the WP_RADIUS parameter on the MAV at the end of the link
 #mav.param_set_send(7, 1, "WP_RADIUS", 101, mavlink.MAV_PARAM_TYPE_REAL32)
-mav.heartbeat_send(1,  2, 3, 4, 5, 6)
+#mav.heartbeat_send(1,  2, 3, 4, 5, 6)
 
 # alternatively, produce a MAVLink_param_set object 
 # this can be sent via your own transport if you like

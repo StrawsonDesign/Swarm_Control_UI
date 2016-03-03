@@ -4,7 +4,7 @@
 check bandwidth of link
 '''
 
-import sys, struct, time, os
+import time
 
 from pymavlink import mavutil
 
@@ -34,13 +34,15 @@ while True:
     #master.mav.gps_raw_send(1, 2, 3, 4, 5, 6, 7, 8, 9)
     master.mav.attitude_send(1, 2, 3, 4, 5, 6, 7)
     master.mav.vfr_hud_send(1, 2, 3, 4, 5, 6)
-    #time.sleep(1)
+    time.sleep(1)
     while 1:
         m = master.recv_msg()
         if m == None: break
-        if m.get_type() not in counts:
+        if m.get_type() not in counts:            
             counts[m.get_type()] = 0
         counts[m.get_type()] += 1
+        if m != None:
+            print("Received packet: MSG ID: %d \n" % (m.get_msgId()))
     t2 = time.time()
     if t2 - t1 > 1.0:
         print("%u sent, %u received, %u errors bwin=%.1f kB/s bwout=%.1f kB/s" % (
@@ -48,8 +50,7 @@ while True:
             master.mav.total_packets_received,
             master.mav.total_receive_errors,
             0.001*(master.mav.total_bytes_received-bytes_recv)/(t2-t1),
-            0.001*(master.mav.total_bytes_sent-bytes_sent)/(t2-t1)))
-        print("\nReceived packet: MSG ID: %d\n", m.get_msgId())
-        bytes_sent = master.mav.total_bytes_sent
-        bytes_recv = master.mav.total_bytes_received
-        t1 = t2
+            0.001*(master.mav.total_bytes_sent-bytes_sent)/(t2-t1)))    
+    bytes_sent = master.mav.total_bytes_sent
+    bytes_recv = master.mav.total_bytes_received
+    t1 = t2

@@ -446,7 +446,7 @@ class settingsThreadClass(threading.Thread):
 		
 class statisticsThreadClass(threading.Thread):
 	
-	def __init__(self, master, PlotPacket):
+	def __init__(self, master, PlotPacket, msgIDs):
 		threading.Thread.__init__(self)
 		statisticsFrame = tk.Frame(master)
 		#h_dash=int((screenH-h-int(0.16*vidH))/5)-5# height of each setting box
@@ -460,41 +460,41 @@ class statisticsThreadClass(threading.Thread):
 		# statisticsFrame.columnconfigure(0, weight = 1)
 
 		plotFrame = tk.Frame(statisticsFrame)
+		plotFrameh=int(0.5*vidH)
+		plotFrame.place(x=0,y=0,width=w,height=plotFrameh)
+		#plotFrame.grid(row = 0, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		# plotFrame.rowconfigure(1, weight = 1)
+		# plotFrame.rowconfigure(0, weight = 1)
 		
-		#plotFrame.place(x=0,y=h,width=w,height=int(0.5*vidH))
-		plotFrame.grid(row = 0,
-						column = 0,
-						sticky = tk.N + tk.S + tk.W + tk.E)
-		plotFrame.rowconfigure(1, weight = 1)
-		plotFrame.rowconfigure(0, weight = 1)
-		
-		plotFrame.columnconfigure(0, weight = 1)
-		plotFrame.columnconfigure(1, weight = 1)
-		plotFrame.columnconfigure(2, weight = 1)
-		plotFrame.columnconfigure(3, weight = 1)
-		plotFrame.columnconfigure(4, weight = 1)
-		plotFrame.columnconfigure(5, weight = 1)
+		# plotFrame.columnconfigure(0, weight = 1)
+		# plotFrame.columnconfigure(1, weight = 1)
+		# plotFrame.columnconfigure(2, weight = 1)
+		# plotFrame.columnconfigure(3, weight = 1)
+		# plotFrame.columnconfigure(4, weight = 1)
+		# plotFrame.columnconfigure(5, weight = 1)
 			
 		
 		stat_velocityBoxFrame = tk.Frame(statisticsFrame)
-		stat_velocityBoxFrame.grid(row = 1, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		#stat_velocityBoxFrame.grid(row = 1, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_accelerationBoxFrame = tk.Frame(statisticsFrame)
-		stat_accelerationBoxFrame.grid(row = 1, column = 1, sticky = tk.N + tk.S + tk.W + tk.E)
+		#stat_accelerationBoxFrame.grid(row = 1, column = 1, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_positionBoxFrame = tk.Frame(statisticsFrame)
-		stat_positionBoxFrame.grid(row = 1, column = 2, sticky = tk.N + tk.S + tk.W + tk.E)
+		#stat_positionBoxFrame.grid(row = 1, column = 2, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_rollBoxFrame = tk.Frame(statisticsFrame)
-		stat_rollBoxFrame.grid(row = 1, column = 3, sticky = tk.N + tk.S + tk.W + tk.E)
+		#stat_rollBoxFrame.grid(row = 1, column = 3, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_pitchBoxFrame = tk.Frame(statisticsFrame)
-		stat_pitchBoxFrame.grid(row = 1, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
+		#stat_pitchBoxFrame.grid(row = 1, column = 4, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_yawBoxFrame = tk.Frame(statisticsFrame)
-		stat_yawBoxFrame.grid(row = 1, column = 5, sticky = tk.N + tk.S + tk.W + tk.E)
+		#stat_yawBoxFrame.grid(row = 1, column = 5, sticky = tk.N + tk.S + tk.W + tk.E)
 
-		#stat_velocityBoxFrame.place(x=0,y=0,width=w,height=h_dash)
-		#stat_accelerationBoxFrame.place(x=0,y=0,width=w,height=h_dash)
-		#stat_positionBoxFrame.place(x=2*w,y=0,width=w,height=h_dash)
-		#stat_rollBoxFrame.place(x=3*w,y=0,width=w,height=h_dash)
-		#stat_pitchBoxFrame.place(x=4*w,y=0,width=w,height=h_dash)
-		#stat_yawBoxFrame.place(x=5*w,y=0,width=w,height=h_dash)
+		rem_h=int(int(0.66*vidH)-plotFrameh)
+		frame_wid=int(w/6)
+		stat_velocityBoxFrame.place(x=0,y=plotFrameh,width=frame_wid,height=rem_h)
+		stat_accelerationBoxFrame.place(x=frame_wid,y=plotFrameh,width=frame_wid,height=rem_h)
+		stat_positionBoxFrame.place(x=2*frame_wid,y=plotFrameh,width=frame_wid,height=rem_h)
+		stat_rollBoxFrame.place(x=3*frame_wid,y=plotFrameh,width=frame_wid,height=rem_h)
+		stat_pitchBoxFrame.place(x=4*frame_wid,y=plotFrameh,width=frame_wid,height=rem_h)
+		stat_yawBoxFrame.place(x=5*frame_wid,y=plotFrameh,width=w-5*frame_wid,height=rem_h)
 
 		stat_ivelocity = tk.IntVar()
 		stat_iacceleration = tk.IntVar()
@@ -519,7 +519,11 @@ class statisticsThreadClass(threading.Thread):
 		# plt.show()
 
 		canvas = FigureCanvasTkAgg(self.fig, plotFrame)
-		canvas.get_tk_widget().pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		canvas.get_tk_widget().grid(row = 0, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		#canvas.get_tk_widget().place(x=0,y=0,width=w,height=plotFrameh)
+		canvas.get_tk_widget().rowconfigure(0, weight = 1)
+		canvas.get_tk_widget().columnconfigure(0, weight=1)
+		
 		canvas.show()
 
 
@@ -928,9 +932,9 @@ class tkinterGUI(tk.Frame):
 		'''
 		
 def udpConnection():
-	IPaddress = '192.168.1.107' # IP to send the packets
+	ClientIPaddress = '192.168.1.107' # IP to send the packets
 	portNum = 14551 # port number of destination
-	device = 'udpout:' + str(IPaddress) + ':' + str(portNum)
+	device = 'udpout:' + str(ClientIPaddress) + ':' + str(portNum)
 	baudrate = 57600
 	
 	parser = ArgumentParser(description=__doc__)
@@ -949,11 +953,11 @@ def udpConnection():
 	# wait for the heartbeat msg to find the system ID
 	wait_heartbeat(master)
 
-	def wait_heartbeat(m):
-		'''wait for a heartbeat so we know the target system IDs'''
-		print("Waiting for APM heartbeat")
-		m.wait_heartbeat()
-		print("Heartbeat from APM (system %u component %u)" % (m.target_system, m.target_system))
+def wait_heartbeat(m):
+	'''wait for a heartbeat so we know the target system IDs'''
+	print("Waiting for APM heartbeat")
+	m.wait_heartbeat()
+	print("Heartbeat from APM (system %u component %u)" % (m.target_system, m.target_system))
 	
 	return master
 	
@@ -1070,7 +1074,7 @@ def main():
 	stopLogging = Value('i', 1, lock = lock)
 	print 'Start Bool: ' + str(startLogging.value) + '\n'
 	print 'Stop Bool: ' + str(stopLogging.value) + '\n'
-	UDPmaster = udpConnection();
+	UDPmaster = udpConnection()
 	#udpProcess = Process(name = 'UDP Process', target = UDP, args=(n,startLogging,stopLogging,UDPmaster,msgIDs))
 	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(n,startLogging,stopLogging,msgIDs))
     # broadcastProcess = Process(name='Broadcasting Process', target=broadcast)

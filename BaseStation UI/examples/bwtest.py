@@ -43,6 +43,10 @@ while True:
         counts[m.get_type()] += 1
         if m != None:
             print("Received packet: MSG ID: %d \n" % (m.get_msgId()))
+			if m.get_msgId() == 30
+				print 'Roll: ' + str(m.message['ATTITUDE'].roll) + '\n'
+				print 'Pitch: ' + str(m.message['ATTITUDE'].pitch) + '\n'
+
     t2 = time.time()
     if t2 - t1 > 1.0:
         print("%u sent, %u received, %u errors bwin=%.1f kB/s bwout=%.1f kB/s" % (

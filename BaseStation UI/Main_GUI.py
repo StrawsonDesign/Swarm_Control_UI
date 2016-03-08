@@ -381,8 +381,8 @@ class settingsThreadClass(threading.Thread):
 
 		m=tk.IntVar()
 		f=tk.IntVar()
-		p=tk.IntVar()   
-		c=tk.IntVar()   
+		p=tk.IntVar()
+		c=tk.IntVar()
 
 		# default flight modes
 		m.set(0) #mappingMode = 0    
@@ -472,7 +472,6 @@ class statisticsThreadClass(threading.Thread):
 		# plotFrame.columnconfigure(3, weight = 1)
 		# plotFrame.columnconfigure(4, weight = 1)
 		# plotFrame.columnconfigure(5, weight = 1)
-			
 		
 		stat_velocityBoxFrame = tk.Frame(statisticsFrame)
 		#stat_velocityBoxFrame.grid(row = 1, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
@@ -495,7 +494,8 @@ class statisticsThreadClass(threading.Thread):
 		stat_rollBoxFrame.place(x=3*frame_wid,y=plotFrameh,width=frame_wid,height=rem_h)
 		stat_pitchBoxFrame.place(x=4*frame_wid,y=plotFrameh,width=frame_wid,height=rem_h)
 		stat_yawBoxFrame.place(x=5*frame_wid,y=plotFrameh,width=w-5*frame_wid,height=rem_h)
-
+		
+		
 		stat_ivelocity = tk.IntVar()
 		stat_iacceleration = tk.IntVar()
 		stat_iposition = tk.IntVar()
@@ -542,7 +542,9 @@ class statisticsThreadClass(threading.Thread):
 		self.yaw_line.set_data([],[])
 
 		self.PlotPacket = PlotPacket
-
+		self.msgIDs = msgIDs
+		
+		#if ('30' or '')in self.msgIds
 		# velocity_line = canvas.create_line(0,0,0,0, fill = 'red')
 		# acceleration_line = canvas.create_line(0,0,0,0, fill = 'blue')'
 		# position_line = canvas,create_line(0,0,0,0, fill = 'green')
@@ -959,8 +961,6 @@ def wait_heartbeat(m):
 	m.wait_heartbeat()
 	print("Heartbeat from APM (system %u component %u)" % (m.target_system, m.target_system))
 	
-	return master
-	
 def UDP(Packets, startLogging, stopLogging,UDPmaster, msgIDs):
 	UDPlistenThread=listener(10, Packets, startLogging, stopLogging, UDPmaster, msgIDs) # sizeOfRingBuffer
 	UDPlistenThread.setDaemon(True)
@@ -1009,14 +1009,14 @@ def sendSettingPacket(m,f,p,c):
 	# p - Pilot reference mode: global (5), First Person View (6), PPV (7)
 	# c - Control mode: User (8) , Auto land (9), Come back home (10), Circle Mode (11)
 	print "New Settings received :",'Mapping Mode',m,'\tFlight Mode :',f,'\tPilot Reference Mode',p,'\tControl Mode',c
+	# mav_flight_mode_ctrl        : (See MAV_CTRL_MODE) Valid options are: MAV_CTRL_MODE_MANUAL = 0, MAV_CTRL_MODE_ALTITUDE = 1, MAV_CTRL_MODE_ATTITUDE = 2, MAV_CTRL_MODE_POS_LOCAL = 3, MAV_CTRL_MODE_POS_GLOBAL = 4, MAV_CTRL_MODE_POS_RADIAL = 5, MAV_CTRL_MODE_POS_SPHERICAL = 6, MAV_CTRL_MODE_POS_FOLLOW_ME = 7 (uint8_t)
+	# mav_flight_mode_auto        : (See MAV_AUTO_MODE) Valid options are: MAV_AUTO_MODE_MANUAL = 0, MAV_AUTO_MODE_EMERGENCY_LAND = 1, MAV_AUTO_MODE_RETURN_TO_HOME = 2, MAV_AUTO_MODE_WANDER = 3 (uint8_t)
+	# mav_flight_mode_kill        : (See MAV_KILL) Valid options are: MAV_KILL_SWITCH_OFF = 0, MAV_KILL_NOW = 1 (uint8_t)
+	#mav_flight_ctrl_and_modes_send(chan1_raw, chan2_raw, chan3_raw, chan4_raw, chan5_raw, chan6_raw, chan7_raw, chan8_raw, mav_flight_mode_ctrl, mav_flight_mode_auto, mav_flight_mode_kill)
+	#mav_flight_ctrl_and_modes_send(chan1_raw, chan2_raw, chan3_raw, chan4_raw, chan5_raw, chan6_raw, chan7_raw, chan8_raw, mav_flight_mode_ctrl, mav_flight_mode_auto, mav_flight_mode_kill)
 
 def saveDroneData():
 	pass
-	
-def killDroneMethod():
-    print 'this should send a specific MAVlink packet'
-    
-    # start tkinter stuff
 	
 def broadcast():
 	UDPConnectionThread = udpConnection()
@@ -1074,7 +1074,7 @@ def main():
 	stopLogging = Value('i', 1, lock = lock)
 	print 'Start Bool: ' + str(startLogging.value) + '\n'
 	print 'Stop Bool: ' + str(stopLogging.value) + '\n'
-	UDPmaster = udpConnection()
+	#UDPmaster = udpConnection()
 	#udpProcess = Process(name = 'UDP Process', target = UDP, args=(n,startLogging,stopLogging,UDPmaster,msgIDs))
 	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(n,startLogging,stopLogging,msgIDs))
     # broadcastProcess = Process(name='Broadcasting Process', target=broadcast)

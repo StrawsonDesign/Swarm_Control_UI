@@ -20,7 +20,7 @@ from pymavlink import mavutil
 #master = mavutil.mavlink_connection(args.device, baud=args.baudrate)
 device = 'udpout:192.168.1.107:14551'
 baudrate = 57600
-master = mavutil.mavlink_connection(device, baud=baudrate)
+
 t1 = time.time()
 
 counts = {}
@@ -33,16 +33,23 @@ def wait_heartbeat(m):
     m.wait_heartbeat()
     print("Heartbeat from APM (system %u component %u)" % (m.target_system, m.target_system))
 
-wait_heartbeat(master)
+master = mavutil.mavlink_connection(device, baud=baudrate)
 
-while True:
-    master.mav.heartbeat_send(1,  2, 3, 4, 5, 6)
-    master.mav.sys_status_send(1, 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11, 12,13)
+#wait_heartbeat(master)
+
+while True:    
+    #master.mav.heartbeat_send(1,  2, 3, 4, 5, 6)
+    #master.mav.sys_status_send(1, 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11, 12,13)
     #master.mav.gps_raw_send(1, 2, 3, 4, 5, 6, 7, 8, 9)
-    master.mav.attitude_send(1, 2, 3, 4, 5, 6, 7)
-    master.mav.vfr_hud_send(1, 2, 3, 4, 5, 6)
-	master.mav.position_target_local_ned_send(1, 1, 0b0000000000000000, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
-	# position_target_local_ned_send(time_boot_ms, coordinate_frame, type_mask, x, y, z, vx, vy, vz, afx, afy, afz, yaw, yaw_rate)
+    #master.mav.attitude_send(1, 2, 3, 4, 5, 6, 7)
+    #master.mav.vfr_hud_send(1, 2, 3, 4, 5, 6)
+    #master.mav.position_target_local_ned_send(1, 8, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+    #master.mav.set_position_target_global_int_send(1,255,0,5,0b0000000000000000,1000,2000,500,1,1,1,2,2,2,1,1)
+    #master.mav.attitude_target_send(1,0b0000000000000000,[1,0,0,0],1,1,1,0)  
+    #master.mav.local_position_ned_system_global_offset_send(1,2,3,4,5,6,7)
+    #master.mav.mission_count_send(255,0,2)
+    master.mav.mav_flight_ctrl_and_modes_send(1,2,3,4,5,6,7,8,0,0,0)
+    # position_target_local_ned_send(time_boot_ms, coordinate_frame, type_mask, x, y, z, vx, vy, vz, afx, afy, afz, yaw, yaw_rate)
 	# time_boot_ms              : Timestamp in milliseconds since system boot (uint32_t)
 	# coordinate_frame          : Valid options are: MAV_FRAME_LOCAL_NED = 1, MAV_FRAME_LOCAL_OFFSET_NED = 7, MAV_FRAME_BODY_NED = 8, MAV_FRAME_BODY_OFFSET_NED = 9 (uint8_t)
 	# type_mask                 : Bitmask to indicate which dimensions should be ignored by the vehicle: a value of 0b0000000000000000 or 0b0000001000000000 indicates that none of the setpoint dimensions should be ignored. If bit 10 is set the floats afx afy afz should be interpreted as force instead of acceleration. Mapping: bit 1: x, bit 2: y, bit 3: z, bit 4: vx, bit 5: vy, bit 6: vz, bit 7: ax, bit 8: ay, bit 9: az, bit 10: is force setpoint, bit 11: yaw, bit 12: yaw rate (uint16_t)
@@ -66,9 +73,10 @@ while True:
         counts[m.get_type()] += 1
         if m != None:
             print("Received packet: MSG ID: %d \n" % (m.get_msgId()))
-			if m.get_msgId() == 30
-				print 'Roll: ' + str(m.message['ATTITUDE'].roll) + '\n'
-				print 'Pitch: ' + str(m.message['ATTITUDE'].pitch) + '\n'
+            if m.get_msgId() == 30:
+                print 'Roll: ' + str(m.roll) + '\n'
+                print 'Pitch: ' + str(m.pitch) + '\n'
+                print 'Type: ' + str(m.get_type()) + '\n'
 
     t2 = time.time()
     if t2 - t1 > 1.0:

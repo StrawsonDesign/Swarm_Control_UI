@@ -91,8 +91,8 @@ class listener(threading.Thread):
 				
 			finally:
 				self.receviedPacketBufferLock.release()
-				print "Released Buffer is: ", self.receviedPacketBuffer, "\n"
-				print "Released Buffer msg IDs is: ", self.receviedPacketBufferMsgId, "\n"
+				print "Released Buffer are: ", self.receviedPacketBuffer, "\n"
+				print "Released Buffer msg IDs are: ", self.receviedPacketBufferMsgId, "\n"
 				if i%self.sizeOfBuffer==0:
 					for x in xrange(self.sizeOfBuffer):
 						val = self.receviedPacketBuffer.popleft()
@@ -951,15 +951,8 @@ def udpConnection():
 	args = parser.parse_args()
 	# create a mavlink serial instance
 	master = mavutil.mavlink_connection(device, baud=baudrate)
-
-	# wait for the heartbeat msg to find the system ID
-	wait_heartbeat(master)
-
-def wait_heartbeat(m):
-	'''wait for a heartbeat so we know the target system IDs'''
-	print("Waiting for APM heartbeat")
-	m.wait_heartbeat()
-	print("Heartbeat from APM (system %u component %u)" % (m.target_system, m.target_system))
+	
+	return master
 	
 def UDP(Packets, startLogging, stopLogging,UDPmaster, msgIDs):
 	UDPlistenThread=listener(10, Packets, startLogging, stopLogging, UDPmaster, msgIDs) # sizeOfRingBuffer
@@ -1014,9 +1007,13 @@ def sendSettingPacket(m,f,p,c):
 	# mav_flight_mode_kill        : (See MAV_KILL) Valid options are: MAV_KILL_SWITCH_OFF = 0, MAV_KILL_NOW = 1 (uint8_t)
 	#mav_flight_ctrl_and_modes_send(chan1_raw, chan2_raw, chan3_raw, chan4_raw, chan5_raw, chan6_raw, chan7_raw, chan8_raw, mav_flight_mode_ctrl, mav_flight_mode_auto, mav_flight_mode_kill)
 	#mav_flight_ctrl_and_modes_send(chan1_raw, chan2_raw, chan3_raw, chan4_raw, chan5_raw, chan6_raw, chan7_raw, chan8_raw, mav_flight_mode_ctrl, mav_flight_mode_auto, mav_flight_mode_kill)
-
 def saveDroneData():
 	pass
+	
+def killDroneMethod():
+    print 'this should send a specific MAVlink packet'
+    
+    # start tkinter stuff
 	
 def broadcast():
 	UDPConnectionThread = udpConnection()
@@ -1072,9 +1069,10 @@ def main():
 	msgIDs = Array('i', [0]*10, lock = lock) #Message ID Storage Array for transfer between processes
 	startLogging = Value('i', 0, lock = lock)
 	stopLogging = Value('i', 1, lock = lock)
-	print 'Start Bool: ' + str(startLogging.value) + '\n'
-	print 'Stop Bool: ' + str(stopLogging.value) + '\n'
-	#UDPmaster = udpConnection()
+	# print 'Start Bool: ' + str(startLogging.value) + '\n'
+	# print 'Stop Bool: ' + str(stopLogging.value) + '\n'
+	UDPmaster = udpConnection()
+	print UDPmaster
 	#udpProcess = Process(name = 'UDP Process', target = UDP, args=(n,startLogging,stopLogging,UDPmaster,msgIDs))
 	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(n,startLogging,stopLogging,msgIDs))
     # broadcastProcess = Process(name='Broadcasting Process', target=broadcast)

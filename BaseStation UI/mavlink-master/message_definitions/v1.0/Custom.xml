@@ -1,7 +1,6 @@
 <?xml version='1.0'?>
 <!-- MESSAGE IDs 150 - 240: Space for custom messages in individual projectname_messages.xml files -->
 <mavlink>
-	<include>ardupilotmega.xml</include>
 	<version>3</version>
 	<enums>
 		<enum name="MAV_CTRL_MODE">               	

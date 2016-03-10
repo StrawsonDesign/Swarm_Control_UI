@@ -18,7 +18,8 @@ from pymavlink import mavutil
 
 # create a mavlink serial instance
 #master = mavutil.mavlink_connection(args.device, baud=args.baudrate)
-device = 'udpout:192.168.1.107:14551'
+#device = 'udpout:192.168.1.107:14551'
+device = 'udpout:192.168.7.2:14551'
 baudrate = 57600
 
 t1 = time.time()
@@ -48,7 +49,7 @@ while True:
     #master.mav.attitude_target_send(1,0b0000000000000000,[1,0,0,0],1,1,1,0)  
     #master.mav.local_position_ned_system_global_offset_send(1,2,3,4,5,6,7)
     #master.mav.mission_count_send(255,0,2)
-    master.mav.mav_flight_ctrl_and_modes_send(1,2,3,4,5,6,7,8,0,0,0)
+    #master.mav.mav_flight_ctrl_and_modes_send(1,2,3,4,5,6,7,8,0,0,0)
     # position_target_local_ned_send(time_boot_ms, coordinate_frame, type_mask, x, y, z, vx, vy, vz, afx, afy, afz, yaw, yaw_rate)
 	# time_boot_ms              : Timestamp in milliseconds since system boot (uint32_t)
 	# coordinate_frame          : Valid options are: MAV_FRAME_LOCAL_NED = 1, MAV_FRAME_LOCAL_OFFSET_NED = 7, MAV_FRAME_BODY_NED = 8, MAV_FRAME_BODY_OFFSET_NED = 9 (uint8_t)

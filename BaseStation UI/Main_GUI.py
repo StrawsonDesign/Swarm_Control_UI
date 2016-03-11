@@ -13,15 +13,15 @@ from collections import deque
 import socket # for sending across UDP packets 
 from multiprocessing.sharedctypes import Value, Array
 from ctypes import Structure, c_double, c_short, c_long
-from multiprocessing import Process, Lock #multiprocessing
+from multiprocessing import Process, Lock, Manager #multiprocessing
 
 from argparse import ArgumentParser
 
 from pymavlink import mavutil
 
 allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','More Orcs','Orc1','Orc2','Orc3','Orc4']
-activeDronesList=['Othrod','Ugluk','Bolg','Orcobal'] 
-		
+activeDronesList=['Othrod','Ugluk','Bolg','Orcobal']
+
 class listener(threading.Thread):
     def __init__(self,sizeOfBuffer, Packets, startLogging, stopLogging, UDPmaster, msgIDs):
 		threading.Thread.__init__(self)
@@ -42,7 +42,6 @@ class listener(threading.Thread):
 		outfile='testfile.txt'
 		self.log_dummy=open(outfile,"w",1) # use a = append mode, buffering set to true
 		print "file", outfile, "is opened"
-
 		print "The packet delivered is: " + str(self.Packets[:])
 		tempData=""
 		m=0
@@ -59,7 +58,7 @@ class listener(threading.Thread):
 			i += 1
 	#except IndexError:
 		#print "Index Error occured, couldn't pop left on an empty deque"
-		
+
 	#finally:
 		#receviedPacketBufferLock.release()
 		print "Released Packet:" + str(self.Packets[:]) #This is the packet that should be released to the plotter
@@ -79,28 +78,40 @@ class listener(threading.Thread):
 			sleep(1)
 			try:
 				if self.receviedPacketBufferLock.acquire(1):
-					#print "Buffer is : ", self.receviedPacketBuffer, "\n"
 					#self.receviedPacketBuffer.append(i)
-					msg = self.UDPmaster.recv_msg() #This should recv the message then parse it
-					#self.receviedPacketBuffer.append(msg)
-					self.receviedPacketBuffer += msg
-					#self.receviedPacketBufferMsgId.append(msg.get_msgId())
-					self.receviedPacketBufferMsgId += msg.get_msgId()
+					data = self.UDPmaster.recv() #This should recv the data from the socket
+					self.receviedPacketBuffer.append(data)
+					
 				else:
 					print "Lock was not ON"
-				
+					
 			finally:
 				self.receviedPacketBufferLock.release()
-				print "Released Buffer are: ", self.receviedPacketBuffer, "\n"
-				print "Released Buffer msg IDs are: ", self.receviedPacketBufferMsgId, "\n"
+				# print "Released Buffer are: ", self.receviedPacketBuffer, "\n"
+				# print "Released Buffer msg IDs are: ", self.receviedPacketBufferMsgId, "\n"
 				if i%self.sizeOfBuffer==0:
 					for x in xrange(self.sizeOfBuffer):
-						val = self.receviedPacketBuffer.popleft()
-						self.Packets[x] = val
-						self.msgIDs[x] = self.receviedPacketBufferMsgId.popleft()
+						packet = self.UDPmaster.mav.parse_char(receviedPacketBuffer.popleft())
+						if packet == None: continue
+						if packet is not None:
+							master.post_message(packet)
+							
+							if packet.get_msgId() == 30 #Attitude Packet (Contains Roll, Pitch, Yaw)
+								message_Roll.append(packet.roll)			#roll  : Roll angle (rad, -pi..+pi) (float)
+								message_Pitch.appened(packet.Pitch)			#pitch : Pitch angle (rad, -pi..+pi) (float)
+								message_Yaw.append(packet.Yaw)				#yaw   : Yaw angle (rad, -pi..+pi) (float)
+							
+							elif packet.get_msgId() == 10
+								pass
+							
+						messages['Attitude'] = ['Roll': message_Roll, 'Pitch': message_Pitch, 'Yaw': message_Yaw]
+						
+						#val = self.receviedPacketBuffer.popleft()
+						#self.Packets[x] = val
+						#self.msgIDs[x] = self.receviedPacketBufferMsgId.popleft()
 						#print "Just popped " + str(val) + '\n'
-					print 'Packet Buffer: ' + str(self.Packets[:]) + '\n'
-					print 'MSGIds: ' + str(self.msgIDs[:]) +'\n'
+					#print 'Packet Buffer: ' + str(self.Packets[:]) + '\n'
+					#print 'MSGIds: ' + str(self.msgIDs[:]) +'\n'
 					print 'Call Logger'
 										
 					if self.startLogging.value == 1 and self.stopLogging.value == 0:
@@ -1065,14 +1076,17 @@ class AutoScrollbar(tk.Scrollbar):
 def main():
     #global udpProcess # try to kill updprocess using startTkinter
 	lock = Lock()
+	manager = Manager()
 	n = Array('i', [0]*10, lock = lock) #Packet Storage Array for transfer between processes
 	msgIDs = Array('i', [0]*10, lock = lock) #Message ID Storage Array for transfer between processes
 	startLogging = Value('i', 0, lock = lock)
 	stopLogging = Value('i', 1, lock = lock)
+	lproxy = manager.list()
+	lproxy.append({})
+	messages = manager.dict()
 	# print 'Start Bool: ' + str(startLogging.value) + '\n'
 	# print 'Stop Bool: ' + str(stopLogging.value) + '\n'
 	UDPmaster = udpConnection()
-	print UDPmaster
 	#udpProcess = Process(name = 'UDP Process', target = UDP, args=(n,startLogging,stopLogging,UDPmaster,msgIDs))
 	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(n,startLogging,stopLogging,msgIDs))
     # broadcastProcess = Process(name='Broadcasting Process', target=broadcast)

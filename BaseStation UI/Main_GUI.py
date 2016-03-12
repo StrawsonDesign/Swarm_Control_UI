@@ -4,7 +4,12 @@ import matplotlib.pyplot as plt
 # matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg #, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
-#import matplotlib.animation as animation
+import matplotlib.animation as animation
+from matplotlib import style
+
+import csv
+import traceback
+
 from PIL import ImageTk , Image # for image conversion
 import cv2 # OpenCV for video handling
 import tkFont, threading, Queue, tkMessageBox
@@ -22,8 +27,10 @@ from pymavlink import mavutil
 allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','More Orcs','Orc1','Orc2','Orc3','Orc4']
 activeDronesList=['Othrod','Ugluk','Bolg','Orcobal']
 
+style.use("ggplot")
+
 class listener(threading.Thread):
-    def __init__(self,sizeOfBuffer, Packets, startLogging, stopLogging, UDPmaster, msgIDs):
+    def __init__(self, sizeOfBuffer, messages, startLogging, stopLogging, UDPmaster, Log_msgIDs):
 		threading.Thread.__init__(self)
 		#global receviedPacketBuffer # Must declare gloabl varibale prior to assigning values
 		#global receviedPacketBufferLock
@@ -31,43 +38,63 @@ class listener(threading.Thread):
 		self.receviedPacketBufferLock = threading.Lock()
 		print "Initialized Ring Buffer as size of", sizeOfBuffer
 		#self.isBufferBusy=0
-		self.Packets = Packets
+		self.messages = messages
 		self.sizeOfBuffer = sizeOfBuffer
 		self.startLogging = startLogging
 		self.stopLogging = stopLogging
 		self.UDPmaster = UDPmaster
-		self.msgIDs = msgIDs
 		
-    def logger(self):
-		outfile='testfile.txt'
-		self.log_dummy=open(outfile,"w",1) # use a = append mode, buffering set to true
-		print "file", outfile, "is opened"
-		print "The packet delivered is: " + str(self.Packets[:])
-		tempData=""
-		m=0
+		self.Log_msgIDs = Log_msgIDs
+		self.message_BootTime = []
+		self.message_Roll = []
+		self.message_Pitch = []
+		self.message_Yaw = []
+		self.message_BatteryRemaining =[]
+		self.message_X_Position = []
+		self.message_Y_Position = []
+		self.message_Z_Position = []
+		
+		self.outfile='data.csv'
+		
+    def logger(self, csv_writer):
+	
+		try:
+			csv_writer.writerow([self.packet])
+			
+		except(KeyboardInterrupt, SystemExit):
+			raise
+			
+		except:
+			traceback.print_exc()
+			
+		#self.log_dummy=open(outfile,"w",1) # use a = append mode, buffering set to true
+		# print "file", outfile, "is opened"
+		# print "The packet delivered is: " + str(self.Packets[:])
+		# tempData=""
+		# m=0
 		#while m<20: # change this
 		#sleep(1)
 		#if self.receviedPacketBufferLock.acquire(0):
 			#try:
-		i = 0
-		for i in xrange(self.sizeOfBuffer): # empty the entire list
+		# i = 0
+		# for i in xrange(self.sizeOfBuffer): # empty the entire list
 		#self.listenerobject.isBufferBusy=1
-			data=strftime("%c") + "\t" + str(self.Packets[i]) + "\n"
-			tempData=tempData+data
-			print "Packet: " + str(self.Packets[i])
-			i += 1
+			# data=strftime("%c") + "\t" + str(self.Packets[i]) + "\n"
+			# tempData=tempData+data
+			# print "Packet: " + str(self.Packets[i])
+			# i += 1
 	#except IndexError:
 		#print "Index Error occured, couldn't pop left on an empty deque"
 
 	#finally:
 		#receviedPacketBufferLock.release()
-		print "Released Packet:" + str(self.Packets[:]) #This is the packet that should be released to the plotter
-		m += 1
+		# print "Released Packet:" + str(self.Packets[:]) #This is the packet that should be released to the plotter
+		# m += 1
 		#print "M is", m
-		if m%self.sizeOfBuffer==0:
-			self.log_dummy.write(tempData)
-			print "WROTE TO DISK"
-			tempData=""
+		# if m%self.sizeOfBuffer==0:
+			# self.log_dummy.write(tempData)
+			# print "WROTE TO DISK"
+			# tempData=""
 			
     def run(self):
 		i = 0
@@ -91,33 +118,57 @@ class listener(threading.Thread):
 				# print "Released Buffer msg IDs are: ", self.receviedPacketBufferMsgId, "\n"
 				if i%self.sizeOfBuffer==0:
 					for x in xrange(self.sizeOfBuffer):
-						packet = self.UDPmaster.mav.parse_char(receviedPacketBuffer.popleft())
-						if packet == None: continue
-						if packet is not None:
-							master.post_message(packet)
-							
-							if packet.get_msgId() == 30 #Attitude Packet (Contains Roll, Pitch, Yaw)
-								message_Roll.append(packet.roll)			#roll  : Roll angle (rad, -pi..+pi) (float)
-								message_Pitch.appened(packet.Pitch)			#pitch : Pitch angle (rad, -pi..+pi) (float)
-								message_Yaw.append(packet.Yaw)				#yaw   : Yaw angle (rad, -pi..+pi) (float)
-							
-							elif packet.get_msgId() == 10
-								pass
-							
-						messages['Attitude'] = ['Roll': message_Roll, 'Pitch': message_Pitch, 'Yaw': message_Yaw]
+						self.packet = self.UDPmaster.mav.parse_char(receviedPacketBuffer.popleft())
 						
+						if self.packet is not None:
+							master.post_message(packet)
+							print 'Call Logger'
+								
+							if self.packet.get_msgId() == 30: #Attitude Packet (Contains Roll, Pitch, Yaw)
+								self.message_BootTime.append(packet.time_boot_ms)
+								self.message_Roll.append(packet.roll)			#roll  : Roll angle (rad, -pi..+pi) (float)
+								self.message_Pitch.appened(packet.Pitch)		#pitch : Pitch angle (rad, -pi..+pi) (float)
+								self.message_Yaw.append(packet.Yaw)				#yaw   : Yaw angle (rad, -pi..+pi) (float)
+								
+							elif self.packet.get_msgId() == 1:
+								self.message_BatteryRemaining.append(packet.battery_remaining)
+								
+							elif self.packet.get_msgId() == 104:
+								self.message_X_Position.append(packet.x)
+								self.message_Y_Position.append(packet.y)
+								self.message_Z_Position.append(packet.z)
+							
+							if self.startLogging.value == 1 and self.stopLogging.value == 0 and packet.get_msgID() in self.Log_msgIDs: # Check if the GUI should be Logging data
+								with open(outfile, 'w', self.sizeOfBuffer*1024) as csv_handler:
+									csv_writer = csv.writer(csv_handle, delimiter ='')
+									self.logger(csv_writer)
+							else:
+								print "Don't need to record data yet"
+								
+						# if packet == None:
+							# continue
+							
+						if x == self.sizeOfBuffer:
+							self.messages['ATTITUDE'] = {'BootTime': self.message_BootTime, 'Roll': self.message_Roll, 'Pitch': self.message_Pitch, 'Yaw': self.message_Yaw}
+							self.messages['SYS_STATUS'] = {'Battery_Power': self.message_BatteryRemaining}
+							self.messages['VICON_POSITION_ESTIMATE'] = {'X': self.message_X_Position, 'Y': self.message_Y_Position, 'Z': self.message_Z_Position}
+							
+							self.message_BootTime = []
+							self.message_Roll.append = []
+							self.message_Pitch.appened = []
+							self.message_Yaw.append = []
+							self.message_BatteryRemaining = []
+							self.message_X_Position = []
+							self.message_Y_Position = []
+							self.message_Z_Position = []
+							
 						#val = self.receviedPacketBuffer.popleft()
 						#self.Packets[x] = val
 						#self.msgIDs[x] = self.receviedPacketBufferMsgId.popleft()
 						#print "Just popped " + str(val) + '\n'
 					#print 'Packet Buffer: ' + str(self.Packets[:]) + '\n'
 					#print 'MSGIds: ' + str(self.msgIDs[:]) +'\n'
-					print 'Call Logger'
-										
-					if self.startLogging.value == 1 and self.stopLogging.value == 0:
-						self.logger()
-					else:
-						print "Don't need to record data yet"
+					
 
 class myUAVThreadClass(threading.Thread):
 	def __init__(self,master):
@@ -224,7 +275,7 @@ class otherdrones(threading.Thread):
 			
 class loggingThreadClass(threading.Thread):
 	
-	def __init__(self, master, startBool, stopBool):
+	def __init__(self, master, startBool, stopBool, Log_msgIDs):
 		threading.Thread.__init__(self)
 		loggingFrame = tk.Frame(master)
 		h_dash=int((screenH-h-int(0.33*vidH))/5)-5# height of each setting box
@@ -285,7 +336,9 @@ class loggingThreadClass(threading.Thread):
 		log_startButton.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = 1)
 		log_stopButton.pack(side = tk.BOTTOM, fill = tk.BOTH, expand = 1)
 		
+		self.Log_msgIDs = Log_msgIDs
 		self.loggingVariables = []
+		self.msgIDs = []
 		self.startLogging = startBool
 		self.stopLogging = stopBool
 		
@@ -340,15 +393,54 @@ class loggingThreadClass(threading.Thread):
 	
 		if var_State == 1:
 			self.loggingVariables.append(var_Name)
+			
 			print self.loggingVariables
 			
-		elif var_State == 0:
+			if 'Attitude' is var_Name:
+				self.msgIDs.append(30)
+			
+			elif 'Position' is var_Name:
+				self.msgIDs.append(104)
+				
+			elif 'Velocity' is var_Name:
+				self.msgIDs.append(123890122)
+				
+			elif 'Battery' is var_Name:
+				self.msgIDs.append(1)
+				
+			print self.Log_msgIDs	
+			
+		elif var_State == 0:			
+			
+			if 'Attitude' is var_Name:
+				ivar_Name = self.msgIDs.index(30)
+				print ivar_Name
+				self.msgIDs.pop(ivar_Name)
+				
+			elif 'Position' is var_Name:
+				ivar_Name = self.msgIDs.index(104)
+				self.msgIDs.pop(ivar_Name)
+				
+			elif 'Velocity' is var_Name:
+				ivar_Name = self.msgIDs.index(123890122)
+				self.msgIDs.pop(ivar_Name)
+				
+			elif 'Battery' is var_Name:
+				ivar_Name = self.msgIDs.index(1)
+				self.msgIDs.pop(ivar_Name)		
+			
 			ivar_Name = self.loggingVariables.index(var_Name)
 			self.loggingVariables.pop(ivar_Name)
+			
 			print self.loggingVariables
-		
+			print self.msgIDs
+			
 		self.Log_names = self.loggingVariables
-		print "Log names: " + str(self.Log_names)
+		self.Log_msgIDs = self.msgIDs
+			
+		print "Log names: " + str(self.loggingVariables)
+		print "Log message IDs: " + str(self.msgIDs)
+		#self.msgIDs = {'Attitude': 30, 'Position': 104, 'Velocity': 231409213, 'Battery': 1}
 		
 	def run(self):
 		pass
@@ -457,7 +549,7 @@ class settingsThreadClass(threading.Thread):
 		
 class statisticsThreadClass(threading.Thread):
 	
-	def __init__(self, master, PlotPacket, msgIDs):
+	def __init__(self, master, messages):
 		threading.Thread.__init__(self)
 		statisticsFrame = tk.Frame(master)
 		#h_dash=int((screenH-h-int(0.16*vidH))/5)-5# height of each setting box
@@ -552,8 +644,7 @@ class statisticsThreadClass(threading.Thread):
 		self.pitch_line.set_data([],[])
 		self.yaw_line.set_data([],[])
 
-		self.PlotPacket = PlotPacket
-		self.msgIDs = msgIDs
+		self.PlotMessages = messages
 		
 		#if ('30' or '')in self.msgIds
 		# velocity_line = canvas.create_line(0,0,0,0, fill = 'red')
@@ -578,12 +669,11 @@ class statisticsThreadClass(threading.Thread):
 
 		plt.close(self.fig)			
 			
-		# def AnimatePlot():
-		# pullData = open('').read()
+		#def AnimatePlot():
 		# dataList = pullData.split('\n')
 		# xList = []
 		# yList = []
-		# zList =  []
+		# zList = []
 
 		# for eachLine in dataList
 			# if len(eachLine) > 1:
@@ -605,9 +695,8 @@ class statisticsThreadClass(threading.Thread):
 		# ax.relim()
 		# ax.autoscale_view()
 		# plt.draw
-
-		# def animate():		
-		# anim = animation.FuncAnimation(fig, animate, init_func = init, frames = 360, interval = 5, blit = True)
+	
+		# anim = animation.FuncAnimation(self.fig, AnimatePlot, interval = 1000) #init_func = init, frames = 360, interval = 5, blit = True)
 		
 	def Plot(self,var_name, var_state, canvas):
 		
@@ -644,7 +733,7 @@ class statisticsThreadClass(threading.Thread):
 				self.yaw_line.set_data(t, yaw)
 				
 			print "Plotting " + var_name
-			print 'The Packet being plotted is: ' + str(self.PlotPacket[:]) #This is the packet that would be sent to the Settings Thread for plotting
+			print 'The Packet being plotted is: ' + str(self.PlotMessages[:]) #This is the packet that would be sent to the Settings Thread for plotting
 			self.ax.relim()
 			self.ax.autoscale_view()
 			# plt.gcf().canvas.draw()
@@ -819,7 +908,7 @@ class Video(threading.Thread):
         vidLabel.after(2,self.showVideo,vidLabel,vidFrame) # calls the method after 10 ms
 		
 class tkinterGUI(tk.Frame):
-	def __init__(self, PlotPacket, startBool, stopBool, msgIDs):
+	def __init__(self, messages, startBool, stopBool, Log_msgIDs):
 		tk.Frame.__init__(self)
 		# self.grid()
 		# self.grid(sticky = tk.N + tk.S + tk.E + tk.W)
@@ -863,8 +952,8 @@ class tkinterGUI(tk.Frame):
 
 		videoThread=Video(self)
 		settingsThread = settingsThreadClass(self)
-		loggingThread = loggingThreadClass(self, startBool, stopBool)
-		statisticsThread = statisticsThreadClass(self, PlotPacket, msgIDs)
+		loggingThread = loggingThreadClass(self, startBool, stopBool, Log_msgIDs)
+		statisticsThread = statisticsThreadClass(self, messages)
 		myUAVThread = myUAVThreadClass(self)
 		otherDrones=otherdrones(self)
 
@@ -965,8 +1054,9 @@ def udpConnection():
 	
 	return master
 	
-def UDP(Packets, startLogging, stopLogging,UDPmaster, msgIDs):
-	UDPlistenThread=listener(10, Packets, startLogging, stopLogging, UDPmaster, msgIDs) # sizeOfRingBuffer
+def UDP(messages, startLogging, stopLogging, UDPmaster, Log_msgIDs):
+	sizeOfBuffer = 10
+	UDPlistenThread=listener(sizeOfBuffer, messages, startLogging, stopLogging, UDPmaster, Log_msgIDs) # sizeOfRingBuffer
 	UDPlistenThread.setDaemon(True)
 	
 	#UDPlogThread=logger(Packets)
@@ -977,7 +1067,7 @@ def UDP(Packets, startLogging, stopLogging,UDPmaster, msgIDs):
 
 	#UDPlogThread.start()
 
-	print 'Pack:' + str(Packets[:]) #The Packet which will be outputted to the plotter
+	# print 'Pack:' + str(messages[:]) #The Packet which will be outputted to the plotter
 	UDPlistenThread.join()
 	#UDPlogThread.join()
 	
@@ -1018,6 +1108,7 @@ def sendSettingPacket(m,f,p,c):
 	# mav_flight_mode_kill        : (See MAV_KILL) Valid options are: MAV_KILL_SWITCH_OFF = 0, MAV_KILL_NOW = 1 (uint8_t)
 	#mav_flight_ctrl_and_modes_send(chan1_raw, chan2_raw, chan3_raw, chan4_raw, chan5_raw, chan6_raw, chan7_raw, chan8_raw, mav_flight_mode_ctrl, mav_flight_mode_auto, mav_flight_mode_kill)
 	#mav_flight_ctrl_and_modes_send(chan1_raw, chan2_raw, chan3_raw, chan4_raw, chan5_raw, chan6_raw, chan7_raw, chan8_raw, mav_flight_mode_ctrl, mav_flight_mode_auto, mav_flight_mode_kill)
+	
 def saveDroneData():
 	pass
 	
@@ -1077,18 +1168,15 @@ def main():
     #global udpProcess # try to kill updprocess using startTkinter
 	lock = Lock()
 	manager = Manager()
-	n = Array('i', [0]*10, lock = lock) #Packet Storage Array for transfer between processes
-	msgIDs = Array('i', [0]*10, lock = lock) #Message ID Storage Array for transfer between processes
 	startLogging = Value('i', 0, lock = lock)
 	stopLogging = Value('i', 1, lock = lock)
-	lproxy = manager.list()
-	lproxy.append({})
 	messages = manager.dict()
+	Log_msgIDs = Array('i', [0]*4, lock = lock)
 	# print 'Start Bool: ' + str(startLogging.value) + '\n'
 	# print 'Stop Bool: ' + str(stopLogging.value) + '\n'
 	UDPmaster = udpConnection()
-	#udpProcess = Process(name = 'UDP Process', target = UDP, args=(n,startLogging,stopLogging,UDPmaster,msgIDs))
-	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(n,startLogging,stopLogging,msgIDs))
+	udpProcess = Process(name = 'UDP Process', target = UDP, args=(messages, startLogging, stopLogging, UDPmaster, Log_msgIDs))
+	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(messages, startLogging, stopLogging, Log_msgIDs))
     # broadcastProcess = Process(name='Broadcasting Process', target=broadcast)
 	#udpProcess.start()
 	TkinterProcess.start()

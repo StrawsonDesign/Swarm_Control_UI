@@ -9,6 +9,8 @@ def f(messages):
 		yaw.append(i*2)
 	messages['Attitude'] = {'Roll': roll,'Yaw': yaw}
 	messages['bleh'] = {'Roll': roll,'Yaw': yaw}
+	roll = []
+	yaw = []
 	#attitude['Roll'] = roll
 	# messages['Attitude'] = attitude['Roll']
 	#messages['Attitude']['Roll'] = roll
@@ -44,6 +46,6 @@ if __name__ == '__main__':
 	#print messages
 	# print 'Roll'
 	print messages['Attitude']['Roll']
-	print messages['bleh']['Roll']
+	print messages['bleh']['Yaw']
 	# print 'Yaw'
 	# print messages['Yaw']

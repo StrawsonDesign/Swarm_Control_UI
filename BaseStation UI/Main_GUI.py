@@ -13,7 +13,7 @@ import traceback
 from PIL import ImageTk , Image # for image conversion
 import cv2 # OpenCV for video handling
 import tkFont, threading, Queue, tkMessageBox
-from time import strftime, sleep
+from time import strftime, sleep, timezone
 from collections import deque
 import socket # for sending across UDP packets 
 from multiprocessing.sharedctypes import Value, Array
@@ -148,7 +148,7 @@ class listener(threading.Thread):
 						# if packet == None:
 							# continue
 							
-						if x == self.sizeOfBuffer:
+						if x == self.sizeOfBuffer:						
 							self.messages['ATTITUDE'] = {'BootTime': self.message_BootTime, 'Roll': self.message_Roll, 'Pitch': self.message_Pitch, 'Yaw': self.message_Yaw}
 							self.messages['SYS_STATUS'] = {'Battery_Power': self.message_BatteryRemaining}
 							self.messages['VICON_POSITION_ESTIMATE'] = {'X': self.message_X_Position, 'Y': self.message_Y_Position, 'Z': self.message_Z_Position}
@@ -576,6 +576,7 @@ class statisticsThreadClass(threading.Thread):
 		# plotFrame.columnconfigure(4, weight = 1)
 		# plotFrame.columnconfigure(5, weight = 1)
 		
+		
 		stat_velocityBoxFrame = tk.Frame(statisticsFrame)
 		#stat_velocityBoxFrame.grid(row = 1, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_accelerationBoxFrame = tk.Frame(statisticsFrame)
@@ -608,7 +609,8 @@ class statisticsThreadClass(threading.Thread):
 
 		#quad = statVariables()
 
-
+		
+		
 		# x = range(100)
 		# y = range(100)
 		# f = Figure(figsize = (3,3), dpi = 50)
@@ -644,7 +646,7 @@ class statisticsThreadClass(threading.Thread):
 		self.pitch_line.set_data([],[])
 		self.yaw_line.set_data([],[])
 
-		self.PlotMessages = messages
+		self.messages = messages
 		
 		#if ('30' or '')in self.msgIds
 		# velocity_line = canvas.create_line(0,0,0,0, fill = 'red')
@@ -670,7 +672,6 @@ class statisticsThreadClass(threading.Thread):
 		plt.close(self.fig)			
 			
 		#def AnimatePlot():
-		# dataList = pullData.split('\n')
 		# xList = []
 		# yList = []
 		# zList = []
@@ -685,12 +686,12 @@ class statisticsThreadClass(threading.Thread):
 		# a.clear()
 		# a.plot(xList,yList)
 
-		# updated_data, = plt.plot([], [])
+		# stuff, = plt.plot([], [])
 
 		#Whenever new data is received run this function to update the data array
 		# def update_line(new_data,ax, data):
-		# updated_data_x = data.set_xdata(np.append(data.get_xdata(), new_data))
-		# updated_data_y = data.set_ydata(np.append(data.get_ydata(), new_data))
+		# updated_data_x = stuff.set_xdata(np.append(stuff.get_xdata(), new_data))
+		# updated_data_y = stuff.set_ydata(np.append(stuff.get_ydata(), new_data))
 		# return updated_data_x, updated_data_y
 		# ax.relim()
 		# ax.autoscale_view()
@@ -699,10 +700,15 @@ class statisticsThreadClass(threading.Thread):
 		# anim = animation.FuncAnimation(self.fig, AnimatePlot, interval = 1000) #init_func = init, frames = 360, interval = 5, blit = True)
 		
 	def Plot(self,var_name, var_state, canvas):
+	
+		tseconds = (np.array(self.messages['ATTITUDE']['BootTime']) - timezone) / (60)
+		#tdays += 719163 # pylab wants it since 0001-01-01
+		tseconds += 1035594720 # pylab wants it since 0001-01-01
+		self.time = tseconds
 		
 		if var_state == 1:
 			
-			if var_name is "Velocity":
+			if var_name is "Velocity":				
 				t = np.arange(0.0, 3.0, 0.01)
 				velocity = np.sin(np.pi*t)
 				self.velocity_line.set_data(t, velocity)
@@ -718,20 +724,24 @@ class statisticsThreadClass(threading.Thread):
 				self.position_line.set_data(t, position)
 				
 			elif var_name is "Roll":
-				t = np.arange(0.0, 3.0, 0.01)
-				roll = np.sin(7*np.pi*t)
-				self.roll_line.set_data(t, roll)
+				anim = animation.FuncAnimation(self.fig, AnimatePlot, fargs=(self.time,self.messages['ATTITUDE']['Roll'],interval = 1000) #init_func = init, frames = 360, interval = 5, blit = True)
+				# t = np.arange(0.0, 3.0, 0.01)
+				# roll = np.sin(7*np.pi*t)
+				# self.roll_line.set_data(t, roll)
 				
 			elif var_name is "Pitch":
-				t = np.arange(0.0, 3.0, 0.01)
-				pitch = np.sin(9*np.pi*t)
-				self.pitch_line.set_data(t, pitch)
+				anim = animation.FuncAnimation(self.fig, AnimatePlot, fargs=(self.time,self.messages['ATTITUDE']['Pitch'],interval = 1000) #init_func = init, frames = 360, interval = 5, blit = True)
+				# t = np.arange(0.0, 3.0, 0.01)
+				# pitch = np.sin(9*np.pi*t)
+				# self.pitch_line.set_data(t, pitch)
 				
 			elif var_name is "Yaw":
-				t = np.arange(0.0, 3.0, 0.01)
-				yaw = np.sin(11*np.pi*t)
-				self.yaw_line.set_data(t, yaw)
+				anim = animation.FuncAnimation(self.fig, AnimatePlot, fargs=(self.time,self.messages['ATTITUDE']['Yaw'],interval = 1000) #init_func = init, frames = 360, interval = 5, blit = True)
+				# t = np.arange(0.0, 3.0, 0.01)
+				# yaw = np.sin(11*np.pi*t)
+				# self.yaw_line.set_data(t, yaw)
 				
+			
 			print "Plotting " + var_name
 			print 'The Packet being plotted is: ' + str(self.PlotMessages[:]) #This is the packet that would be sent to the Settings Thread for plotting
 			self.ax.relim()
@@ -1034,7 +1044,8 @@ class tkinterGUI(tk.Frame):
 		'''
 		
 def udpConnection():
-	ClientIPaddress = '192.168.1.107' # IP to send the packets
+	#ClientIPaddress = '192.168.1.107' # IP to send the packets
+	ClientIPaddress = '192.168.7.2' # IP to send the packets
 	portNum = 14551 # port number of destination
 	device = 'udpout:' + str(ClientIPaddress) + ':' + str(portNum)
 	baudrate = 57600

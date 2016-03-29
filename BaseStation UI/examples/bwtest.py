@@ -6,6 +6,7 @@ check bandwidth of link
 
 import time
 from collections import deque
+from multiprocessing import Process, Manager
 from pymavlink import mavutil
 import csv
 import traceback
@@ -30,6 +31,7 @@ counts = {}
 message_Roll = []
 message_Pitch = []
 message_Yaw = []
+message = {}
 bytes_sent = 0
 bytes_recv = 0
 buff = 10
@@ -79,42 +81,47 @@ with open('data.csv', 'w', buff * 1024) as csv_handle:
                 data = master.recv()
                 receivedPacketBuffer.append(data)
                 if _ % sizeOfBuffer == 0:
-                    for i in xrange(sizeOfBuffer):
-                        m2 = master.mav.parse_char(receivedPacketBuffer.popleft())
-                                               
-                        if m2 is not None:
-                            master.post_message(m2)
-                        #print 'Message: ' + str(m2) + '\n'
-                        
-                        #if m2 == None: break:
-                        if m2 == None: continue
-                        if m2.get_type() not in counts: 
-                            counts[m2.get_type()] = 0
-                        counts[m2.get_type()] += 1
-                        if m2 != None:
-                            print("Received packet: MSG ID: %d \n" % (m2.get_msgId()))
-                            if m2.get_msgId() == 30:
-                                print m2
-                                csv_writer.writerow([m2])
-                                message_Roll.append(m2.roll)
-                                message_Pitch.append(m2.pitch)
-                                message_Yaw.append(m2.yaw)
-                                #print 'Roll: ' + str(message_Roll) + '\n'
-                                #print 'Pitch: ' + str(message_Pitch) + '\n'
-                                #print 'Yaw: ' + str(message_Yaw) + '\n'
-                                #print 'Type: ' + str(m2.get_type()) + '\n'
-                                
-                                #print 'Roll: ' + str(m2.roll) + '\n'
-                                #print 'Pitch: ' + str(m2.pitch) + '\n'
-                                #print 'Type: ' + str(m2.get_type()) + '\n'
-                    message_Attitude = {'Roll': message_Roll, 'Pitch': message_Pitch, 'Yaw': message_Yaw}
-                                       
-                    break
+					for i in xrange(sizeOfBuffer):
+						m2 = master.mav.parse_char(receivedPacketBuffer.popleft())
+											   
+						if m2 is not None:
+							master.post_message(m2)
+						#print 'Message: ' + str(m2) + '\n'
+						
+						#if m2 == None: break:
+						if m2 == None: continue
+						if m2.get_type() not in counts: 
+							counts[m2.get_type()] = 0
+						counts[m2.get_type()] += 1
+						if m2 != None:
+							print("Received packet: MSG ID: %d \n" % (m2.get_msgId()))
+							if m2.get_msgId() == 30:
+								print m2
+								csv_writer.writerow([m2])
+								message_Roll.append(m2.roll)
+								message_Pitch.append(m2.pitch)
+								message_Yaw.append(m2.yaw)
+								#print 'Roll: ' + str(message_Roll) + '\n'
+								#print 'Pitch: ' + str(message_Pitch) + '\n'
+								#print 'Yaw: ' + str(message_Yaw) + '\n'
+								#print 'Type: ' + str(m2.get_type()) + '\n'
+
+								#print 'Roll: ' + str(m2.roll) + '\n'
+								#print 'Pitch: ' + str(m2.pitch) + '\n'
+								#print 'Type: ' + str(m2.get_type()) + '\n'
+					message['Attitude'] = {'Roll': message_Roll, 'Pitch': message_Pitch, 'Yaw': message_Yaw}
+					print 'Roll: ' + str(message['Attitude']['Roll'])
+					print 'Pitch: ' + str(message['Attitude']['Pitch'])
+					print 'Yaw: ' + str(message['Attitude']['Yaw'])
+					message_Roll = []
+					message_Pitch = []
+					message_Yaw = []
+					break
             except(KeyboardInterrupt, SystemExit):
                 raise
             except:
                 traceback.print_exc()                
-                    
+        time.sleep(1)
         t2 = time.time()
         if t2 - t1 > 1.0:
             print("%u sent, %u received, %u errors bwin=%.1f kB/s bwout=%.1f kB/s" % (

@@ -1,4 +1,5 @@
 from multiprocessing import Process, Manager
+import numpy as np
 
 def f(messages):
 	roll = []
@@ -45,7 +46,10 @@ if __name__ == '__main__':
 	# print 'Messages:'
 	#print messages
 	# print 'Roll'
+	
 	print messages['Attitude']['Roll']
 	print messages['bleh']['Yaw']
+
+	print (np.array(messages['Attitude']['Roll']) - 2)/(-1)
 	# print 'Yaw'
 	# print messages['Yaw']

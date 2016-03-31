@@ -535,6 +535,7 @@ class loggingThreadClass(threading.Thread):
 		self.Log_names = self.loggingVariables
 		print "Log names: " + str(self.Log_names)
 		
+		
 	def run(self):
 		pass
 
@@ -604,7 +605,7 @@ class listener(threading.Thread):
 				if i%self.sizeOfBuffer==0:
 					for x in xrange(self.sizeOfBuffer):
 						val = self.receviedPacketBuffer.popleft()
-						self.Packets[x] = val
+						self.Packets.append = val
 						#print "Just popped " + str(val) + '\n'
 					print 'Packet Buffer: ' + str(self.Packets[:]) + '\n'
 					print 'Call Logger'					
@@ -695,6 +696,7 @@ def main():
     #global udpProcess # try to kill updprocess using startTkinter
 	lock = Lock()
 	n = Array('i', [0]*10, lock = lock) #Packet Storage Array for transfer between processes
+	Log_names = 
 	startLogging = Value('i', 0, lock = lock)
 	stopLogging = Value('i', 1, lock = lock)
 	print 'Start Bool: ' + str(startLogging.value) + '\n'

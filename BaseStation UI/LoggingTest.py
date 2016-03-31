@@ -61,7 +61,7 @@ class listener(threading.Thread):
 		self.Use_First_Buffer = True
 		self.Use_Second_Buffer = False
 		self.outfile='data.csv'
-		# print self.Log_msgIDs[:]
+		print self.Log_msgIDs[:]
     # def logger(self, csv_writer):
 	
 		# try:
@@ -105,7 +105,7 @@ class listener(threading.Thread):
     def run(self):
 		i = 0
 		with open(self.outfile, 'w') as csv_handle:
-			for i in xrange(30): # replace by reading head
+			for i in xrange(20): # replace by reading head
 			#while i < 100:
 				
 				#self.UDPmaster.mav.sys_status_send(1, 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11, 12,13)
@@ -133,10 +133,9 @@ class listener(threading.Thread):
 						
 					else:
 						print "Lock was not ON"
-					
+						
 				finally:
 					self.receivedPacketBufferLock.release()
-					# self.Log_msgIDs.release()
 					# print "Released Buffer are: ", self.receviedPacketBuffer, "\n"
 					# print "Released Buffer msg IDs are: ", self.receviedPacketBufferMsgId, "\n"
 					
@@ -171,10 +170,9 @@ class listener(threading.Thread):
 									self.message_Y_Position.append(self.packet.y)
 									self.message_Z_Position.append(self.packet.z)
 								print self.packet.get_msgId()
-								
 								print self.Log_msgIDs[:]
-								print self.packet.get_msgId() in self.Log_msgIDs[:]
-								if self.startLogging.value == True and self.packet.get_msgId() in self.Log_msgIDs[:]: # Check if the GUI should be Logging data
+								print self.packet.get_msgId() in self.Log_msgIDs
+								if self.startLogging.value == True and self.packet.get_msgId() in self.Log_msgIDs: # Check if the GUI should be Logging data
 										print 'Logging Data'
 										csv_writer = csv.writer(csv_handle, delimiter =',')
 										# self.logger(csv_writer)
@@ -219,7 +217,7 @@ class listener(threading.Thread):
 							#print "Just popped " + str(val) + '\n'
 						#print 'Packet Buffer: ' + str(self.Packets[:]) + '\n'
 						#print 'MSGIds: ' + str(self.msgIDs[:]) +'\n'
-				
+
 class logger(threading.Thread):
 	def __init__(self,csv_writer, packet):
 		threading.Thread.__init__(self)
@@ -503,13 +501,13 @@ class loggingThreadClass(threading.Thread):
 		self.Log_names = self.loggingVariables
 		# self.Log_msgIDs = self.msgIDs
 			
-		
-		
-		#self.msgIDs = {'Attitude': 30, 'Position': 104, 'Velocity': ?????????, 'Battery': 1}
+		print "Log names: " + str(self.loggingVariables)
+		# print "Log message IDs: " + str(self.msgIDs)
+		print "Log message IDs: " + str(self.Log_msgIDs)
+		#self.msgIDs = {'Attitude': 30, 'Position': 104, 'Velocity': 231409213, 'Battery': 1}
 		
 	def run(self):
-		print "Log names: " + str(self.loggingVariables)
-		print "Log message IDs: " + str(self.Log_msgIDs)
+		pass
 		
 class settingsThreadClass(threading.Thread):
     def __init__(self,master):
@@ -1245,12 +1243,12 @@ def main():
     #global udpProcess # try to kill updprocess using startTkinter
 	lock = Lock()
 	manager = Manager()
-	startLogging = Value('i', 0, lock = lock)
+	startLogging = Value('i', 1, lock = lock)
 	messages = manager.dict()
 	Log_msgIDs = manager.list()
-	# Log_msgIDs = Array('i', [0]*4, lock = lock)
+	# Log_msgIDs = Array('i', [30]*4, lock = lock)
 	# print 'Start Bool: ' + str(startLogging.value) + '\n'
-	# UDPmaster = udpConnection()	
+	# UDPmaster = udpConnection()
 	udpProcess = Process(name = 'UDP Process', target = UDP, args=(messages, startLogging, Log_msgIDs))
 	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(messages, startLogging, Log_msgIDs))
     # broadcastProcess = Process(name='Broadcasting Process', target=broadcast)

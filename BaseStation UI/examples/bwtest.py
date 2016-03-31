@@ -26,7 +26,8 @@ device = 'udpout:192.168.7.2:14551'
 baudrate = 57600
 sizeOfBuffer = 10
 t1 = time.time()
-receivedPacketBuffer = deque([], sizeOfBuffer)
+receivedPacketBuffer_1 = deque([], sizeOfBuffer)
+receivedPacketBuffer_2 = deque([], sizeOfBuffer)
 counts = {}
 message_Roll = []
 message_Pitch = []
@@ -34,7 +35,9 @@ message_Yaw = []
 message = {}
 bytes_sent = 0
 bytes_recv = 0
-buff = 10
+Use_First_Buffer = True
+Use_Second_Buffer = False
+startLogging = 0
 def wait_heartbeat(m):
     '''wait for a heartbeat so we know the target system IDs'''
     print("Waiting for APM heartbeat")
@@ -44,20 +47,21 @@ def wait_heartbeat(m):
 master = mavutil.mavlink_connection(device, baud=baudrate)
 _ = 0
 #wait_heartbeat(master)
-with open('data.csv', 'w', buff * 1024) as csv_handle:
+
+with open('data.csv', 'w') as csv_handle:
     csv_writer = csv.writer(csv_handle, delimiter=',')
-    while True:    
+    while True:
         master.mav.heartbeat_send(1,  2, 3, 4, 5, 6)
-        master.mav.sys_status_send(1, 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11, 12,13)
+        #master.mav.sys_status_send(1, 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11, 12,13)
         #master.mav.gps_raw_send(1, 2, 3, 4, 5, 6, 7, 8, 9)
-        master.mav.attitude_send(1, 2, 3, 4, 5, 6, 7)
-        master.mav.vfr_hud_send(1, 2, 3, 4, 5, 6)
+        #master.mav.attitude_send(1, 2, 3, 4, 5, 6, 7)
+        #master.mav.vfr_hud_send(1, 2, 3, 4, 5, 6)
         #master.mav.position_target_local_ned_send(1, 8, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
         #master.mav.set_position_target_global_int_send(1,255,0,5,0b0000000000000000,1000,2000,500,1,1,1,2,2,2,1,1)
-        #master.mav.attitude_target_send(1,0b0000000000000000,[1,0,0,0],1,1,1,0)  
+        #master.mav.attitude_target_send(1,0b0000000000000000,[1,0,0,0],1,1,1,0)
         #master.mav.local_position_ned_system_global_offset_send(1,2,3,4,5,6,7)
         #master.mav.mission_count_send(255,0,2)
-        master.mav.mav_flight_ctrl_and_modes_send(1,2,3,4,5,6,7,8,0,0,0)
+        #master.mav.mav_flight_ctrl_and_modes_send(1,2,3,4,5,6,7,8,0,0,0)
         # position_target_local_ned_send(time_boot_ms, coordinate_frame, type_mask, x, y, z, vx, vy, vz, afx, afy, afz, yaw, yaw_rate)
     	# time_boot_ms              : Timestamp in milliseconds since system boot (uint32_t)
     	# coordinate_frame          : Valid options are: MAV_FRAME_LOCAL_NED = 1, MAV_FRAME_LOCAL_OFFSET_NED = 7, MAV_FRAME_BODY_NED = 8, MAV_FRAME_BODY_OFFSET_NED = 9 (uint8_t)
@@ -76,21 +80,42 @@ with open('data.csv', 'w', buff * 1024) as csv_handle:
         time.sleep(1)
         while 1:
             #m = master.recv_msg()
-            _ += 1
-            try: 
-                data = master.recv()
-                receivedPacketBuffer.append(data)
-                if _ % sizeOfBuffer == 0:
+			_ += 1
+			
+			if _ == 25:
+				startLogging = 1
+				
+			try:
+				data = master.recv()
+				if startLogging == 1:
+					if Use_First_Buffer == True:
+						receivedPacketBuffer_1.append(data)
+						
+					elif Use_Second_Buffer == True:
+						receivedPacketBuffer_2.append(data)
+						
+				else:
+					receivedPacketBuffer_1.append(data)
+					
+				if _ % sizeOfBuffer == 0:
 					for i in xrange(sizeOfBuffer):
-						m2 = master.mav.parse_char(receivedPacketBuffer.popleft())
-											   
+						if startLogging == 1:
+							if Use_First_Buffer == True:
+								m2 = master.mav.parse_char(receivedPacketBuffer_1.popleft())
+							
+							elif Use_Second_Buffer == True:
+								m2 = master.mav.parse_char(receivedPacketBuffer_2.popleft())						
+						
+						else:
+							m2 = master.mav.parse_char(receivedPacketBuffer_1.popleft())
+							
+						if m2 == None: continue
+						
 						if m2 is not None:
 							master.post_message(m2)
-						#print 'Message: ' + str(m2) + '\n'
+						#print 'Message: ' + str(m2) + '\n'						
 						
-						#if m2 == None: break:
-						if m2 == None: continue
-						if m2.get_type() not in counts: 
+						if m2.get_type() not in counts:
 							counts[m2.get_type()] = 0
 						counts[m2.get_type()] += 1
 						if m2 != None:
@@ -109,6 +134,23 @@ with open('data.csv', 'w', buff * 1024) as csv_handle:
 								#print 'Roll: ' + str(m2.roll) + '\n'
 								#print 'Pitch: ' + str(m2.pitch) + '\n'
 								#print 'Type: ' + str(m2.get_type()) + '\n'
+					if startLogging == 1:
+						if Use_First_Buffer == True:
+							Use_First_Buffer = False
+							Use_Second_Buffer = True
+							receivedPacketBuffer_2.clear()
+							
+						elif Use_Second_Buffer == True:
+							Use_First_Buffer = True
+							Use_Second_Buffer = False
+							receivedPacketBuffer_1.clear()
+							
+					else:
+						Use_First_Buffer = True
+						Use_Second_Buffer = False
+						receivedPacketBuffer_1.clear()
+					print 'First Buffer Status: ' + str(Use_First_Buffer) + '\n'
+					print 'Second Buffer Status: ' + str(Use_Second_Buffer) + '\n'
 					message['Attitude'] = {'Roll': message_Roll, 'Pitch': message_Pitch, 'Yaw': message_Yaw}
 					print 'Roll: ' + str(message['Attitude']['Roll'])
 					print 'Pitch: ' + str(message['Attitude']['Pitch'])
@@ -117,10 +159,10 @@ with open('data.csv', 'w', buff * 1024) as csv_handle:
 					message_Pitch = []
 					message_Yaw = []
 					break
-            except(KeyboardInterrupt, SystemExit):
-                raise
-            except:
-                traceback.print_exc()                
+			except(KeyboardInterrupt, SystemExit):
+				raise
+			except:
+				traceback.print_exc()                
         time.sleep(1)
         t2 = time.time()
         if t2 - t1 > 1.0:

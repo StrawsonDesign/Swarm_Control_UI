@@ -158,7 +158,7 @@ class listener(threading.Thread):
 								print 'Call Logger'
 								
 								if self.packet.get_msgId() == 30: #Attitude Packet (Contains Roll, Pitch, Yaw)
-									self.message_BootTime.append(self.packet.time_boot_ms)
+									# self.message_BootTime.append(self.packet.time_boot_ms)
 									self.message_Roll.append(self.packet.roll)			#roll  : Roll angle (rad, -pi..+pi) (float)
 									self.message_Pitch.append(self.packet.pitch)		#pitch : Pitch angle (rad, -pi..+pi) (float)
 									self.message_Yaw.append(self.packet.yaw)				#yaw   : Yaw angle (rad, -pi..+pi) (float)
@@ -187,7 +187,7 @@ class listener(threading.Thread):
 									print "Don't need to record data yet"
 								
 							if x == self.sizeOfBuffer-1:
-								self.messages['ATTITUDE'] = {'BootTime': self.message_BootTime, 'Roll': self.message_Roll, 'Pitch': self.message_Pitch, 'Yaw': self.message_Yaw}
+								self.messages['ATTITUDE'] = {'Roll': self.message_Roll, 'Pitch': self.message_Pitch, 'Yaw': self.message_Yaw}
 								self.messages['SYS_STATUS'] = {'Battery_Power': self.message_BatteryRemaining}
 								self.messages['VICON_POSITION_ESTIMATE'] = {'X': self.message_X_Position, 'Y': self.message_Y_Position, 'Z': self.message_Z_Position}
 								
@@ -643,11 +643,13 @@ class statisticsThreadClass(threading.Thread):
 		# plotFrame.columnconfigure(5, weight = 1)
 		
 		
-		stat_velocityBoxFrame = tk.Frame(statisticsFrame)
+		# stat_velocityBoxFrame = tk.Frame(statisticsFrame)
 		#stat_velocityBoxFrame.grid(row = 1, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
-		stat_accelerationBoxFrame = tk.Frame(statisticsFrame)
+		# stat_accelerationBoxFrame = tk.Frame(statisticsFrame)
 		#stat_accelerationBoxFrame.grid(row = 1, column = 1, sticky = tk.N + tk.S + tk.W + tk.E)
-		stat_positionBoxFrame = tk.Frame(statisticsFrame)
+		stat_xPositionBoxFrame = tk.Frame(statisticsFrame)
+		stat_yPositionBoxFrame = tk.Frame(statisticsFrame)
+		stat_zPositionBoxFrame = tk.Frame(statisticsFrame)
 		#stat_positionBoxFrame.grid(row = 1, column = 2, sticky = tk.N + tk.S + tk.W + tk.E)
 		stat_rollBoxFrame = tk.Frame(statisticsFrame)
 		#stat_rollBoxFrame.grid(row = 1, column = 3, sticky = tk.N + tk.S + tk.W + tk.E)
@@ -658,17 +660,21 @@ class statisticsThreadClass(threading.Thread):
 
 		rem_h=int(int(0.66*vidH)-plotFrameh)
 		frame_wid=int(w/6)
-		stat_velocityBoxFrame.place(x=0,y=plotFrameh,width=frame_wid,height=rem_h)
-		stat_accelerationBoxFrame.place(x=frame_wid,y=plotFrameh,width=frame_wid,height=rem_h)
-		stat_positionBoxFrame.place(x=2*frame_wid,y=plotFrameh,width=frame_wid,height=rem_h)
+		# stat_velocityBoxFrame.place(x=0,y=plotFrameh,width=frame_wid,height=rem_h)
+		# stat_accelerationBoxFrame.place(x=frame_wid,y=plotFrameh,width=frame_wid,height=rem_h)
+		stat_xPositionBoxFrame.place(x=0,y=plotFrameh,width=frame_wid,height=rem_h)
+		stat_yPositionBoxFrame.place(x=frame_wid,y=plotFrameh,width=frame_wid,height=rem_h)
+		stat_zPositionBoxFrame.place(x=2*frame_wid,y=plotFrameh,width=frame_wid,height=rem_h)
 		stat_rollBoxFrame.place(x=3*frame_wid,y=plotFrameh,width=frame_wid,height=rem_h)
 		stat_pitchBoxFrame.place(x=4*frame_wid,y=plotFrameh,width=frame_wid,height=rem_h)
 		stat_yawBoxFrame.place(x=5*frame_wid,y=plotFrameh,width=w-5*frame_wid,height=rem_h)
 		
 		
-		stat_ivelocity = tk.IntVar()
-		stat_iacceleration = tk.IntVar()
-		stat_iposition = tk.IntVar()
+		# stat_ivelocity = tk.IntVar()
+		# stat_iacceleration = tk.IntVar()
+		stat_iXposition = tk.IntVar()
+		stat_iYposition = tk.IntVar()
+		stat_iZposition = tk.IntVar()
 		stat_iroll = tk.IntVar()
 		stat_ipitch = tk.IntVar()
 		stat_iyaw = tk.IntVar()
@@ -698,16 +704,20 @@ class statisticsThreadClass(threading.Thread):
 		canvas.show()
 
 
-		self.velocity_line = plt.plot([],[])[0]
-		self.acceleration_line = plt.plot([],[])[0]
-		self.position_line = plt.plot([],[])[0]
+		# self.velocity_line = plt.plot([],[])[0]
+		# self.acceleration_line = plt.plot([],[])[0]
+		self.xPosition_line = plt.plot([],[])[0]
+		self.yPosition_line = plt.plot([],[])[0]
+		self.zPosition_line = plt.plot([],[])[0]
 		self.roll_line = plt.plot([],[])[0]
 		self.pitch_line = plt.plot([],[])[0]
 		self.yaw_line = plt.plot([],[])[0]
 
-		self.velocity_line.set_data([],[])
-		self.acceleration_line.set_data([],[])
-		self.position_line.set_data([],[])
+		# self.velocity_line.set_data([],[])
+		# self.acceleration_line.set_data([],[])
+		self.xPosition_line.set_data([],[])
+		self.yPosition_line.set_data([],[])
+		self.zPosition_line.set_data([],[])
 		self.roll_line.set_data([],[])
 		self.pitch_line.set_data([],[])
 		self.yaw_line.set_data([],[])
@@ -721,16 +731,20 @@ class statisticsThreadClass(threading.Thread):
 		# roll_line = canvas.create_line(0,0,0,0, fill = 'black')
 		# pitch_line = canvas.create_line(0,0,0,0, fill = ')		
 
-		stat_velocityCheckButton = tk.Checkbutton(stat_velocityBoxFrame, text = 'Velocity', variable = stat_ivelocity, command = lambda : self.Plot('Velocity', stat_ivelocity.get(), canvas))
-		stat_accelerationCheckButton = tk.Checkbutton(stat_accelerationBoxFrame, text = 'Acceleration', variable = stat_iacceleration, command = lambda : self.Plot('Acceleration', stat_iacceleration.get(), canvas))
-		stat_positionCheckButton = tk.Checkbutton(stat_positionBoxFrame, text = 'Position', variable = stat_iposition, command = lambda : self.Plot('Position', stat_iposition.get(), canvas))
+		# stat_velocityCheckButton = tk.Checkbutton(stat_velocityBoxFrame, text = 'Velocity', variable = stat_ivelocity, command = lambda : self.Plot('Velocity', stat_ivelocity.get(), canvas))
+		# stat_accelerationCheckButton = tk.Checkbutton(stat_accelerationBoxFrame, text = 'Acceleration', variable = stat_iacceleration, command = lambda : self.Plot('Acceleration', stat_iacceleration.get(), canvas))
+		stat_xPositionCheckButton = tk.Checkbutton(stat_xPositionBoxFrame, text = 'X Position', variable = stat_iXposition, command = lambda : self.Plot('X_Position', stat_iXposition.get(), canvas))
+		stat_yPositionCheckButton = tk.Checkbutton(stat_yPositionBoxFrame, text = 'Y Position', variable = stat_iYposition, command = lambda : self.Plot('Y_Position', stat_iYposition.get(), canvas))
+		stat_zPositionCheckButton = tk.Checkbutton(stat_zPositionBoxFrame, text = 'Z Position', variable = stat_iZposition, command = lambda : self.Plot('Z_Position', stat_iZposition.get(), canvas))
 		stat_rollCheckButton = tk.Checkbutton(stat_rollBoxFrame, text = 'Roll', variable = stat_iroll, command = lambda : self.Plot('Roll', stat_iroll.get(), canvas))
 		stat_pitchCheckButton = tk.Checkbutton(stat_pitchBoxFrame, text = 'Pitch', variable = stat_ipitch, command = lambda : self.Plot('Pitch', stat_ipitch.get(), canvas))
 		stat_yawCheckButton = tk.Checkbutton(stat_yawBoxFrame, text = 'Yaw', variable = stat_iyaw, command = lambda : self.Plot('Yaw', stat_iyaw.get(), canvas))
 
-		stat_velocityCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
-		stat_accelerationCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
-		stat_positionCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		# stat_velocityCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		# stat_accelerationCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		stat_xPositionCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		stat_yPositionCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		stat_zPositionCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		stat_rollCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		stat_pitchCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		stat_yawCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
@@ -769,25 +783,35 @@ class statisticsThreadClass(threading.Thread):
 	
 		tseconds = (np.array(self.messages['ATTITUDE']['BootTime']) - timezone) / (60)
 		#tdays += 719163 # pylab wants it since 0001-01-01
-		tseconds += 1035594720 # pylab wants it since 0001-01-01
+		# tseconds += 1035594720 # pylab wants it since 0001-01-01
 		self.time = tseconds
 		
 		if var_state == 1:
 			
-			if var_name is "Velocity":				
-				t = np.arange(0.0, 3.0, 0.01)
-				velocity = np.sin(np.pi*t)
-				self.velocity_line.set_data(t, velocity)
+			# if var_name is "Velocity":				
+				# t = np.arange(0.0, 3.0, 0.01)
+				# velocity = np.sin(np.pi*t)
+				# self.velocity_line.set_data(t, velocity)
 				
-			elif var_name is "Acceleration":
-				t = np.arange(0.0, 3.0, 0.01)
-				acceleration = np.sin(3*np.pi*t)
-				self.acceleration_line.set_data(t, acceleration)
+			# elif var_name is "Acceleration":
+				# t = np.arange(0.0, 3.0, 0.01)
+				# acceleration = np.sin(3*np.pi*t)
+				# self.acceleration_line.set_data(t, acceleration)
 				
-			elif var_name is "Position":
+			if var_name is "X_Position":
 				t = np.arange(0.0, 3.0, 0.01)
 				position = np.sin(5*np.pi*t)
-				self.position_line.set_data(t, position)
+				self.xPosition_line.set_data(t, position)
+				
+			elif var_name is "Y_Position":
+				t = np.arange(0.0, 3.0, 0.01)
+				position = np.sin(5*np.pi*t)
+				self.yPosition_line.set_data(t, position)
+				
+			elif var_name is "Z_Position":
+				t = np.arange(0.0, 3.0, 0.01)
+				position = np.sin(5*np.pi*t)
+				self.zPosition_line.set_data(t, position)
 				
 			elif var_name is "Roll":
 				# anim = animation.FuncAnimation(self.fig, AnimatePlot, fargs=(self.time,self.messages['ATTITUDE']['Roll'],interval = 1000) #init_func = init, frames = 360, interval = 5, blit = True)
@@ -805,11 +829,10 @@ class statisticsThreadClass(threading.Thread):
 				# anim = animation.FuncAnimation(self.fig, AnimatePlot, fargs=(self.time,self.messages['ATTITUDE']['Yaw'],interval = 1000) #init_func = init, frames = 360, interval = 5, blit = True)
 				t = np.arange(0.0, 3.0, 0.01)
 				yaw = np.sin(11*np.pi*t)
-				self.yaw_line.set_data(t, yaw)
-				
+				self.yaw_line.set_data(t, yaw)				
 			
 			print "Plotting " + var_name
-			print 'The Packet being plotted is: ' + str(self.PlotMessages[:]) #This is the packet that would be sent to the Settings Thread for plotting
+			# print 'The Packet being plotted is: ' + str(self.PlotMessages[:]) #This is the packet that would be sent to the Settings Thread for plotting
 			self.ax.relim()
 			self.ax.autoscale_view()
 			# plt.gcf().canvas.draw()
@@ -822,14 +845,20 @@ class statisticsThreadClass(threading.Thread):
 			
 		else:
 		
-			if var_name is "Velocity":
-				self.velocity_line.set_data([],[])
+			# if var_name is "Velocity":
+				# self.velocity_line.set_data([],[])
 				
-			elif var_name is "Acceleration":
-				self.acceleration_line.set_data([],[])
+			# elif var_name is "Acceleration":
+				# self.acceleration_line.set_data([],[])
 				
-			elif var_name is "Position":
-				self.position_line.set_data([],[])
+			if var_name is "X_Position":
+				self.xPosition_line.set_data([],[])
+				
+			elif var_name is "Y_Position":
+				self.yPosition_line.set_data([],[])
+				
+			elif var_name is "Z_Position":
+				self.zPosition_line.set_data([],[])
 				
 			elif var_name is "Roll":
 				self.roll_line.set_data([],[])

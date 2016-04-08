@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg #, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
 import matplotlib.animation as animation
-from matplotlib import style
+from matplotlib import style, ticker
 
 import csv
 import traceback
@@ -13,7 +13,7 @@ import traceback
 from PIL import ImageTk , Image # for image conversion
 import cv2 # OpenCV for video handling
 import tkFont, threading, Queue, tkMessageBox
-from time import strftime, sleep, timezone
+from time import strftime, sleep, time
 from collections import deque
 import socket # for sending across UDP packets 
 from multiprocessing.sharedctypes import Value, Array
@@ -30,7 +30,7 @@ activeDronesList=['Othrod','Ugluk','Bolg','Orcobal']
 style.use("ggplot")
 
 class listener(threading.Thread):
-    def __init__(self, sizeOfBuffer, messages, startLogging, Log_msgIDs):
+    def __init__(self, sizeOfBuffer, messages, startLogging, Log_msgIDs, new_data):
 		threading.Thread.__init__(self)
 		#global receivedPacketBuffer # Must declare gloabl varibale prior to assigning values
 		#global receivedPacketBufferLock
@@ -50,17 +50,24 @@ class listener(threading.Thread):
 		
 		#print self.UDPmaster
 		self.Log_msgIDs = Log_msgIDs
-		self.message_BootTime = []
+		
+		self.message_Attitude_Boot_Time = []
 		self.message_Roll = []
 		self.message_Pitch = []
 		self.message_Yaw = []
-		self.message_BatteryRemaining =[]
+		
+		self.message_Battery_Boot_Time = []
+		self.message_Battery_Voltage =[]
+		
+		self.message_Position_Boot_Time = []
 		self.message_X_Position = []
 		self.message_Y_Position = []
 		self.message_Z_Position = []
+		
 		self.Use_First_Buffer = True
 		self.Use_Second_Buffer = False
 		self.outfile='data.csv'
+		self.new_data = new_data
 		# print self.Log_msgIDs[:]
     # def logger(self, csv_writer):
 	
@@ -105,15 +112,15 @@ class listener(threading.Thread):
     def run(self):
 		i = 0
 		with open(self.outfile, 'w') as csv_handle:
-			for i in xrange(30): # replace by reading head
-			#while i < 100:
-				
+			# for i in xrange(100): # replace by reading head
+			while 1:
 				#self.UDPmaster.mav.sys_status_send(1, 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11, 12,13)
 				#self.UDPmaster.mav.gps_raw_send(1, 2, 3, 4, 5, 6, 7, 8, 9)
 				#self.UDPmaster.mav.attitude_send(1, 2, 3, 4, 5, 6, 7)
 				#self.UDPmaster.mav.vfr_hud_send(1, 2, 3, 4, 5, 6)
 				i = i + 1
-				sleep(1)
+				sleep(.1)
+				self.new_data.value = 0
 				try:
 					if self.receivedPacketBufferLock.acquire(1):
 						#self.receviedPacketBuffer.append(i)
@@ -139,7 +146,9 @@ class listener(threading.Thread):
 					# self.Log_msgIDs.release()
 					# print "Released Buffer are: ", self.receviedPacketBuffer, "\n"
 					# print "Released Buffer msg IDs are: ", self.receviedPacketBufferMsgId, "\n"
-					
+					if i == 1:
+						BootTime = time()
+						
 					if i%self.sizeOfBuffer==0:
 					
 						for x in xrange(self.sizeOfBuffer):
@@ -155,25 +164,28 @@ class listener(threading.Thread):
 							
 							if self.packet is not None:
 								self.UDPmaster.post_message(self.packet)
-								print 'Call Logger'
+								# print 'Call Logger'
 								
 								if self.packet.get_msgId() == 30: #Attitude Packet (Contains Roll, Pitch, Yaw)
-									# self.message_BootTime.append(self.packet.time_boot_ms)
+									self.message_Attitude_Boot_Time.append(time() - BootTime)
 									self.message_Roll.append(self.packet.roll)			#roll  : Roll angle (rad, -pi..+pi) (float)
 									self.message_Pitch.append(self.packet.pitch)		#pitch : Pitch angle (rad, -pi..+pi) (float)
 									self.message_Yaw.append(self.packet.yaw)				#yaw   : Yaw angle (rad, -pi..+pi) (float)
 									
 								elif self.packet.get_msgId() == 1:
-									self.message_BatteryRemaining.append(self.packet.battery_remaining)
+									self.message_Battery_Boot_Time.append(time() - BootTime)
+									self.message_Battery_Voltage.append(self.packet.voltages)
 									
 								elif self.packet.get_msgId() == 104:
+									self.message_Position_Boot_Time.append(time() - BootTime)
 									self.message_X_Position.append(self.packet.x)
 									self.message_Y_Position.append(self.packet.y)
 									self.message_Z_Position.append(self.packet.z)
-								print self.packet.get_msgId()
+									
+								# print self.packet.get_msgId()
 								
-								print self.Log_msgIDs[:]
-								print self.packet.get_msgId() in self.Log_msgIDs[:]
+								# print self.Log_msgIDs[:]
+								# print self.packet.get_msgId() in self.Log_msgIDs[:]
 								if self.startLogging.value == True and self.packet.get_msgId() in self.Log_msgIDs[:]: # Check if the GUI should be Logging data
 										print 'Logging Data'
 										csv_writer = csv.writer(csv_handle, delimiter =',')
@@ -187,19 +199,25 @@ class listener(threading.Thread):
 									print "Don't need to record data yet"
 								
 							if x == self.sizeOfBuffer-1:
-								self.messages['ATTITUDE'] = {'Roll': self.message_Roll, 'Pitch': self.message_Pitch, 'Yaw': self.message_Yaw}
-								self.messages['SYS_STATUS'] = {'Battery_Power': self.message_BatteryRemaining}
-								self.messages['VICON_POSITION_ESTIMATE'] = {'X': self.message_X_Position, 'Y': self.message_Y_Position, 'Z': self.message_Z_Position}
-								
-								self.message_BootTime = []
+								self.messages['ATTITUDE'] = {'BootTime':self.message_Attitude_Boot_Time, 'Roll': self.message_Roll, 'Pitch': self.message_Pitch, 'Yaw': self.message_Yaw}
+								self.messages['SYS_STATUS'] = {'BootTime':self.message_Battery_Boot_Time, 'Battery_Voltage': self.message_Battery_Voltage}
+								self.messages['VICON_POSITION_ESTIMATE'] = {'BootTime': self.message_Position_Boot_Time, 'X': self.message_X_Position, 'Y': self.message_Y_Position, 'Z': self.message_Z_Position}
+								self.new_data.value = 1
+								print self.messages['ATTITUDE']['BootTime']
+								self.message_Attitude_Boot_Time = []
 								self.message_Roll = []
 								self.message_Pitch = []
 								self.message_Yaw = []
-								self.message_BatteryRemaining = []
+								
+								self.message_Battery_Boot_Time = []
+								self.message_Battery_Voltage = []
+								
+								self.message_Position_Boot_Time = []
 								self.message_X_Position = []
 								self.message_Y_Position = []
 								self.message_Z_Position = []
-								print self.messages
+								
+								# print self.messages
 								
 						if self.startLogging.value == 1:
 							if self.Use_First_Buffer == True:
@@ -614,8 +632,7 @@ class settingsThreadClass(threading.Thread):
 		controlModeRadioButton11.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
 		
 class statisticsThreadClass(threading.Thread):
-	
-	def __init__(self, master, messages):
+	def __init__(self, master, messages, new_data):
 		threading.Thread.__init__(self)
 		statisticsFrame = tk.Frame(master)
 		#h_dash=int((screenH-h-int(0.16*vidH))/5)-5# height of each setting box
@@ -629,7 +646,7 @@ class statisticsThreadClass(threading.Thread):
 		# statisticsFrame.columnconfigure(0, weight = 1)
 
 		plotFrame = tk.Frame(statisticsFrame)
-		plotFrameh=int(0.5*vidH)
+		plotFrameh = int(0.5*vidH)+20
 		plotFrame.place(x=0,y=0,width=w,height=plotFrameh)
 		#plotFrame.grid(row = 0, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
 		# plotFrame.rowconfigure(1, weight = 1)
@@ -672,16 +689,14 @@ class statisticsThreadClass(threading.Thread):
 		
 		# stat_ivelocity = tk.IntVar()
 		# stat_iacceleration = tk.IntVar()
-		stat_iXposition = tk.IntVar()
-		stat_iYposition = tk.IntVar()
-		stat_iZposition = tk.IntVar()
-		stat_iroll = tk.IntVar()
-		stat_ipitch = tk.IntVar()
-		stat_iyaw = tk.IntVar()
+		self.stat_iXposition = tk.IntVar()
+		self.stat_iYposition = tk.IntVar()
+		self.stat_iZposition = tk.IntVar()
+		self.stat_iroll = tk.IntVar()
+		self.stat_ipitch = tk.IntVar()
+		self.stat_iyaw = tk.IntVar()
 
-		#quad = statVariables()
-
-		
+		#quad = statVariables()		
 		
 		# x = range(100)
 		# y = range(100)
@@ -690,19 +705,19 @@ class statisticsThreadClass(threading.Thread):
 		self.fig = plt.figure(figsize = (5,5), dpi = 75)
 		#self.ax = self.fig.add_axes( (0.05, .05, .50, .50), axisbg=(.75,.75,.75), frameon=False)
 		self.ax = self.fig.add_subplot(111)
-		plt.title('Live Plot')
-		plt.xlabel('Time(s)')
-		plt.ylabel('Variable Name')
+		self.ax.relim()
+		self.ax.autoscale_view()
+		# plt.title('Live Plot')
+		# plt.xlabel('Time(s)')
+		# plt.ylabel('Variable Name')
 		# plt.show()
 
-		canvas = FigureCanvasTkAgg(self.fig, plotFrame)
-		canvas.get_tk_widget().grid(row = 0, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
-		#canvas.get_tk_widget().place(x=0,y=0,width=w,height=plotFrameh)
-		canvas.get_tk_widget().rowconfigure(0, weight = 1)
-		canvas.get_tk_widget().columnconfigure(0, weight=1)
-		
-		canvas.show()
-
+		self.canvas = FigureCanvasTkAgg(self.fig, plotFrame)
+		self.canvas.get_tk_widget().grid(row = 0, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
+		self.canvas.get_tk_widget().place(x=0,y=0,width=w,height=plotFrameh)
+		self.canvas.get_tk_widget().rowconfigure(0, weight = 1)
+		self.canvas.get_tk_widget().columnconfigure(0, weight=1)		
+		self.canvas.show()
 
 		# self.velocity_line = plt.plot([],[])[0]
 		# self.acceleration_line = plt.plot([],[])[0]
@@ -715,13 +730,8 @@ class statisticsThreadClass(threading.Thread):
 
 		# self.velocity_line.set_data([],[])
 		# self.acceleration_line.set_data([],[])
-		self.xPosition_line.set_data([],[])
-		self.yPosition_line.set_data([],[])
-		self.zPosition_line.set_data([],[])
-		self.roll_line.set_data([],[])
-		self.pitch_line.set_data([],[])
-		self.yaw_line.set_data([],[])
-
+		
+		self.new_data = new_data
 		self.messages = messages
 		
 		#if ('30' or '')in self.msgIds
@@ -733,12 +743,12 @@ class statisticsThreadClass(threading.Thread):
 
 		# stat_velocityCheckButton = tk.Checkbutton(stat_velocityBoxFrame, text = 'Velocity', variable = stat_ivelocity, command = lambda : self.Plot('Velocity', stat_ivelocity.get(), canvas))
 		# stat_accelerationCheckButton = tk.Checkbutton(stat_accelerationBoxFrame, text = 'Acceleration', variable = stat_iacceleration, command = lambda : self.Plot('Acceleration', stat_iacceleration.get(), canvas))
-		stat_xPositionCheckButton = tk.Checkbutton(stat_xPositionBoxFrame, text = 'X Position', variable = stat_iXposition, command = lambda : self.Plot('X_Position', stat_iXposition.get(), canvas))
-		stat_yPositionCheckButton = tk.Checkbutton(stat_yPositionBoxFrame, text = 'Y Position', variable = stat_iYposition, command = lambda : self.Plot('Y_Position', stat_iYposition.get(), canvas))
-		stat_zPositionCheckButton = tk.Checkbutton(stat_zPositionBoxFrame, text = 'Z Position', variable = stat_iZposition, command = lambda : self.Plot('Z_Position', stat_iZposition.get(), canvas))
-		stat_rollCheckButton = tk.Checkbutton(stat_rollBoxFrame, text = 'Roll', variable = stat_iroll, command = lambda : self.Plot('Roll', stat_iroll.get(), canvas))
-		stat_pitchCheckButton = tk.Checkbutton(stat_pitchBoxFrame, text = 'Pitch', variable = stat_ipitch, command = lambda : self.Plot('Pitch', stat_ipitch.get(), canvas))
-		stat_yawCheckButton = tk.Checkbutton(stat_yawBoxFrame, text = 'Yaw', variable = stat_iyaw, command = lambda : self.Plot('Yaw', stat_iyaw.get(), canvas))
+		stat_xPositionCheckButton = tk.Checkbutton(stat_xPositionBoxFrame, text = 'X Position', variable = self.stat_iXposition, command = lambda : self.Plot('X_Position', self.stat_iXposition.get(), self.canvas))
+		stat_yPositionCheckButton = tk.Checkbutton(stat_yPositionBoxFrame, text = 'Y Position', variable = self.stat_iYposition, command = lambda : self.Plot('Y_Position', self.stat_iYposition.get(), self.canvas))
+		stat_zPositionCheckButton = tk.Checkbutton(stat_zPositionBoxFrame, text = 'Z Position', variable = self.stat_iZposition, command = lambda : self.Plot('Z_Position', self.stat_iZposition.get(), self.canvas))
+		stat_rollCheckButton = tk.Checkbutton(stat_rollBoxFrame, text = 'Roll', variable = self.stat_iroll, command = lambda : self.Plot('Roll', self.stat_iroll.get(), self.canvas))
+		stat_pitchCheckButton = tk.Checkbutton(stat_pitchBoxFrame, text = 'Pitch', variable = self.stat_ipitch, command = lambda : self.Plot('Pitch', self.stat_ipitch.get(), self.canvas))
+		stat_yawCheckButton = tk.Checkbutton(stat_yawBoxFrame, text = 'Yaw', variable = self.stat_iyaw, command = lambda : self.Plot('Yaw', self.stat_iyaw.get(), self.canvas))
 
 		# stat_velocityCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		# stat_accelerationCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
@@ -749,7 +759,7 @@ class statisticsThreadClass(threading.Thread):
 		stat_pitchCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		stat_yawCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 
-		plt.close(self.fig)			
+		# plt.close(self.fig)
 			
 		#def AnimatePlot():
 		# xList = []
@@ -776,19 +786,83 @@ class statisticsThreadClass(threading.Thread):
 		# ax.relim()
 		# ax.autoscale_view()
 		# plt.draw
-	
-		# anim = animation.FuncAnimation(self.fig, AnimatePlot, interval = 1000) #init_func = init, frames = 360, interval = 5, blit = True)
+
+		self.xPosition_line.set_data([],[])
+		self.yPosition_line.set_data([],[])
+		self.zPosition_line.set_data([],[])
+		self.roll_line.set_data([],[])
+		self.pitch_line.set_data([],[])
+		self.yaw_line.set_data([],[])
+		
+	def run(self):
+		while 1:
+			print 'New Data: ' + str(self.new_data.value)
+			if self.new_data.value == 1:
+				# print "\nPlot!" + '\n'
+				self.AnimatePlot(self.canvas)
+			else:
+				print "New Data not available" + '\n'
+			sleep(.1)
+		# master.after(250,self.AnimatePlot(self.canvas))
+		# anim = animation.FuncAnimation(self.fig, self.AnimatePlot, frames = 100, init_func = self.init_draw, interval = 500) #init_func = init, frames = 360, interval = 5, blit = True)
+		# plt.show()
+		# self.canvas.draw()
+		
+	def AnimatePlot(self,canvas):
+		# print self.messages['ATTITUDE']['BootTime']
+		if self.stat_iXposition.get() == 1:
+			self.xPosition_line.set_xdata(np.append(self.xPosition_line.get_xdata(), self.messages['VICON_POSITION_ESTIMATE']['BootTime']))
+			self.xPosition_line.set_ydata(np.append(self.xPosition_line.get_ydata(), self.messages['VICON_POSITION_ESTIMATE']['X']))
+			
+		if self.stat_iYposition.get() == 1:
+			self.yPosition_line.set_xdata(np.append(self.yPosition_line.get_xdata(), self.messages['VICON_POSITION_ESTIMATE']['BootTime']))
+			self.yPosition_line.set_ydata(np.append(self.yPosition_line.get_ydata(), self.messages['VICON_POSITION_ESTIMATE']['Y']))
+		
+		if self.stat_iZposition.get() == 1:
+			self.zPosition_line.set_xdata(np.append(self.zPosition_line.get_xdata(), self.messages['VICON_POSITION_ESTIMATE']['BootTime']))
+			self.zPosition_line.set_ydata(np.append(self.zPosition_line.get_ydata(), self.messages['VICON_POSITION_ESTIMATE']['Z']))
+		
+		if self.stat_iroll.get() == 1:
+			print 'Plot Roll data!'
+			# self.roll_line.set_xdata(np.append(self.roll_line.get_xdata(), self.messages['ATTITUDE']['BootTime']))
+			# self.roll_line.set_ydata(np.append(self.roll_line.get_ydata(), self.messages['ATTITUDE']['Roll']))
+			roll_x = np.append(self.roll_line.get_xdata(), self.messages['ATTITUDE']['BootTime'])
+			roll_y = np.append(self.roll_line.get_ydata(), self.messages['ATTITUDE']['Roll'])
+			print roll_x
+			print roll_y
+			self.roll_line.set_xdata(roll_x)
+			self.roll_line.set_ydata(roll_y)
+			# print self.roll_line
+		
+		if self.stat_iyaw.get() == 1:
+			print 'Plot Yaw data!'
+			self.yaw_line.set_xdata(np.append(self.yaw_line.get_xdata(), self.messages['ATTITUDE']['BootTime']))
+			self.yaw_line.set_ydata(np.append(self.yaw_line.get_ydata(), self.messages['ATTITUDE']['Yaw']))
+		
+		if self.stat_ipitch.get() == 1:
+			print 'Plot Pitch data!'
+			self.pitch_line.set_xdata(np.append(self.pitch_line.get_xdata(), self.messages['ATTITUDE']['BootTime']))
+			self.pitch_line.set_ydata(np.append(self.pitch_line.get_ydata(), self.messages['ATTITUDE']['Pitch']))
+			
+		xmax = max(self.messages['ATTITUDE']['BootTime'])
+		ymax = max(self.messages['ATTITUDE']['Roll'])
+		ymin = min(self.messages['ATTITUDE']['Roll'])
+		self.ax.set_xlim([xmax-30,xmax])
+		self.ax.set_ylim([ymin,ymax])
+		self.ax.get_xaxis().set_major_formatter(ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+		self.canvas.draw()
+		# master.after(1000,self.AnimatePlot(self.canvas))
 		
 	def Plot(self,var_name, var_state, canvas):
 	
-		tseconds = (np.array(self.messages['ATTITUDE']['BootTime']) - timezone) / (60)
+		# tseconds = (np.array(self.messages['ATTITUDE']['BootTime']) - timezone) / (60)
 		#tdays += 719163 # pylab wants it since 0001-01-01
 		# tseconds += 1035594720 # pylab wants it since 0001-01-01
-		self.time = tseconds
-		
+		# self.time = tseconds
+		"""
 		if var_state == 1:
 			
-			# if var_name is "Velocity":				
+			# if var_name is "Velocity":
 				# t = np.arange(0.0, 3.0, 0.01)
 				# velocity = np.sin(np.pi*t)
 				# self.velocity_line.set_data(t, velocity)
@@ -835,16 +909,16 @@ class statisticsThreadClass(threading.Thread):
 			# print 'The Packet being plotted is: ' + str(self.PlotMessages[:]) #This is the packet that would be sent to the Settings Thread for plotting
 			self.ax.relim()
 			self.ax.autoscale_view()
-			# plt.gcf().canvas.draw()
-			canvas.draw()
+			# plt.gcf().self.canvas.draw()
+			self.canvas.draw()
 			plt.pause(.001)
 
 			# self.a.plot(t, s)			
-			# self.canvas = FigureCanvasTkAgg(self.f, self.plotFrame)
+			# self.canvas = Figureself.canvasTkAgg(self.f, self.plotFrame)
 			# self.canvas.draw()
-			
-		else:
-		
+			"""
+		# else:
+		if var_state == 0:
 			# if var_name is "Velocity":
 				# self.velocity_line.set_data([],[])
 				
@@ -869,13 +943,13 @@ class statisticsThreadClass(threading.Thread):
 			elif var_name is "Yaw":
 				self.yaw_line.set_data([],[])		
 			
-			print "Not Plotting" + var_name
+			# print "Not Plotting" + var_name
 			
-			self.ax.relim()
-			self.ax.autoscale_view()
-			# plt.gcf().canvas.draw()
-			canvas.draw()
-			plt.pause(.001)
+			# self.ax.relim()
+			# self.ax.autoscale_view()
+			# plt.gcf().self.canvas.draw()
+			# self.canvas.draw()
+			# plt.pause(.001)
 			
 class Video(threading.Thread):
     # Manages video streaming and Video Controls
@@ -1013,7 +1087,7 @@ class Video(threading.Thread):
         vidLabel.after(2,self.showVideo,vidLabel,vidFrame) # calls the method after 10 ms
 		
 class tkinterGUI(tk.Frame):
-	def __init__(self, messages, startBool, Log_msgIDs):
+	def __init__(self, messages, startBool, Log_msgIDs, new_data):
 		tk.Frame.__init__(self)
 		# self.grid()
 		# self.grid(sticky = tk.N + tk.S + tk.E + tk.W)
@@ -1058,7 +1132,7 @@ class tkinterGUI(tk.Frame):
 		videoThread=Video(self)
 		settingsThread = settingsThreadClass(self)
 		loggingThread = loggingThreadClass(self, startBool, Log_msgIDs)
-		statisticsThread = statisticsThreadClass(self, messages)
+		statisticsThread = statisticsThreadClass(self, messages, new_data)
 		myUAVThread = myUAVThreadClass(self)
 		otherDrones=otherdrones(self)
 
@@ -1160,9 +1234,9 @@ def udpConnection():
 	
 	return master
 	
-def UDP(messages, startLogging, Log_msgIDs):
+def UDP(messages, startLogging, Log_msgIDs, new_data):
 	sizeOfBuffer = 10
-	UDPlistenThread=listener(sizeOfBuffer, messages, startLogging, Log_msgIDs) # sizeOfRingBuffer
+	UDPlistenThread=listener(sizeOfBuffer, messages, startLogging, Log_msgIDs, new_data) # sizeOfRingBuffer
 	UDPlistenThread.setDaemon(True)
 	
 	#UDPlogThread=logger(Packets)
@@ -1198,8 +1272,8 @@ def closeProgram():
     killUDPprocessCounter=0
     print "here I am ", killUDPprocessCounter
 	
-def startTkinter(PlotPacket,startBool, msgIDs):
-    root = tkinterGUI(PlotPacket,startBool, msgIDs)
+def startTkinter(PlotPacket,startBool, msgIDs, new_data):
+    root = tkinterGUI(PlotPacket,startBool, msgIDs, new_data)
     root.master.title("Azog") # Name of current drone, Here it is Azog
     root.mainloop()
 
@@ -1275,13 +1349,14 @@ def main():
 	lock = Lock()
 	manager = Manager()
 	startLogging = Value('i', 0, lock = lock)
+	new_data = Value('i', 0, lock = lock)
 	messages = manager.dict()
 	Log_msgIDs = manager.list()
 	# Log_msgIDs = Array('i', [0]*4, lock = lock)
 	# print 'Start Bool: ' + str(startLogging.value) + '\n'
 	# UDPmaster = udpConnection()	
-	udpProcess = Process(name = 'UDP Process', target = UDP, args=(messages, startLogging, Log_msgIDs))
-	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(messages, startLogging, Log_msgIDs))
+	udpProcess = Process(name = 'UDP Process', target = UDP, args=(messages, startLogging, Log_msgIDs, new_data))
+	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(messages, startLogging, Log_msgIDs, new_data))
     # broadcastProcess = Process(name='Broadcasting Process', target=broadcast)
 	udpProcess.start()
 	TkinterProcess.start()

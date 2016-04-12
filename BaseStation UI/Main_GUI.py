@@ -196,14 +196,15 @@ class listener(threading.Thread):
 										UDPlogThread.join()
 								
 								else:
-									print "Don't need to record data yet"
+									# print "Don't need to record data yet"
+									pass
 								
 							if x == self.sizeOfBuffer-1:
 								self.messages['ATTITUDE'] = {'BootTime':self.message_Attitude_Boot_Time, 'Roll': self.message_Roll, 'Pitch': self.message_Pitch, 'Yaw': self.message_Yaw}
 								self.messages['SYS_STATUS'] = {'BootTime':self.message_Battery_Boot_Time, 'Battery_Voltage': self.message_Battery_Voltage}
 								self.messages['VICON_POSITION_ESTIMATE'] = {'BootTime': self.message_Position_Boot_Time, 'X': self.message_X_Position, 'Y': self.message_Y_Position, 'Z': self.message_Z_Position}
 								self.new_data.value = 1
-								print self.messages['ATTITUDE']['BootTime']
+								# print self.messages['ATTITUDE']['BootTime']
 								self.message_Attitude_Boot_Time = []
 								self.message_Roll = []
 								self.message_Pitch = []
@@ -704,9 +705,9 @@ class statisticsThreadClass(threading.Thread):
 		# a = f.add_subplot(111)
 		self.fig = plt.figure(figsize = (5,5), dpi = 75)
 		#self.ax = self.fig.add_axes( (0.05, .05, .50, .50), axisbg=(.75,.75,.75), frameon=False)
-		self.ax = self.fig.add_subplot(111)
-		self.ax.relim()
-		self.ax.autoscale_view()
+		self.ax = self.fig.add_subplot(111)		
+		# self.ax.relim()
+		# self.ax.autoscale_view()
 		# plt.title('Live Plot')
 		# plt.xlabel('Time(s)')
 		# plt.ylabel('Variable Name')
@@ -721,13 +722,28 @@ class statisticsThreadClass(threading.Thread):
 
 		# self.velocity_line = plt.plot([],[])[0]
 		# self.acceleration_line = plt.plot([],[])[0]
-		self.xPosition_line = plt.plot([],[])[0]
-		self.yPosition_line = plt.plot([],[])[0]
-		self.zPosition_line = plt.plot([],[])[0]
-		self.roll_line = plt.plot([],[])[0]
-		self.pitch_line = plt.plot([],[])[0]
-		self.yaw_line = plt.plot([],[])[0]
-
+		
+		# self.xPosition_line = plt.plot([],[])[0]
+		# self.yPosition_line = plt.plot([],[])[0]
+		# self.zPosition_line = plt.plot([],[])[0]
+		# self.roll_line = plt.plot([],[])[0]
+		# self.pitch_line = plt.plot([],[])[0]
+		# self.yaw_line = plt.plot([],[])[0]
+		
+		self.ax.set_ylabel('Position (m)')
+		self.ax2 = self.ax.twinx()
+		self.ax2.set_ylabel('Rotation Angle (radians)')
+		
+		self.xPosition_line = self.ax.plot([],[],label='X Position')[0]
+		self.yPosition_line = self.ax.plot([],[],label='Y Position')[0]
+		self.zPosition_line = self.ax.plot([],[],label='Z Position')[0]
+		self.roll_line = self.ax2.plot([],[],label='Roll')[0]
+		self.pitch_line = self.ax2.plot([],[],label='Pitch')[0]
+		self.yaw_line = self.ax2.plot([],[],label='Yaw')[0]
+		plt.legend(bbox_to_anchor = (0., 1.02, 1., .102), loc=3,
+           ncol=2, mode="expand", borderaxespad=0.)
+		# ax2.legend(bbox_to_anchor = (0., 1.02, 1., .102), loc=3,
+		# ncol=2, mode="expand", borderaxespad=0.)
 		# self.velocity_line.set_data([],[])
 		# self.acceleration_line.set_data([],[])
 		
@@ -739,7 +755,7 @@ class statisticsThreadClass(threading.Thread):
 		# acceleration_line = canvas.create_line(0,0,0,0, fill = 'blue')'
 		# position_line = canvas,create_line(0,0,0,0, fill = 'green')
 		# roll_line = canvas.create_line(0,0,0,0, fill = 'black')
-		# pitch_line = canvas.create_line(0,0,0,0, fill = ')		
+		# pitch_line = canvas.create_line(0,0,0,0, fill = ')
 
 		# stat_velocityCheckButton = tk.Checkbutton(stat_velocityBoxFrame, text = 'Velocity', variable = stat_ivelocity, command = lambda : self.Plot('Velocity', stat_ivelocity.get(), canvas))
 		# stat_accelerationCheckButton = tk.Checkbutton(stat_accelerationBoxFrame, text = 'Acceleration', variable = stat_iacceleration, command = lambda : self.Plot('Acceleration', stat_iacceleration.get(), canvas))
@@ -796,12 +812,13 @@ class statisticsThreadClass(threading.Thread):
 		
 	def run(self):
 		while 1:
-			print 'New Data: ' + str(self.new_data.value)
+			# print 'New Data: ' + str(self.new_data.value)
 			if self.new_data.value == 1:
 				# print "\nPlot!" + '\n'
 				self.AnimatePlot(self.canvas)
 			else:
-				print "New Data not available" + '\n'
+				# print "New Data not available" + '\n'
+				pass
 			sleep(.1)
 		# master.after(250,self.AnimatePlot(self.canvas))
 		# anim = animation.FuncAnimation(self.fig, self.AnimatePlot, frames = 100, init_func = self.init_draw, interval = 500) #init_func = init, frames = 360, interval = 5, blit = True)
@@ -809,48 +826,164 @@ class statisticsThreadClass(threading.Thread):
 		# self.canvas.draw()
 		
 	def AnimatePlot(self,canvas):
-		# print self.messages['ATTITUDE']['BootTime']
+		# print self.messages['ATTITUDE']['BootTime'][0]
+		# if (self.stat_iXposition.get() and self.stat_iYposition.get() and self.stat_iZposition.get() and self.stat_iroll.get() and self.stat_iyaw.get() and self.stat_ipitch.get()) == 0:
+			# xMax = 0
+			# yMin = 0
+			# yMax = 0			
+		
 		if self.stat_iXposition.get() == 1:
-			self.xPosition_line.set_xdata(np.append(self.xPosition_line.get_xdata(), self.messages['VICON_POSITION_ESTIMATE']['BootTime']))
-			self.xPosition_line.set_ydata(np.append(self.xPosition_line.get_ydata(), self.messages['VICON_POSITION_ESTIMATE']['X']))
+			X_Position_x = np.append(self.xPosition_line.get_xdata(), self.messages['VICON_POSITION_ESTIMATE']['BootTime'])
+			X_Position_y =np.append(self.xPosition_line.get_ydata(), self.messages['VICON_POSITION_ESTIMATE']['X'])
+			
+			self.xPosition_line.set_xdata(X_Position_x)
+			self.xPosition_line.set_ydata(X_Position_y)
+			
+			BufferSize = len(self.messages['VICON_POSITION_ESTIMATE']['BootTime'])
+			
+			xMax_X_Position = self.messages['VICON_POSITION_ESTIMATE']['BootTime'][BufferSize-1]
+			yMin_X_Position = min(X_Position_y)
+			yMax_X_Position = max(X_Position_y)
+			
+			xMax_Position = max(xMax_X_Position)
+			yMin_Position = min(yMin_X_Position)
+			yMax_Position = max(yMax_X_Position)
 			
 		if self.stat_iYposition.get() == 1:
-			self.yPosition_line.set_xdata(np.append(self.yPosition_line.get_xdata(), self.messages['VICON_POSITION_ESTIMATE']['BootTime']))
-			self.yPosition_line.set_ydata(np.append(self.yPosition_line.get_ydata(), self.messages['VICON_POSITION_ESTIMATE']['Y']))
-		
+			Y_Position_x = np.append(self.yPosition_line.get_xdata(), self.messages['VICON_POSITION_ESTIMATE']['BootTime'])
+			Y_Position_y = np.append(self.yPosition_line.get_ydata(), self.messages['VICON_POSITION_ESTIMATE']['Y'])
+			
+			self.yPosition_line.set_xdata(Y_Position_x)
+			self.yPosition_line.set_ydata(Y_Position_y)
+			
+			BufferSize = len(self.messages['VICON_POSITION_ESTIMATE']['BootTime'])
+			
+			xMax_Y_Position = self.messages['VICON_POSITION_ESTIMATE']['BootTime'][BufferSize-1]
+			yMin_Y_Position = min(Y_Position_y)
+			yMax_Y_Position = max(Y_Position_y)
+			
+			if self.stat_iXposition.get() == 1:
+				xMax_Position = xMax_Y_Position
+				yMin_Position = min(yMin_Position, yMin_Y_Position)
+				yMax_Position = max(yMax_Position, yMax_Y_Position)
+				
+			else:
+				xMax_Position = xMax_yPosition
+				yMin_Position = yMin_yPosition
+				yMax_Position = yMax_yPosition
+				
 		if self.stat_iZposition.get() == 1:
-			self.zPosition_line.set_xdata(np.append(self.zPosition_line.get_xdata(), self.messages['VICON_POSITION_ESTIMATE']['BootTime']))
-			self.zPosition_line.set_ydata(np.append(self.zPosition_line.get_ydata(), self.messages['VICON_POSITION_ESTIMATE']['Z']))
-		
+			Z_Position_x = np.append(self.zPosition_line.get_xdata(), self.messages['VICON_POSITION_ESTIMATE']['BootTime'])
+			Z_Position_y = np.append(self.zPosition_line.get_ydata(), self.messages['VICON_POSITION_ESTIMATE']['Z'])
+			
+			self.zPosition_line.set_xdata(Z_Position_x)
+			self.zPosition_line.set_ydata(Z_Position_y)
+			
+			BufferSize = len(self.messages['VICON_POSITION_ESTIMATE']['BootTime'])
+			
+			xMax_Z_Position = self.messages['VICON_POSITION_ESTIMATE']['BootTime'][BufferSize-1]
+			yMin_Z_Position = min(Z_Position_y)
+			yMax_Z_Position = max(Z_Position_y)
+			
+			if self.stat_iXposition.get() == 1 or self.stat_iYposition.get() == 1:
+				xMax_Position = xMax_Z_Position
+				yMin_Position = min(yMin_Position, yMin_Z_Position)
+				yMax_Position = max(yMax_Position, yMax_Z_Position)
+				
+			else:
+				xMax_Position = xMax_zPosition
+				yMin_Position = yMin_zPosition
+				yMax_Position = yMax_zPosition
+			
 		if self.stat_iroll.get() == 1:
 			print 'Plot Roll data!'
 			# self.roll_line.set_xdata(np.append(self.roll_line.get_xdata(), self.messages['ATTITUDE']['BootTime']))
 			# self.roll_line.set_ydata(np.append(self.roll_line.get_ydata(), self.messages['ATTITUDE']['Roll']))
-			roll_x = np.append(self.roll_line.get_xdata(), self.messages['ATTITUDE']['BootTime'])
-			roll_y = np.append(self.roll_line.get_ydata(), self.messages['ATTITUDE']['Roll'])
-			print roll_x
-			print roll_y
-			self.roll_line.set_xdata(roll_x)
-			self.roll_line.set_ydata(roll_y)
+			Roll_x = np.append(self.roll_line.get_xdata(), self.messages['ATTITUDE']['BootTime'])
+			Roll_y = np.append(self.roll_line.get_ydata(), self.messages['ATTITUDE']['Roll'])
+			# print roll_x
+			# print roll_y
+			self.roll_line.set_xdata(Roll_x)
+			self.roll_line.set_ydata(Roll_y)			
 			# print self.roll_line
-		
-		if self.stat_iyaw.get() == 1:
-			print 'Plot Yaw data!'
-			self.yaw_line.set_xdata(np.append(self.yaw_line.get_xdata(), self.messages['ATTITUDE']['BootTime']))
-			self.yaw_line.set_ydata(np.append(self.yaw_line.get_ydata(), self.messages['ATTITUDE']['Yaw']))
-		
+			
+			BufferSize = len(self.messages['ATTITUDE']['BootTime'])
+			
+			xMax_Roll = self.messages['ATTITUDE']['BootTime'][BufferSize-1]
+			yMin_Roll = min(Roll_y)
+			yMax_Roll = max(Roll_y)
+
+			xMax_Angle = xMax_Roll
+			yMin_Angle = yMin_Roll
+			yMax_Angle = yMax_Roll
+			
 		if self.stat_ipitch.get() == 1:
 			print 'Plot Pitch data!'
-			self.pitch_line.set_xdata(np.append(self.pitch_line.get_xdata(), self.messages['ATTITUDE']['BootTime']))
-			self.pitch_line.set_ydata(np.append(self.pitch_line.get_ydata(), self.messages['ATTITUDE']['Pitch']))
+			Pitch_x = np.append(self.pitch_line.get_xdata(), self.messages['ATTITUDE']['BootTime'])
+			Pitch_y = np.append(self.pitch_line.get_ydata(), self.messages['ATTITUDE']['Pitch'])
 			
-		xmax = max(self.messages['ATTITUDE']['BootTime'])
-		ymax = max(self.messages['ATTITUDE']['Roll'])
-		ymin = min(self.messages['ATTITUDE']['Roll'])
-		self.ax.set_xlim([xmax-30,xmax])
-		self.ax.set_ylim([ymin,ymax])
-		self.ax.get_xaxis().set_major_formatter(ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
-		self.canvas.draw()
+			self.pitch_line.set_xdata(Pitch_x)
+			self.pitch_line.set_ydata(Pitch_y)
+			
+			BufferSize = len(self.messages['ATTITUDE']['BootTime'])
+			
+			xMax_Pitch = self.messages['ATTITUDE']['BootTime'][BufferSize-1]
+			yMin_Pitch = min(Pitch_y)
+			yMax_Pitch = max(Pitch_y)
+		
+			if self.stat_iroll.get() == 1:
+				xMax_Angle = xMax_Pitch
+				yMin_Angle = min(yMin_Angle, yMin_Pitch)
+				yMax_Angle = max(yMax_Angle, yMax_Pitch)
+				
+			else:
+				xMax_Angle = xMax_Pitch
+				yMin_Angle = yMin_Pitch
+				yMax_Angle = yMax_Pitch
+				
+		if self.stat_iyaw.get() == 1:
+			print 'Plot Yaw data!'
+			Yaw_x = np.append(self.yaw_line.get_xdata(), self.messages['ATTITUDE']['BootTime'])
+			Yaw_y = np.append(self.yaw_line.get_ydata(), self.messages['ATTITUDE']['Yaw'])
+
+			self.yaw_line.set_xdata(Yaw_x)
+			self.yaw_line.set_ydata(Yaw_y)
+			
+			BufferSize = len(self.messages['ATTITUDE']['BootTime'])
+			
+			xMax_Yaw = self.messages['ATTITUDE']['BootTime'][BufferSize-1]
+			yMin_Yaw = min(Yaw_y)
+			yMax_Yaw = max(Yaw_y)
+			# print yMin_Yaw
+			# print yMax_Yaw
+			
+			if self.stat_iroll.get() == 1 or self.stat_ipitch.get() == 1:
+				xMax_Angle = xMax_Yaw
+				yMin_Angle = min(yMin_Angle, yMin_Yaw)
+				yMax_Angle = max(yMax_Angle, yMax_Yaw)
+				
+			else:
+				xMax_Angle = xMax_Yaw
+				yMin_Angle = yMin_Yaw
+				yMax_Angle = yMax_Yaw
+				
+		# xMax = max(xMax_xPosition, xMax_yPosition, xMax_zPosition, xMax_Roll, xMax_Yaw, xMax_Pitch)
+		# yMin = min(yMin_xPosition, yMin_yPosition, yMin_zPosition, yMin_Roll, yMin_Yaw, yMin_Pitch)
+		# yMax = max(yMax_xPosition, yMax_yPosition, yMax_zPosition, yMax_Roll, yMax_Yaw, yMax_Pitch)
+		
+		if self.stat_iXposition.get() == 1 or self.stat_iYposition.get() == 1 or self.stat_iZposition.get() == 1:
+			self.ax.set_xlim([xMax_Position-30,xMax_Position])
+			self.ax.set_ylim([yMin_Position,yMax_Position])
+			self.ax.get_yaxis().set_major_formatter(ticker.FuncFormatter(lambda y, p: format(float(y), ',')))
+			
+		if self.stat_iroll.get() == 1 or self.stat_ipitch.get() == 1 or self.stat_iyaw.get() == 1:
+			self.ax2.set_ylim([yMin_Angle,yMax_Angle])
+			self.ax2.get_yaxis().set_major_formatter(ticker.FuncFormatter(lambda y, p: format(float(y), ',')))
+			
+			self.ax.set_xlim([xMax_Angle-30,xMax_Angle])
+			
+		self.ax.get_xaxis().set_major_formatter(ticker.FuncFormatter(lambda x, p: format(int(x), ',')))			
+		canvas.draw()
 		# master.after(1000,self.AnimatePlot(self.canvas))
 		
 	def Plot(self,var_name, var_state, canvas):

@@ -3086,8 +3086,8 @@
         </message>
 		
 		<!-- MESSAGE IDs 180 - 240: Space for custom messages in individual projectname_messages.xml files --> <!-- I think this isn't valid for the entire range since ardupilotmega.xml uses the message IDs up to 219 -->
-		<message id="220" name="MAV_FLIGHT_CTRL_AND_MODES">
-			<description> Floating point values from Joystick I/O pins (which would be converted to velocity set points using mixing on board) and MAV modes to declare what state the drone is in</description>
+		<message id="220" name="MAV_FLIGHT_CTRL_AND_CAMERA_MODES">
+			<description> Floating point values from Joystick I/O pins (which would be converted to velocity set points using mixing on board) and MAV Modes to declare what state the drone is in</description>
 			<field type="float" name="chan1_raw"> Channel 1 </field>
 			<field type="float" name="chan2_raw"> Channel 2 </field>
 			<field type="float" name="chan3_raw"> Channel 3 </field>
@@ -3099,6 +3099,7 @@
 			<field type="uint8_t" name="mav_flight_mode_ctrl" enum="MAV_CTRL" > (See MAV_CTRL_MODE) Valid options are: MAV_CTRL_MODE_MANUAL = 0, MAV_CTRL_MODE_ALTITUDE = 1, MAV_CTRL_MODE_ATTITUDE = 2, MAV_CTRL_MODE_POS_LOCAL = 3, MAV_CTRL_MODE_POS_GLOBAL = 4, MAV_CTRL_MODE_POS_RADIAL = 5, MAV_CTRL_MODE_POS_SPHERICAL = 6, MAV_CTRL_MODE_POS_FOLLOW_ME = 7</field>
 			<field type="uint8_t" name="mav_flight_mode_auto" enum="MAV_AUTO_MODE"> (See MAV_AUTO_MODE) Valid options are: MAV_AUTO_MODE_MANUAL = 0, MAV_AUTO_MODE_EMERGENCY_LAND = 1, MAV_AUTO_MODE_RETURN_TO_HOME = 2, MAV_AUTO_MODE_WANDER = 3</field>
 			<field type="uint8_t" name="mav_flight_mode_kill" enum="MAV_KILL"> (See MAV_KILL) Valid options are: MAV_KILL_SWITCH_OFF = 0, MAV_KILL_NOW = 1 </field>
+			<field type="uint8_t" name="mav_camera_mode" enum="MAV_CAMERA"> (See MAV_CAMERA_MODE) Valid options are: MAV_KILL_SWITCH_OFF = 0, MAV_KILL_NOW = 1 </field>
 		</message>
 		
         <message id="241" name="VIBRATION">

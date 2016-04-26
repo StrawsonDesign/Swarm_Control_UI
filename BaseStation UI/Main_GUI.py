@@ -947,20 +947,167 @@ class statisticsThreadClass(threading.Thread):
 			
 	def AnimatePlot(self,canvas,legend_changed):
 		# print self.messages['ATTITUDE']['BootTime'][0]
+		Prev_Rotation_Scaling_Factor = 0
+		Rotation_Scaling_Factor = 0
+		Prev_Position_Scaling_Factor = 0
+		Position_Scaling_Factor = 0
+		Scale = 2
 		
-		SCALING_FACTOR = 0
-		Scale = 2		
-		Previous_Scaling_Factor = 676532
+		NumDataPlots = self.stat_iyaw.get() + self.stat_ipitch.get() + self.stat_iroll.get() + self.stat_iZposition.get() + self.stat_iYposition.get() + self.stat_iXposition.get()
+		
+		if NumDataPlots is 0:
+			Position_Lines, _ = self.ax.get_legend_handles_labels()
+			Rotation_Lines, _ = self.ax2.get_legend_handles_labels()
+			Position_Lables = None
+			Rotation_Lables = None
+			L = self.ax2.legend(Position_Lines+Rotation_Lines, 'None', bbox_to_anchor = (0., 1.02, 1., .102), loc=3,
+						ncol= 1, mode="expand", borderaxespad=0.)
+			L.remove()
+			
+		else:
+			Position_Lines, Position_Lables = self.ax.get_legend_handles_labels()
+			Rotation_Lines, Rotation_Lables = self.ax2.get_legend_handles_labels()
+			# print Rotation_Lines
+			if self.stat_iXposition.get() == 0:
+				if 'X' in Position_Lables:
+					Position_Lines.pop(Position_Lables.index('X'))
+					Position_Lables.pop(Position_Lables.index('X'))
+					print 'Remove X'
+					
+			if self.stat_iYposition.get() == 0:
+				if 'Y' in Position_Lables:
+					Position_Lines.pop(Position_Lables.index('Y'))
+					Position_Lables.pop(Position_Lables.index('Y'))
+					print 'Remove Y'
+					
+			if self.stat_iZposition.get() == 0:
+				if 'Z' in Position_Lables:
+					Position_Lines.pop(Position_Lables.index('Z'))
+					Position_Lables.pop(Position_Lables.index('Z'))
+					print "Remove Z"
+					
+			if self.stat_iroll.get() == 0:
+				if 'Roll' in Rotation_Lables:
+					Rotation_Lines.pop(Rotation_Lables.index("Roll"))
+					Rotation_Lables.pop(Rotation_Lables.index("Roll"))					
+					print "Remove Roll"
+					
+				# if ('(1/' + str(Rotation_Scaling_Factor) + ')*Roll') in Rotation_Lables:
+					# Rotation_Lines.pop(Rotation_Lables.index('(1/' + str(Rotation_Scaling_Factor) + ')*Roll'))
+					# Rotation_Lables.pop(Rotation_Lables.index('(1/' + str(Rotation_Scaling_Factor) + ')*Roll'))					
+					
+				# if ('(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Roll') in Rotation_Lables:
+					# Rotation_Lines.pop(Rotation_Lables.index('(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Roll'))
+					# Rotation_Lables.pop(Rotation_Lables.index('(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Roll'))					
+					
+			if self.stat_ipitch.get() == 0:
+				if 'Pitch' in Rotation_Lables:
+					Rotation_Lines.pop(Rotation_Lables.index("Pitch"))
+					Rotation_Lables.pop(Rotation_Lables.index("Pitch"))					
+					print "Remove Pitch"
+					
+				# if '(1/' + str(Rotation_Scaling_Factor) + ')*Pitch' in Rotation_Lables:
+					# Rotation_Lines.pop(Rotation_Lables.index('(1/' + str(Rotation_Scaling_Factor) + ')*Pitch'))
+					# Rotation_Lables.pop(Rotation_Lables.index('(1/' + str(Rotation_Scaling_Factor) + ')*Pitch'))					
+					
+				# elif '(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Pitch' in Rotation_Lables:
+					# Rotation_Lines.pop(Rotation_Lables.index('(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Pitch'))
+					# Rotation_Lables.pop(Rotation_Lables.index('(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Pitch'))					
+					
+			if self.stat_iyaw.get() == 0:
+				if 'Yaw' in Rotation_Lables:
+					Rotation_Lines.pop(Rotation_Lables.index('Yaw'))
+					Rotation_Lables.pop(Rotation_Lables.index('Yaw'))					
+					print "Remove Yaw"
+					print Rotation_Lables.index('Yaw')
+					
+				# if ('(1/' + str(Rotation_Scaling_Factor) + ')*Yaw') in Rotation_Lables:
+					# Rotation_Lines.pop(Rotation_Lables.index('(1/' + str(Rotation_Scaling_Factor) + ')*Yaw'))
+					# Rotation_Lables.pop(Rotation_Lables.index('(1/' + str(Rotation_Scaling_Factor) + ')*Yaw'))					
+					# print "Remove Rotation_Scaling_Factor"
+					
+				# if ('(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Yaw') in Rotation_Lables:
+					# Rotation_Lines.pop(Rotation_Lables.index('(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Yaw'))
+					# Rotation_Lables.pop(Rotation_Lables.index('(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Yaw'))					
+					# print "Remove Previous Rotation_Scaling_Factor"
+			
+			if Rotation_Scaling_Factor == 0:
+				if ('(1/' + str(Rotation_Scaling_Factor) + ')*Roll') in Rotation_Lables:
+					Rotation_Lines.pop(Rotation_Lables.index('(1/' + str(Rotation_Scaling_Factor) + ')*Roll'))
+					Rotation_Lables.pop(Rotation_Lables.index('(1/' + str(Rotation_Scaling_Factor) + ')*Roll'))					
+					
+				elif ('(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Roll') in Rotation_Lables:
+					Rotation_Lines.pop(Rotation_Lables.index('(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Roll'))
+					Rotation_Lables.pop(Rotation_Lables.index('(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Roll'))					
+					
+				if '(1/' + str(Rotation_Scaling_Factor) + ')*Pitch' in Rotation_Lables:
+					Rotation_Lines.pop(Rotation_Lables.index('(1/' + str(Rotation_Scaling_Factor) + ')*Pitch'))
+					Rotation_Lables.pop(Rotation_Lables.index('(1/' + str(Rotation_Scaling_Factor) + ')*Pitch'))					
+					
+				elif '(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Pitch' in Rotation_Lables:
+					Rotation_Lines.pop(Rotation_Lables.index('(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Pitch'))
+					Rotation_Lables.pop(Rotation_Lables.index('(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Pitch'))					
+					
+				if ('(1/' + str(Rotation_Scaling_Factor) + ')*Yaw') in Rotation_Lables:
+					Rotation_Lines.pop(Rotation_Lables.index('(1/' + str(Rotation_Scaling_Factor) + ')*Yaw'))
+					Rotation_Lables.pop(Rotation_Lables.index('(1/' + str(Rotation_Scaling_Factor) + ')*Yaw'))					
+					print "Remove Rotation_Scaling_Factor"
+					
+				elif ('(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Yaw') in Rotation_Lables:
+					Rotation_Lines.pop(Rotation_Lables.index('(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Yaw'))
+					Rotation_Lables.pop(Rotation_Lables.index('(1/' + str(Prev_Rotation_Scaling_Factor) + ')*Yaw'))					
+					print "Remove Previous Rotation_Scaling_Factor"
+					
+			if Position_Scaling_Factor == 0:
+				if ('(1/' + str(Position_Scaling_Factor) + ')*X') in Position_Lables:
+					Position_Lines.pop(Position_Lables.index('(1/' + str(Position_Scaling_Factor) + ')*X'))
+					Position_Lables.pop(Position_Lables.index('(1/' + str(Position_Scaling_Factor) + ')*X'))
+				
+				elif ('(1/' + str(Prev_Position_Scaling_Factor) + ')*X') in Position_Lables:
+					Position_Lines.pop(Position_Lables.index('(1/' + str(Prev_Position_Scaling_Factor) + ')*X'))
+					Position_Lables.pop(Position_Lables.index('(1/' + str(Prev_Position_Scaling_Factor) + ')*X'))
+				
+				if ('(1/' + str(Position_Scaling_Factor) + ')*Y') in Position_Lables:
+					Position_Lines.pop(Position_Lables.index('(1/' + str(Position_Scaling_Factor) + ')*Y'))
+					Position_Lables.pop(Position_Lables.index('(1/' + str(Position_Scaling_Factor) + ')*Y'))
+				
+				elif ('(1/' + str(Prev_Position_Scaling_Factor) + ')*Y') in Position_Lables:
+					Position_Lines.pop(Position_Lables.index('(1/' + str(Prev_Position_Scaling_Factor) + ')*Y'))
+					Position_Lables.pop(Position_Lables.index('(1/' + str(Prev_Position_Scaling_Factor) + ')*Y'))
+				
+				if ('(1/' + str(Position_Scaling_Factor) + ')*Z') in Position_Lables:
+					Position_Lines.pop(Position_Lables.index('(1/' + str(Position_Scaling_Factor) + ')*Z'))
+					Position_Lables.pop(Position_Lables.index('(1/' + str(Position_Scaling_Factor) + ')*Z'))
+				
+				elif ('(1/' + str(Prev_Position_Scaling_Factor) + ')*Z') in Position_Lables:
+					Position_Lines.pop(Position_Lables.index('(1/' + str(Prev_Position_Scaling_Factor) + ')*Z'))
+					Position_Lables.pop(Position_Lables.index('(1/' + str(Prev_Position_Scaling_Factor) + ')*Z'))
+					
+			print Rotation_Lines
+			L = self.ax2.legend(Position_Lines + Rotation_Lines, Position_Lables + Rotation_Lables, bbox_to_anchor = (0., 1.02, 1., .102), loc=3,
+						ncol= NumDataPlots, mode="expand", borderaxespad=0.)
+						
+###########################################################################################################################################
+######################################################## Position! ########################################################################
+###########################################################################################################################################
+		
+		New_xPosition_y_data = self.messages['VICON_POSITION_ESTIMATE']['X']
+		New_yPosition_y_data = self.messages['VICON_POSITION_ESTIMATE']['Y']
+		New_zPosition_y_data = self.messages['VICON_POSITION_ESTIMATE']['Z']
+		xPosition_y_data = np.append(self.xPosition_line.get_ydata(), New_xPosition_y_data)
+		yPosition_y_data = np.append(self.yPosition_line.get_ydata(), New_yPosition_y_data)
+		zPosition_y_data = np.append(self.zPosition_line.get_ydata(), New_zPosition_y_data)
+		
 		if (self.stat_iXposition.get() and self.stat_iYposition.get() and self.stat_iZposition.get()) == 1:
-			yMax_X_Position = max(self.messages['VICON_POSITION_ESTIMATE']['X'])
-			yMax_Y_Position = max(self.messages['VICON_POSITION_ESTIMATE']['Y'])
-			yMax_Z_Position = max(self.messages['VICON_POSITION_ESTIMATE']['Z'])
+			yMax_X_Position = abs(max(New_xPosition_y_data))
+			yMax_Y_Position = abs(max(New_yPosition_y_data))
+			yMax_Z_Position = abs(max(New_zPosition_y_data))
 			
-			Max_Position = max(abs(yMax_X_Position), abs(yMax_Y_Position), abs(yMax_Z_Position))
-			Min_Max_Position = min(abs(yMax_X_Position), abs(yMax_Y_Position), abs(yMax_Z_Position))
-			SCALING_FACTOR = int(Min_Max_Position/Max_Position)
+			Max_Position = max(yMax_X_Position, yMax_Y_Position, yMax_Z_Position)
+			Min_Max_Position = min(yMax_X_Position, yMax_Y_Position, yMax_Z_Position)
+			Position_Scaling_Factor = int(Min_Max_Position/Max_Position)
 			
-			if SCALING_FACTOR >= Scale:
+			if Position_Scaling_Factor >= Scale:
 				if yMax_X_Position > (yMax_Y_Position and yMax_Z_Position):
 					Scale_X_Position = 1
 					Scale_Y_Position = 0
@@ -976,55 +1123,76 @@ class statisticsThreadClass(threading.Thread):
 					Scale_Y_Position = 0
 					Scale_Z_Position = 1
 			
+			else:
+				Scale_X_Position = 0
+				Scale_Y_Position = 0
+				Scale_Z_Position = 0
+			
 		elif (self.stat_iXposition.get() and self.stat_iYposition.get()) == 1:
-			yMax_X_Position = max(self.messages['VICON_POSITION_ESTIMATE']['X'])
-			yMax_Y_Position = max(self.messages['VICON_POSITION_ESTIMATE']['Y'])
+			yMax_X_Position = abs(max(New_xPosition_y_data))
+			yMax_Y_Position = abs(max(New_yPosition_y_data))
 			
-			Max_Position = max(abs(yMax_X_Position), abs(yMax_Y_Position))
-			Min_Max_Position = min(abs(yMax_X_Position), abs(yMax_Y_Position))
-			SCALING_FACTOR = int(Min_Max_Position/Max_Position)
+			Max_Position = max(yMax_X_Position, yMax_Y_Position)
+			Min_Max_Position = min(yMax_X_Position, yMax_Y_Position)
+			Position_Scaling_Factor = int(Min_Max_Position/Max_Position)
 			
-			if SCALING_FACTOR >= Scale:
+			if Position_Scaling_Factor >= Scale:
 				if yMax_X_Position > yMax_Y_Position:
 					Scale_X_Position = 1
 					Scale_Y_Position = 0
+					Scale_Z_Position = 0
 					
 				elif yMax_Y_Position > yMax_X_Position:
 					Scale_X_Position = 0
 					Scale_Y_Position = 1
+					Scale_Z_Position = 0
 					
+			else:
+				Scale_X_Position = 0
+				Scale_Y_Position = 0
+				Scale_Z_Position = 0
+				
 		elif (self.stat_iYposition.get() and self.stat_iZposition.get()) == 1:
-			yMax_Y_Position = max(self.messages['VICON_POSITION_ESTIMATE']['Y'])
-			yMax_Z_Position = max(self.messages['VICON_POSITION_ESTIMATE']['Z'])
+			yMax_Y_Position = abs(max(New_yPosition_y_data))
+			yMax_Z_Position = abs(max(New_zPosition_y_data))
 			
-			Max_Position = max(abs(yMax_Y_Position), abs(yMax_Z_Position))
-			Min_Max_Position = min(abs(yMax_Y_Position), abs(yMax_Z_Position))
-			SCALING_FACTOR = int(Min_Max_Position/Max_Position)
+			Max_Position = max(yMax_Y_Position, yMax_Z_Position)
+			Min_Max_Position = min(yMax_Y_Position, yMax_Z_Position)
+			Position_Scaling_Factor = int(Min_Max_Position/Max_Position)
 			
-			if SCALING_FACTOR >= Scale:
+			if Position_Scaling_Factor >= Scale:
 				if yMax_Y_Position > yMax_Z_Position:
+					Scale_X_Position = 0
 					Scale_Y_Position = 1
 					Scale_Z_Position = 0
 					
 				elif yMax_Z_Position > yMax_Y_Position:
+					Scale_X_Position = 0
 					Scale_Y_Position = 0
 					Scale_Z_Position = 1
+			
+			else:
+				Scale_X_Position = 0
+				Scale_Y_Position = 0
+				Scale_Z_Position = 0
 					
 		elif (self.stat_iXposition.get() and self.stat_iZposition.get()) == 1:
-			yMax_X_Position = max(self.messages['VICON_POSITION_ESTIMATE']['X'])
-			yMax_Z_Position = max(self.messages['VICON_POSITION_ESTIMATE']['Z'])
+			yMax_X_Position = abs(max(New_xPosition_y_data))
+			yMax_Z_Position = abs(max(New_zPosition_y_data))
 			
-			Max_Position = max(abs(yMax_X_Position), abs(yMax_Z_Position))
-			Min_Max_Position = min(abs(yMax_X_Position), abs(yMax_Z_Position))
-			SCALING_FACTOR = int(Min_Max_Position/Max_Position)
+			Max_Position = max(yMax_X_Position, yMax_Z_Position)
+			Min_Max_Position = min(yMax_X_Position, yMax_Z_Position)
+			Position_Scaling_Factor = int(Min_Max_Position/Max_Position)
 			
-			if SCALING_FACTOR >= Scale:
+			if Position_Scaling_Factor >= Scale:
 				if yMax_X_Position > yMax_Z_Position:
 					Scale_X_Position = 1
+					Scale_Y_Position = 0
 					Scale_Z_Position = 0
 					
 				elif yMax_Z_Position > yMax_X_Position:
 					Scale_X_Position = 0
+					Scale_Y_Position = 0
 					Scale_Z_Position = 1
 					
 		else:
@@ -1036,86 +1204,124 @@ class statisticsThreadClass(threading.Thread):
 			X_Position_x = np.append(self.xPosition_line.get_xdata(), self.messages['VICON_POSITION_ESTIMATE']['BootTime'])			
 		
 			if Scale_X_Position == 1:
-				X_Position_y =np.append(self.xPosition_line.get_ydata(), self.messages['VICON_POSITION_ESTIMATE']['X']*SCALING_FACTOR)
+				X_Position_y =np.append(self.xPosition_line.get_ydata(), New_xPosition_y_data*(1/Position_Scaling_Factor))
 				
 			else:
-				X_Position_y =np.append(self.xPosition_line.get_ydata(), self.messages['VICON_POSITION_ESTIMATE']['X'])
+				X_Position_y = xPosition_y_data
 				
-			self.xPosition_line.set_xdata(X_Position_x)
-			self.xPosition_line.set_ydata(X_Position_y)
+			if len(X_Position_x) == len(X_Position_y):	
+				self.xPosition_line.set_xdata(X_Position_x)
+				self.xPosition_line.set_ydata(X_Position_y)
+				
+			else:
+				self.xPosition_line.set_xdata(X_Position_x[:len(X_Position_y)])
+				self.xPosition_line.set_ydata(X_Position_y)
+				
+			if len(X_Position_y) > 0:
+				BufferSize = len(self.messages['VICON_POSITION_ESTIMATE']['BootTime'])
+				
+				xMax_X_Position = self.messages['VICON_POSITION_ESTIMATE']['BootTime'][BufferSize-1]
+				yMin_X_Position = min(X_Position_y)
+				yMax_X_Position = max(X_Position_y)
+				
+				xMax_Position = max(xMax_X_Position)
+				yMin_Position = min(yMin_X_Position)
+				yMax_Position = max(yMax_X_Position)
 			
-			BufferSize = len(self.messages['VICON_POSITION_ESTIMATE']['BootTime'])
-			
-			xMax_X_Position = self.messages['VICON_POSITION_ESTIMATE']['BootTime'][BufferSize-1]
-			yMin_X_Position = min(X_Position_y)
-			yMax_X_Position = max(X_Position_y)
-			
-			xMax_Position = max(xMax_X_Position)
-			yMin_Position = min(yMin_X_Position)
-			yMax_Position = max(yMax_X_Position)
-			
-			self.xPosition_line = self.ax.plot(self.xPosition_line.get_xdata(), self.xPosition_line.get_ydata(), 'b', label='X Position')[0]
+			if Scale_X_Position == 1 and self.X_Position_Changed is False and '(1/' + str(Position_Scaling_Factor) + ')*X' not in Position_Lables:
+				self.xPosition_line = self.ax.plot(self.xPosition_line.get_xdata(), self.xPosition_line.get_ydata(), 'b', label='(1/' + str(Position_Scaling_Factor) + 'X Position')[0]
+				self.X_Position_Changed = True
+				
+			elif 'X Position' not in Position_Lables and Scale_X_Position == 0:
+				self.xPosition_line = self.ax.plot(self.xPosition_line.get_xdata(), self.xPosition_line.get_ydata(), 'b', label='X Position')[0]
+				self.X_Position_Changed = False
 			
 		if self.stat_iYposition.get() == 1:
+			print 'Plot Y Position!'
 			Y_Position_x = np.append(self.yPosition_line.get_xdata(), self.messages['VICON_POSITION_ESTIMATE']['BootTime'])
 			
 			if Scale_Y_Position == 1:
-				Y_Position_y = np.append(self.yPosition_line.get_ydata(), self.messages['VICON_POSITION_ESTIMATE']['Y']*SCALING_FACTOR)
+				Y_Position_y = np.append(self.yPosition_line.get_ydata(), New_yPosition_y_data*(1/Position_Scaling_Factor))
+			
 			else:
-				Y_Position_y = np.append(self.yPosition_line.get_ydata(), self.messages['VICON_POSITION_ESTIMATE']['Y'])
-				
-			self.yPosition_line.set_xdata(Y_Position_x)
-			self.yPosition_line.set_ydata(Y_Position_y)
+				Y_Position_y = yPosition_y_data
 			
-			BufferSize = len(self.messages['VICON_POSITION_ESTIMATE']['BootTime'])
-			
-			xMax_Y_Position = self.messages['VICON_POSITION_ESTIMATE']['BootTime'][BufferSize-1]
-			yMin_Y_Position = min(Y_Position_y)
-			yMax_Y_Position = max(Y_Position_y)
-			
-			if self.stat_iXposition.get() == 1:
-				xMax_Position = xMax_Y_Position
-				yMin_Position = min(yMin_Position, yMin_Y_Position)
-				yMax_Position = max(yMax_Position, yMax_Y_Position)
+			if len(Y_Position_x) == len(Y_Position_y):
+				self.yPosition_line.set_xdata(Y_Position_x)
+				self.yPosition_line.set_ydata(Y_Position_y)
 				
 			else:
-				xMax_Position = xMax_yPosition
-				yMin_Position = yMin_yPosition
-				yMax_Position = yMax_yPosition
+				self.yPosition_line.set_xdata(Y_Position_x[:len(Y_Position_y)])
+				self.yPosition_line.set_ydata(Y_Position_y)
+			
+			if len(Y_Position_y) > 0:
+				BufferSize = len(self.messages['VICON_POSITION_ESTIMATE']['BootTime'])
 				
-			self.yPosition_line = self.ax.plot(self.yPosition_line.get_ydata(), self.yPosition_line.get_ydata(), 'g',label='Y Position')[0]
-		
+				xMax_Y_Position = self.messages['VICON_POSITION_ESTIMATE']['BootTime'][BufferSize-1]
+				yMin_Y_Position = min(Y_Position_y)
+				yMax_Y_Position = max(Y_Position_y)
+			
+				if self.stat_iXposition.get() == 1:
+					xMax_Position = xMax_Y_Position
+					yMin_Position = min(yMin_Position, yMin_Y_Position)
+					yMax_Position = max(yMax_Position, yMax_Y_Position)
+					
+				else:
+					xMax_Position = xMax_yPosition
+					yMin_Position = yMin_yPosition
+					yMax_Position = yMax_yPosition
+					
+			if Scale_Y_Position == 1 and self.Y_Position_Changed is False and '(1/' + str(Position_Scaling_Factor) + ')*Y Position' not in Position_Lables:
+				self.yPosition_line = self.ax.plot(self.yPosition_line.get_ydata(), self.yPosition_line.get_ydata(), 'g',label='(1/' + str(Position_Scaling_Factor) + ')*Y Position')[0]
+				self.Y_Position_Changed = True
+				
+			elif 'Y Position' not in Position_Lables and Scale_Y_Position == 0:
+				self.yPosition_line = self.ax.plot(self.yPosition_line.get_ydata(), self.yPosition_line.get_ydata(), 'g',label='Y Position')[0]
+				self.Y_Position_Changed = False
 			
 		if self.stat_iZposition.get() == 1:
 			Z_Position_x = np.append(self.zPosition_line.get_xdata(), self.messages['VICON_POSITION_ESTIMATE']['BootTime'])			
 			
 			if Scale_Z_Position == 1:
-				Z_Position_y = np.append(self.zPosition_line.get_ydata(), self.messages['VICON_POSITION_ESTIMATE']['Z']*SCALING_FACTOR)
+				Z_Position_y = np.append(self.zPosition_line.get_ydata(), New_zPosition_y_data*(1/Position_Scaling_Factor))
 				
 			else:
-				Z_Position_y = np.append(self.zPosition_line.get_ydata(), self.messages['VICON_POSITION_ESTIMATE']['Z'])
-				
-			self.zPosition_line.set_xdata(Z_Position_x)
-			self.zPosition_line.set_ydata(Z_Position_y)
+				Z_Position_y = zPosition_y_data
 			
-			BufferSize = len(self.messages['VICON_POSITION_ESTIMATE']['BootTime'])
+			if len(Z_Position_x) == len(Z_Position_y):
+				self.zPosition_line.set_xdata(Z_Position_x)
+				self.zPosition_line.set_ydata(Z_Position_y)
 			
-			xMax_Z_Position = self.messages['VICON_POSITION_ESTIMATE']['BootTime'][BufferSize-1]
-			yMin_Z_Position = min(Z_Position_y)
-			yMax_Z_Position = max(Z_Position_y)
-			
-			if (self.stat_iXposition.get() or self.stat_iYposition.get()) == 1:
-				xMax_Position = xMax_Z_Position
-				yMin_Position = min(yMin_Position, yMin_Z_Position)
-				yMax_Position = max(yMax_Position, yMax_Z_Position)
-				
 			else:
-				xMax_Position = xMax_zPosition
-				yMin_Position = yMin_zPosition
-				yMax_Position = yMax_zPosition
-		
-			self.zPosition_line = self.ax.plot(self.zPosition_line.get_xdata(), self.zPosition_line.get_ydata(), 'r',label='Z Position')[0]
+				self.zPosition_line.set_xdata(Z_Position_x[:len(Z_Position_y)])
+				self.zPosition_line.set_ydata(Z_Position_y)
 			
+			if len(Z_Position_y) > 0:
+			
+				BufferSize = len(self.messages['VICON_POSITION_ESTIMATE']['BootTime'])
+				
+				xMax_Z_Position = self.messages['VICON_POSITION_ESTIMATE']['BootTime'][BufferSize-1]
+				yMin_Z_Position = min(Z_Position_y)
+				yMax_Z_Position = max(Z_Position_y)
+			
+				if (self.stat_iXposition.get() or self.stat_iYposition.get()) == 1:
+					xMax_Position = xMax_Z_Position
+					yMin_Position = min(yMin_Position, yMin_Z_Position)
+					yMax_Position = max(yMax_Position, yMax_Z_Position)
+					
+				else:
+					xMax_Position = xMax_zPosition
+					yMin_Position = yMin_zPosition
+					yMax_Position = yMax_zPosition
+			
+			if Scale_Z_Position == 1 and self.Z_Position_Changed is False and '(1/' + str(Position_Scaling_Factor) + ')*Z Position' not in Position_Lables:
+				self.zPosition_line = self.ax.plot(self.zPosition_line.get_xdata(), self.zPosition_line.get_ydata(), 'r',label= '(1/' + str(Position_Scaling_Factor) + ')*Z Position')[0]
+				self.Z_Position_Changed = True
+				
+			elif 'Z Position' not in Position_Lables and Scale_Z_Position == 0:
+				self.zPosition_line = self.ax.plot(self.zPosition_line.get_xdata(), self.zPosition_line.get_ydata(), 'r',label='Z Position')[0]
+				self.Z_Position_Changed = False
+				
 ###########################################################################################################################################
 ######################################################## Rotation! ########################################################################
 ###########################################################################################################################################
@@ -1126,17 +1332,19 @@ class statisticsThreadClass(threading.Thread):
 		Roll_y_data = np.append(self.roll_line.get_ydata(), New_Roll_y_data)
 		Pitch_y_data = np.append(self.pitch_line.get_ydata(), New_Pitch_y_data)
 		Yaw_y_data = np.append(self.yaw_line.get_ydata(), New_Yaw_y_data)
+
+		
 		
 		if (self.stat_iroll.get() and self.stat_ipitch.get() and self.stat_iyaw.get()) == 1:
 			yMax_Roll 	= abs(max(New_Roll_y_data))
 			yMax_Pitch 	= abs(max(New_Pitch_y_data))
 			yMax_Yaw 	= abs(max(New_Yaw_y_data))
 
-			Max_Angle = max(abs(yMax_Roll), yMax_Pitch, yMax_Yaw)
+			Max_Angle = max(yMax_Roll, yMax_Pitch, yMax_Yaw)
 			Min_Max_Angle = min(yMax_Roll, yMax_Pitch, yMax_Yaw)
-			SCALING_FACTOR = int(Max_Angle/Min_Max_Angle)
-			print 'Roll/Pitch/Yaw Scaling Factor: ' + str(SCALING_FACTOR)
-			if SCALING_FACTOR >= Scale:
+			Rotation_Scaling_Factor = int(Max_Angle/Min_Max_Angle)
+			print 'Roll/Pitch/Yaw Scaling Factor: ' + str(Rotation_Scaling_Factor)
+			if Rotation_Scaling_Factor >= Scale:
 				if yMax_Roll > (yMax_Pitch and yMax_Yaw):
 					Scale_Roll 	= 1
 					Scale_Pitch = 0
@@ -1163,9 +1371,9 @@ class statisticsThreadClass(threading.Thread):
 			
 			Max_Angle = max(yMax_Roll, yMax_Pitch)
 			Min_Max_Angle = min(yMax_Roll, yMax_Pitch)
-			SCALING_FACTOR = abs(int(Max_Angle/Min_Max_Angle))
-			print 'Roll/Pitch Scaling Factor: ' + str(SCALING_FACTOR)
-			if SCALING_FACTOR >= Scale:
+			Rotation_Scaling_Factor = abs(int(Max_Angle/Min_Max_Angle))
+			print 'Roll/Pitch Scaling Factor: ' + str(Rotation_Scaling_Factor)
+			if Rotation_Scaling_Factor >= Scale:
 				if yMax_Roll > yMax_Pitch:
 					Scale_Roll = 1
 					Scale_Pitch = 0
@@ -1185,11 +1393,11 @@ class statisticsThreadClass(threading.Thread):
 			yMax_Pitch 	= abs(max(New_Pitch_y_data))
 			yMax_Yaw 	= abs(max(New_Yaw_y_data))
 			
-			Max_Angle = max(Max_Pitch, yMax_Yaw)
+			Max_Angle = max(yMax_Pitch, yMax_Yaw)
 			Min_Max_Angle = min(yMax_Pitch, yMax_Yaw)
-			SCALING_FACTOR = int(Max_Angle/Min_Max_Angle)
+			Rotation_Scaling_Factor = int(Max_Angle/Min_Max_Angle)
 			
-			if SCALING_FACTOR >= Scale:
+			if Rotation_Scaling_Factor >= Scale:
 				if yMax_Pitch > yMax_Yaw:
 					Scale_Roll = 0
 					Scale_Pitch = 1
@@ -1211,9 +1419,9 @@ class statisticsThreadClass(threading.Thread):
 			
 			Max_Angle = max(yMax_Roll, yMax_Yaw)
 			Min_Max_Angle = min(yMax_Roll, yMax_Yaw)
-			SCALING_FACTOR = int(Max_Angle/Min_Max_Angle)
-			print SCALING_FACTOR
-			if SCALING_FACTOR >= Scale:
+			Rotation_Scaling_Factor = int(Max_Angle/Min_Max_Angle)
+			print Rotation_Scaling_Factor
+			if Rotation_Scaling_Factor >= Scale:
 				if abs(yMax_Roll) > abs(yMax_Yaw):
 					Scale_Roll = 1
 					Scale_Pitch = 0
@@ -1245,13 +1453,13 @@ class statisticsThreadClass(threading.Thread):
 			Roll_x = np.append(self.roll_line.get_xdata(), self.messages['ATTITUDE']['BootTime'])
 			
 			if Scale_Roll == 1:
-				Roll_y = np.append(self.roll_line.get_ydata(), New_Roll_y_data*(1/SCALING_FACTOR))
+				Roll_y = np.append(self.roll_line.get_ydata(), New_Roll_y_data*(1/Rotation_Scaling_Factor))
 				
 			else:
 				Roll_y = Roll_y_data
 			# print Roll_y
-			print len(Roll_x)
-			print len(Roll_y)
+			# print len(Roll_x)
+			# print len(Roll_y)
 			# print Roll_x*10
 			# print Roll_y*10
 			if len(Roll_x) == len(Roll_y):
@@ -1261,7 +1469,7 @@ class statisticsThreadClass(threading.Thread):
 			else:
 				self.roll_line.set_xdata(Roll_x[:len(Roll_y)])
 				self.roll_line.set_ydata(Roll_y)
-				print 'New x data len: ' + str(len(self.roll_line.get_xdata()))
+				# print 'New x data len: ' + str(len(self.roll_line.get_xdata()))
 				
 			if len(Roll_y) > 0:
 			# print self.roll_line
@@ -1274,32 +1482,32 @@ class statisticsThreadClass(threading.Thread):
 				yMin_Angle = yMin_Roll
 				yMax_Angle = yMax_Roll
 			
-			lines2, ROTATION_LABELS = self.ax2.get_legend_handles_labels()
 			# by_label = OrderedDict(zip(labels2,lines2))
 			# print by_label
 			# by_label = OrderedDict.popitem()
 			# print by_label
 			
-			if Scale_Roll == 1 and self.Roll_Changed is False and '(1/' + str(SCALING_FACTOR) + ')*Roll' not in ROTATION_LABELS:
-				self.roll_line 		= self.ax2.plot(self.roll_line.get_xdata(), self.roll_line.get_ydata(), 'c',label= '(1/' + str(SCALING_FACTOR) + ')*Roll')[0]
+			if Scale_Roll == 1 and self.Roll_Changed is False and '(1/' + str(Rotation_Scaling_Factor) + ')*Roll' not in Rotation_Lables:
+				self.roll_line 		= self.ax2.plot(self.roll_line.get_xdata(), self.roll_line.get_ydata(), 'c',label= '(1/' + str(Rotation_Scaling_Factor) + ')*Roll')[0]
 				self.Roll_Changed = True
 				
-			elif 'Roll' not in ROTATION_LABELS and Scale_Roll == 0:
+			elif 'Roll' not in Rotation_Lables and Scale_Roll == 0:
 				self.roll_line 		= self.ax2.plot(self.roll_line.get_xdata(), self.roll_line.get_ydata(), 'c',label='Roll')[0]
 				self.Roll_Changed = False
-			print ROTATION_LABELS
+				
+			# print Rotation_Lables
 		if self.stat_ipitch.get() == 1:
 			print 'Plot Pitch data!'
 			Pitch_x = np.append(self.pitch_line.get_xdata(), self.messages['ATTITUDE']['BootTime'])
 			
 			if Scale_Pitch == 1:
-				Pitch_y = np.append(self.pitch_line.get_ydata(), New_Pitch_y_data*(1/SCALING_FACTOR))
+				Pitch_y = np.append(self.pitch_line.get_ydata(), New_Pitch_y_data*(1/Rotation_Scaling_Factor))
 				
 			else:
 				Pitch_y = Pitch_y_data
 				
-			print len(Pitch_x)
-			print len(Pitch_y)
+			# print len(Pitch_x)
+			# print len(Pitch_y)
 			
 			if len(Pitch_x) == len(Pitch_y):
 				self.pitch_line.set_xdata(Pitch_x)
@@ -1308,7 +1516,7 @@ class statisticsThreadClass(threading.Thread):
 			else:
 				self.pitch_line.set_xdata(Pitch_x[:len(Pitch_y)])
 				self.pitch_line.set_ydata(Pitch_y)
-				print len(self.pitch_line.get_xdata())
+				# print len(self.pitch_line.get_xdata())
 				
 			if len(Pitch_y) > 0:
 				BufferSize = len(self.messages['ATTITUDE']['BootTime'])
@@ -1327,16 +1535,15 @@ class statisticsThreadClass(threading.Thread):
 					yMin_Angle = yMin_Pitch
 					yMax_Angle = yMax_Pitch
 			
-			lines2, ROTATION_LABELS = self.ax2.get_legend_handles_labels()
-			
-			if Scale_Pitch == 1 and self.Pitch_Changed is False and '(1/' + str(SCALING_FACTOR) + ')*Pitch' not in ROTATION_LABELS:
-				self.pitch_line = self.ax2.plot(self.pitch_line.get_xdata(), self.pitch_line.get_ydata(), 'm',label= '(1/' + str(SCALING_FACTOR) + ')*Pitch')[0]
+			if Scale_Pitch == 1 and self.Pitch_Changed is False and '(1/' + str(Rotation_Scaling_Factor) + ')*Pitch' not in Rotation_Lables:
+				self.pitch_line = self.ax2.plot(self.pitch_line.get_xdata(), self.pitch_line.get_ydata(), 'm',label= '(1/' + str(Rotation_Scaling_Factor) + ')*Pitch')[0]
 				self.Pitch_Changed = True
 			
-			elif 'Pitch' not in ROTATION_LABELS and Scale_Pitch == 0:
+			elif 'Pitch' not in Rotation_Lables and Scale_Pitch == 0:
 				self.pitch_line = self.ax2.plot(self.pitch_line.get_xdata(), self.pitch_line.get_ydata(), 'm',label='Pitch' )[0]
 				self.Pitch_Changed = False
-			print ROTATION_LABELS
+			# print Rotation_Lables
+			
 		if self.stat_iyaw.get() == 1:
 			print 'Plot Yaw data!'
 			Yaw_x = np.append(self.yaw_line.get_xdata(), self.messages['ATTITUDE']['BootTime'])
@@ -1345,15 +1552,15 @@ class statisticsThreadClass(threading.Thread):
 
 			if Scale_Yaw == 1:
 				# print self.messages['ATTITUDE']['Yaw']
-				Yaw_Scaled_data = [x*(1/float(SCALING_FACTOR)) for x in New_Yaw_y_data]
+				Yaw_Scaled_data = [x*(1/float(Rotation_Scaling_Factor)) for x in New_Yaw_y_data]
 				# print Yaw_Scaled_data
 				Yaw_y = np.append(self.yaw_line.get_ydata(), Yaw_Scaled_data)
 				# print 'Scale'				
 			else:
 				Yaw_y = Yaw_y_data
 				# print "normal"
-			print len(Yaw_x)
-			print len(Yaw_y)
+			# print len(Yaw_x)
+			# print len(Yaw_y)
 			
 			if len(Yaw_x) == len(Yaw_y):
 				self.yaw_line.set_xdata(Yaw_x)
@@ -1361,7 +1568,7 @@ class statisticsThreadClass(threading.Thread):
 			else:
 				self.yaw_line.set_xdata(Yaw_x[:len(Yaw_y)])
 				self.yaw_line.set_ydata(Yaw_y)
-				print 'new x length: ' + str(len(self.yaw_line.get_xdata()))
+				# print 'new x length: ' + str(len(self.yaw_line.get_xdata()))
 								
 			if len(Yaw_y) > 0:
 				BufferSize = len(self.messages['ATTITUDE']['BootTime'])
@@ -1381,32 +1588,30 @@ class statisticsThreadClass(threading.Thread):
 					xMax_Angle = xMax_Yaw
 					yMin_Angle = yMin_Yaw
 					yMax_Angle = yMax_Yaw
-			
-			lines2, ROTATION_LABELS = self.ax2.get_legend_handles_labels()			
 				
-			if Scale_Yaw == 1 and self.Yaw_Changed is False and '(1/' + str(SCALING_FACTOR) + ')*Yaw' not in ROTATION_LABELS:
-				self.yaw_line 		= self.ax2.plot(self.yaw_line.get_xdata(), self.yaw_line.get_ydata(), 'k',label= '(1/' + str(SCALING_FACTOR) + ')*Yaw')[0]
+			if Scale_Yaw == 1 and self.Yaw_Changed is False and '(1/' + str(Rotation_Scaling_Factor) + ')*Yaw' not in Rotation_Lables:
+				self.yaw_line 		= self.ax2.plot(self.yaw_line.get_xdata(), self.yaw_line.get_ydata(), 'k',label= '(1/' + str(Rotation_Scaling_Factor) + ')*Yaw')[0]
 				self.Yaw_Changed = True
 				
-			elif 'Yaw' not in ROTATION_LABELS and Scale_Yaw == 0:
+			elif 'Yaw' not in Rotation_Lables and Scale_Yaw == 0:
 				self.yaw_line 		= self.ax2.plot(self.yaw_line.get_xdata(), self.yaw_line.get_ydata(), 'k',label='Yaw')[0]
 				self.Yaw_Changed = False
-			print ROTATION_LABELS
-		print 'Scaling Factor: ' + str(SCALING_FACTOR)
+			# print Rotation_Lables
+		# print 'Scaling Factor: ' + str(Rotation_Scaling_Factor)
 		
-		# if Scaling_Factor >= Scale and Previous_Scaling_Factor is not Scaling_Factor:
+		# if Rotation_Scaling_Factor >= Scale and Previous_Rotation_Scaling_Factor is not Rotation_Scaling_Factor:
 			# if Scale_Roll == 1:
-				# self.roll_line 		= self.ax2.plot(self.roll_line.get_xdata(), self.roll_line.get_ydata(), 'c',label= '(1/' + str(Scaling_Factor) + ')*Roll')[0]
+				# self.roll_line 		= self.ax2.plot(self.roll_line.get_xdata(), self.roll_line.get_ydata(), 'c',label= '(1/' + str(Rotation_Scaling_Factor) + ')*Roll')[0]
 				
 			# elif Scale_Pitch == 1:
-				# self.pitch_line 	= self.ax2.plot(self.pitch_line.get_xdata(), self.pitch_line.get_ydata(), 'm',label= '(1/' + str(Scaling_Factor) + ')*Pitch')[0]
+				# self.pitch_line 	= self.ax2.plot(self.pitch_line.get_xdata(), self.pitch_line.get_ydata(), 'm',label= '(1/' + str(Rotation_Scaling_Factor) + ')*Pitch')[0]
 				
 			# elif Scale_Yaw == 1:
-				# self.yaw_line 		= self.ax2.plot(self.yaw_line.get_xdata(), self.yaw_line.get_ydata(), 'k',label= '(1/' + str(Scaling_Factor) + ')*Yaw')[0]
+				# self.yaw_line 		= self.ax2.plot(self.yaw_line.get_xdata(), self.yaw_line.get_ydata(), 'k',label= '(1/' + str(Rotation_Scaling_Factor) + ')*Yaw')[0]
 			# lines2, labels2 = self.ax2.get_legend_handles_labels()
 			# L = self.ax2.legend(lines2, labels2, bbox_to_anchor = (0., 1.02, 1., .102), loc=3,
 						# ncol=6, mode="expand", borderaxespad=0.)
-			# Previous_Scaling_Factor = Scaling_Factor
+			# Previous_Rotation_Scaling_Factor = Rotation_Scaling_Factor
 			# legend_changed = True
 			
 		# elif legend_changed:
@@ -1421,46 +1626,10 @@ class statisticsThreadClass(threading.Thread):
 		# yMin = min(yMin_xPosition, yMin_yPosition, yMin_zPosition, yMin_Roll, yMin_Yaw, yMin_Pitch)
 		# yMax = max(yMax_xPosition, yMax_yPosition, yMax_zPosition, yMax_Roll, yMax_Yaw, yMax_Pitch)
 		
-		NumDataPlots = self.stat_iyaw.get() + self.stat_ipitch.get() + self.stat_iroll.get() + self.stat_iZposition.get() + self.stat_iYposition.get() + self.stat_iXposition.get()
 		
-		if NumDataPlots is 0:
-			Position_Lines, POSITION_LABELS = self.ax.get_legend_handles_labels()
-			Rotation_Lines, ROTATION_LABELS = self.ax2.get_legend_handles_labels()
-			print ROTATION_LABELS
-			L = self.ax2.legend(Position_Lines + Rotation_Lines, POSITION_LABELS + ROTATION_LABELS, bbox_to_anchor = (0., 1.02, 1., .102), loc=3,
-						ncol= 1, mode="expand", borderaxespad=0.)
-			L.remove()
-			
-		else:
-			Position_Lines, POSITION_LABELS = self.ax.get_legend_handles_labels()
-			Rotation_Lines, ROTATION_LABELS = self.ax2.get_legend_handles_labels()
-			print ROTATION_LABELS
-			if self.stat_iroll == 0:
-				if 'Roll' in ROTATION_LABELS:
-					ROTATION_LABELS.pop(ROTATION_LABELS.index("Roll"))
-					
-				if '(1/' + str(SCALING_FACTOR) + ')*Roll' in ROTATION_LABELS:
-					ROTATION_LABELS.pop(ROTATION_LABELS.index('(1/' + str(SCALING_FACTOR) + ')*Roll'))
-					
-			if self.stat_ipitch.get() == 0:
-				if 'Pitch' in ROTATION_LABELS:
-					ROTATION_LABELS.pop(ROTATION_LABELS.index("Pitch"))
-					
-				if '(1/' + str(SCALING_FACTOR) + ')*Pitch' in ROTATION_LABELS:
-					ROTATION_LABELS.pop(ROTATION_LABELS.index('(1/' + str(SCALING_FACTOR) + ')*Pitch'))
-					
-			if self.stat_iyaw.get() == 0:
-				if 'Yaw' in ROTATION_LABELS:
-					ROTATION_LABELS.pop(ROTATION_LABELS.index("Yaw"))
-					
-				if '(1/' + str(SCALING_FACTOR) + ')*Yaw' in ROTATION_LABELS:
-					ROTATION_LABELS.pop(ROTATION_LABELS.index('(1/' + str(SCALING_FACTOR) + ')*Yaw'))
-			
-			print ROTATION_LABELS
-			L = self.ax2.legend(Position_Lines + Rotation_Lines, POSITION_LABELS + ROTATION_LABELS, bbox_to_anchor = (0., 1.02, 1., .102), loc=3,
-						ncol= NumDataPlots, mode="expand", borderaxespad=0.)
 
-			
+		Prev_Rotation_Scaling_Factor  = Rotation_Scaling_Factor
+		
 		if self.stat_iXposition.get() == 1 or self.stat_iYposition.get() == 1 or self.stat_iZposition.get() == 1:
 			if xMax_Position-30 <= 0:
 				self.ax.set_xlim([0,xMax_Position])

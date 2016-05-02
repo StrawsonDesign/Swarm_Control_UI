@@ -11,7 +11,7 @@ import csv
 import traceback
 
 from PIL import ImageTk , Image # for image conversion
-import cv2 # OpenCV for video handling
+#import cv2 # OpenCV for video handling
 import tkFont, threading, Queue, tkMessageBox
 from time import strftime, sleep, time
 from collections import deque, OrderedDict
@@ -1654,24 +1654,17 @@ class statisticsThreadClass(threading.Thread):
 		canvas.draw()
 		# master.after(1000,self.AnimatePlot(self.canvas))
 		
-			
 class Video(threading.Thread):
     # Manages video streaming and Video Controls
     def __init__(self,master):
         threading.Thread.__init__(self)
-        self.vidFrame=tk.Frame(master,bg='green')
+        self.vidFrame=tk.Frame(master,bg='cyan')
         #stickyelf.vidFrame.config(padx=20)
  
         self.vidFrame.place(x=w,y=h,width=vidW,height=vidH)
-        self.vidLabel=tk.Label(self.vidFrame)
 
-        # self.vidLabel.grid(row=1,
-        #               column=1,
-        #               rowspan=3,
-        #               columnspan=2,
-        #               sticky=tk.S+tk.N+tk.E+tk.W)
+        
 
-        self.vidLabel.pack(fill=tk.BOTH,expand=1)
 
         # def enforceAspectRatio(event):
         #     dw=int(0.7*event.width)
@@ -1706,22 +1699,25 @@ class Video(threading.Thread):
                                         command=self.depthToggle)
         depthToggleButton.place(x=w_dash,y=h_dash,width=screenW-vidW-w-w_dash,height=(int(0.33*vidH)-h_dash))
 
-    def run(self):
-        self.saveVideoToggle=0 # Intialize videocapture toggle to zero
-        self.takeScreenShot=0 # Intialize screenshot toggle to be zerod
-        self.cameraChannelOnVideo=0 # Intialize Camera Channel to default to zero
-        self.vid_cap = cv2.VideoCapture(self.cameraChannelOnVideo) # Assign channel to video capture
-        self.showVideo(self.vidLabel,self.vidFrame)
+    	
+    	#self.vidLabel.pack()
+    	#self.vidLabel.pack(fill=tk.BOTH)
+    	self.saveVideoToggle=0 # Intialize videocapture toggle to zero
+    	self.takeScreenShot=0 # Intialize screenshot toggle to be zerod
+    	self.cameraChannelOnVideo=0 # Intialize Camera Channel to default to zero
+    	#self.vid_cap = cv2.VideoCapture(self.cameraChannelOnVideo) # Assign channel to video capture
+    	self.showVideo()
 
     def recordVideo(self):
         try:
-            w=int(self.vid_cap.get(3))
-            h=int(self.vid_cap.get(4))
-            fourcc = cv2.cv.CV_FOURCC('D','I','V','X')
-            outputFPS = 20.0
-            self.vidWriter = cv2.VideoWriter('Video_'+str(self.cameraChannelOnVideo)+
-                            '_'+strftime("%c")+'.avi', fourcc, outputFPS, (w, h), True)
+            #w=int(self.vid_cap.get(3))
+            #h=int(self.vid_cap.get(4))
+            #fourcc = cv2.cv.CV_FOURCC('D','I','V','X')
+            #outputFPS = 20.0
+            #self.vidWriter = cv2.VideoWriter('Video_'+str(self.cameraChannelOnVideo)+
+            #                '_'+strftime("%c")+'.avi', fourcc, outputFPS, (w, h), True)
             #self.videoWriter.open("output.avi", fourcc, outputFPS, (w, h))
+            ''' @jmaddocks - please add logging code here'''
             self.saveVideoToggle=1 # start capturing video frames in video loop
             self.recordButton.configure(text="Stop", 
                                         bg= "black",
@@ -1737,7 +1733,7 @@ class Video(threading.Thread):
                                     bg="Red",
                                     fg ="Black",
                                     command= self.recordVideo)
-        self.vidWriter.release()
+        #self.vidWriter.release()
 
     def depthToggle(self):
         print 'Depth Toggling function goes here- Read from the stereo camera manual how to do this'
@@ -1750,45 +1746,35 @@ class Video(threading.Thread):
         # works for only two cameras
         #try: # error handling is not working
         newChannel = 1-self.cameraChannelOnVideo
-        self.vid_cap = cv2.VideoCapture(newChannel)
+        #self.vid_cap = cv2.VideoCapture(newChannel)
         self.cameraChannelOnVideo=newChannel
 
-        isChannelValid,_= self.vid_cap.read(0)
-        if isChannelValid:
-            self.cameraChannelOnVideo=newChannel
-        else:
-            self.cameraChannelOnVideo=0
-            self.vid_cap = cv2.VideoCapture(self.cameraChannelOnVideo) # result to default camera method
+        #isChannelValid,_= self.vid_cap.read(0)
+        #if isChannelValid:
+        #    self.cameraChannelOnVideo=newChannel
+        #else:
+        #    self.cameraChannelOnVideo=0
+        #    self.vid_cap = cv2.VideoCapture(self.cameraChannelOnVideo) # result to default camera method
         print 'Displaying Video Feed from Camera Number = ',self.cameraChannelOnVideo 
-        # except:
-        #     print 'Hi'
         
-    def showVideo(self,vidLabel,vidFrame):
-        _, frame = self.vid_cap.read(0) 
-        frame = cv2.flip(frame, 1) # flips the video feed
-        cv2image = cv2.cvtColor(frame,cv2.COLOR_BGR2RGBA)
-        img = Image.fromarray(cv2image)
-    
+    def showVideo(self):
+        #_, frame = self.vid_cap.read(0) 
+        #frame = cv2.flip(frame, 1) # flips the video feed
+        #cv2image = cv2.cvtColor(frame,cv2.COLOR_BGR2RGBA)
+        #img = Image.fromarray(cv2image)
+        self.vidLabel=tk.Label(self.vidFrame)
+        self.vidLabel.pack(fill=tk.BOTH)
+    	imgImport=Image.open('HW.jpg', mode='r')
+        photo = ImageTk.PhotoImage(image=imgImport)
+        self.vidLabel.imgarbage = photo
+        self.vidLabel.config(image=photo)
+
         # save image if screenshot toggle is on
         if self.takeScreenShot==1:
             img.save('Camera '+str(self.cameraChannelOnVideo)+'_'+strftime("%c")+'.jpg')
             self.takeScreenShot=0
 
-        if self.saveVideoToggle==1:
-           self.vidWriter.write(frame)
-
-        # frameAspectRatio = (float(vidFrame.winfo_width())/float(vidFrame.winfo_height()))
-        # if frameAspectRatio > (1.333): # Frame is wider than it needs to be
-        #    new_height= int(10*(vidFrame.winfo_height()/10)) # round image size to nearest
-        #    new_width=int(1.33*new_height)
-        # else: # Frame is taller than it needs to be
-        #     new_width= int(10*(vidFrame.winfo_width()/10))
-        #     new_height =int(0.75* new_width)
-        # img_resize= img.resize([new_width,new_height]) #resizing image
-        imgtk = ImageTk.PhotoImage(image=img)
-        vidLabel.imgarbage = imgtk # for python to exclude image from garbage collection
-        vidLabel.configure(image=imgtk)
-        vidLabel.after(2,self.showVideo,vidLabel,vidFrame) # calls the method after 10 ms
+        self.vidLabel.after(2,self.showVideo) # calls the method after 10 ms
 		
 class tkinterGUI(tk.Frame):
 	def __init__(self, messages, startBool, Log_msgIDs, new_data):
@@ -1866,10 +1852,11 @@ class tkinterGUI(tk.Frame):
 		CAUTION : If primary and Secondary Cameras have different 
 		dimensions then scaling happens with respect to primary camera
 		'''  
-		temp = cv2.VideoCapture(0) # Assign channel to video capture
-		vidW=temp.get(3) # Frame Height
-		vidH=temp.get(4) # Camera Frame Height
-		temp.release() # Release camera object
+
+
+		# change this later based on UDP stream
+		vidW=640
+		vidH=480
 
 		print vidW,vidH
 		camAspectRatio= vidW/vidH

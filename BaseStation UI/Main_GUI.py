@@ -400,8 +400,8 @@ class loggingThreadClass(threading.Thread):
 		log_velocityBoxFrame.place(x=0, y=2*h_dash, width=w, height=h_dash)
 		log_batteryBoxFrame.place(x=0, y=3*h_dash, width=w, height=h_dash)
 		
-		log_startButtonFrame.place(x=0, y=4*h_dash, width=w, height=h_dash)
-		log_stopButtonFrame.place(x=0, y=5*h_dash, width=w, height=h_dash)
+		log_startButtonFrame.place(x=0, y=4*h_dash, width=w/2, height=h_dash)
+		log_stopButtonFrame.place(x=w/2, y=4*h_dash, width=w/2, height=h_dash)
 		
 		log_iattitude = tk.IntVar()
 		log_iposition = tk.IntVar()

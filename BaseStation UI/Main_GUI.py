@@ -366,8 +366,8 @@ class loggingThreadClass(threading.Thread):
 	def __init__(self, master, startBool, Log_msgIDs):
 		threading.Thread.__init__(self)
 		loggingFrame = tk.Frame(master)
-		h_dash=int((screenH-h-int(0.33*vidH))/5)-5# height of each setting box
-		loggingFrame.place(x=w+vidW,y=h+int(0.33*vidH),width=screenW-vidW-w,height=screenH-h-int(0.33*vidH)-25)
+		h_dash=int((screenH-h-int(0.25*vidH))/5)-5# height of each setting box
+		loggingFrame.place(x=w+vidW,y=h+int(0.25*vidH),width=screenW-vidW-w,height=screenH-h-int(0.25*vidH)-25)
 		# loggingFrame.grid(row = 2, 
 						# column = 3,
 						# rowspan = 1,
@@ -400,8 +400,8 @@ class loggingThreadClass(threading.Thread):
 		log_velocityBoxFrame.place(x=0, y=2*h_dash, width=w, height=h_dash)
 		log_batteryBoxFrame.place(x=0, y=3*h_dash, width=w, height=h_dash)
 		
-		log_startButtonFrame.place(x=0, y=4*h_dash, width=w, height=h_dash)
-		log_stopButtonFrame.place(x=0, y=5*h_dash, width=w, height=h_dash)
+		log_startButtonFrame.place(x=0, y=4*h_dash, width=w/2, height=h_dash)
+		log_stopButtonFrame.place(x=w/2, y=4*h_dash, width=w/2, height=h_dash)
 		
 		log_iattitude = tk.IntVar()
 		log_iposition = tk.IntVar()
@@ -1663,9 +1663,6 @@ class Video(threading.Thread):
  
         self.vidFrame.place(x=w,y=h,width=vidW,height=vidH)
 
-        
-
-
         # def enforceAspectRatio(event):
         #     dw=int(0.7*event.width)
         #     dh=int(0.75*event.width)
@@ -1677,32 +1674,24 @@ class Video(threading.Thread):
         
         # Intialize vidControl Frame
         vidControl =tk.Frame(master)
-        vidControl.place(x=w+vidW,y=h,width=screenW-vidW-w,height=int(0.33*screenH))
+        vidControl.place(x=w+vidW,y=h,width=screenW-vidW-w,height=int(0.25*screenH))
         self.recordButton = tk.Button(vidControl, 
                                         text="Record", 
                                         bd = 1,
                                         bg= "Red",
                                         command= self.recordVideo)
         w_dash=int(0.5*(screenW-vidW-w))
-        h_dash=int(0.5*(int(0.33*vidH)))
+        h_dash=int(0.5*(int(0.25*vidH)))
         self.recordButton.place(x=0,y=0,width=w_dash,height=h_dash)
-        toggleCameraButton = tk.Button(vidControl, 
-                                            text = "Camera Toggle", 
-                                            command=self.toggleCamera)
-        toggleCameraButton.place(x=0,y=h_dash,width=w_dash,height=h_dash)
         screenshotButton = tk.Button(vidControl, 
                                             text = "Screen Capture",
                                             command=self.screenshot)
         screenshotButton.place(x=w_dash,y=0,width=screenW-vidW-w-w_dash,height=h_dash)
-        depthToggleButton = tk.Button(vidControl,
-                                        text = "Show Depth",
-                                        command=self.depthToggle)
-        depthToggleButton.place(x=w_dash,y=h_dash,width=screenW-vidW-w-w_dash,height=(int(0.33*vidH)-h_dash))
 
     	
     	#self.vidLabel.pack()
     	#self.vidLabel.pack(fill=tk.BOTH)
-    	self.saveVideoToggle=0 # Intialize videocapture toggle to zero
+
     	self.takeScreenShot=0 # Intialize screenshot toggle to be zerod
     	self.cameraChannelOnVideo=0 # Intialize Camera Channel to default to zero
     	#self.vid_cap = cv2.VideoCapture(self.cameraChannelOnVideo) # Assign channel to video capture
@@ -1718,7 +1707,6 @@ class Video(threading.Thread):
             #                '_'+strftime("%c")+'.avi', fourcc, outputFPS, (w, h), True)
             #self.videoWriter.open("output.avi", fourcc, outputFPS, (w, h))
             ''' @jmaddocks - please add logging code here'''
-            self.saveVideoToggle=1 # start capturing video frames in video loop
             self.recordButton.configure(text="Stop", 
                                         bg= "black",
                                         fg ="snow",
@@ -1727,7 +1715,6 @@ class Video(threading.Thread):
             print "Something bad happened with recordVideo :("
 
     def stopVideoRecord(self):
-        self.saveVideoToggle=0
         print "Stopped Recording Video"
         self.recordButton.configure(text="Record",
                                     bg="Red",
@@ -1735,27 +1722,9 @@ class Video(threading.Thread):
                                     command= self.recordVideo)
         #self.vidWriter.release()
 
-    def depthToggle(self):
-        print 'Depth Toggling function goes here- Read from the stereo camera manual how to do this'
-
     def screenshot(self):
         self.takeScreenShot=1
         print 'Took a Screenshot!'
-
-    def toggleCamera(self):
-        # works for only two cameras
-        #try: # error handling is not working
-        newChannel = 1-self.cameraChannelOnVideo
-        #self.vid_cap = cv2.VideoCapture(newChannel)
-        self.cameraChannelOnVideo=newChannel
-
-        #isChannelValid,_= self.vid_cap.read(0)
-        #if isChannelValid:
-        #    self.cameraChannelOnVideo=newChannel
-        #else:
-        #    self.cameraChannelOnVideo=0
-        #    self.vid_cap = cv2.VideoCapture(self.cameraChannelOnVideo) # result to default camera method
-        print 'Displaying Video Feed from Camera Number = ',self.cameraChannelOnVideo 
         
     def showVideo(self):
         #_, frame = self.vid_cap.read(0) 
@@ -1771,14 +1740,15 @@ class Video(threading.Thread):
 
         # save image if screenshot toggle is on
         if self.takeScreenShot==1:
-            img.save('Camera '+str(self.cameraChannelOnVideo)+'_'+strftime("%c")+'.jpg')
+            imgImport.save('Camera '+str(self.cameraChannelOnVideo)+'_'+strftime("%c")+'.jpg')
             self.takeScreenShot=0
 
         self.vidLabel.after(2,self.showVideo) # calls the method after 10 ms
 		
 class tkinterGUI(tk.Frame):
 	def __init__(self, messages, startBool, Log_msgIDs, new_data):
-		tk.Frame.__init__(self)
+		root=tk.Frame.__init__(self)
+
 		# self.grid()
 		# self.grid(sticky = tk.N + tk.S + tk.E + tk.W)
 		# make top level of the application stretchable and space filling
@@ -1891,11 +1861,11 @@ class tkinterGUI(tk.Frame):
 		|_____________|_____________________________________________|
 		|             |                             |               |
 		|    Status   |              Video          |   vidControl  |
-		|     w,      |         Native Camera       |  w, 1/3*vidH  |
+		|     w,      |         Native Camera       |  w, 1/4*vidH  |
 		|   2/3*vidH  |            Resolution       |_______________|
 		|             |           vidW*vidH         |               |
 		|             |                             |     Logging   |
-		|             |                             |  w, 2/3*vidH  |
+		|             |                             |  w, 3/4*vidH  |
 		|_____________|                             |               |
 		|    modes    |                             |               |
 		|      w,     |                             |               |

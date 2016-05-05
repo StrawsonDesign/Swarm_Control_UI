@@ -378,7 +378,7 @@ class loggingThreadClass(threading.Thread):
 		# loggingFrame.rowconfigure(4, weight = 1)
 		# loggingFrame.rowconfigure(5, weight = 1)
 		# loggingFrame.rowconfigure(6, weight = 1)
-		# loggingFrame.rowconfigure(7, weight = 1)
+		# loggingFrame.rowconfigure(7, weight = 1)top
 		# loggingFrame.columnconfigure(4, weight = 1)
 		
 		log_attitudeBoxFrame = tk.Frame(loggingFrame)
@@ -1673,15 +1673,15 @@ class Video(threading.Thread):
         #self.vidFrame.bind("<Configure>",enforceAspectRatio)
         
         # Intialize vidControl Frame
-        vidControl =tk.Frame(master)
-        vidControl.place(x=w+vidW,y=h,width=screenW-vidW-w,height=int(0.25*screenH))
+        vidControl =tk.Frame(master,bg='cyan')
+        vidControl.place(x=w+vidW,y=h,width=screenW-vidW-w,height=int(0.25*vidH))
         self.recordButton = tk.Button(vidControl, 
                                         text="Record", 
                                         bd = 1,
                                         bg= "Red",
                                         command= self.recordVideo)
         w_dash=int(0.5*(screenW-vidW-w))
-        h_dash=int(0.5*(int(0.25*vidH)))
+        h_dash=int(0.25*vidH)
         self.recordButton.place(x=0,y=0,width=w_dash,height=h_dash)
         screenshotButton = tk.Button(vidControl, 
                                             text = "Screen Capture",
@@ -1748,6 +1748,7 @@ class Video(threading.Thread):
 class tkinterGUI(tk.Frame):
 	def __init__(self, messages, startBool, Log_msgIDs, new_data):
 		root=tk.Frame.__init__(self)
+		#self.attributes('-zoomed', True)
 
 		# self.grid()
 		# self.grid(sticky = tk.N + tk.S + tk.E + tk.W)
@@ -1761,7 +1762,9 @@ class tkinterGUI(tk.Frame):
 		# Defining gemotery of outermost Frame 
 		geom_string = "%dx%d+0+0" % (screenW,screenH)
 		# Assigning max height and width to outer Frame - Maximize Frame Size
-		top.wm_geometry(geom_string)
+		#top.wm_geometry(geom_string)
+		top.attributes('-zoomed', True)
+		top.resizable(0,0)
 		self.place(x=0, y=0,width=screenW,height=screenH)
 		# Retrive scalled dimensions according to schema 
 		[vidH, vidW, h, w]=self.masterWidgetSizes()

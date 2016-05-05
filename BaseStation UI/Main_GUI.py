@@ -314,11 +314,11 @@ class myUAVThreadClass(threading.Thread):
 
 	def run(self):
 		i=0
-		while i<6:
-			print 'i is =',i
-			# print '# active threads in MyUAV loop are',threading.enumerate()
-			sleep(5)
-			i+= 1	
+		# while i<6:
+		# 	print 'i is =',i
+		# 	# print '# active threads in MyUAV loop are',threading.enumerate()
+		# 	sleep(5)
+		# 	i+= 1	
 			
 class otherdrones(threading.Thread):
     def __init__(self,master):
@@ -347,19 +347,13 @@ class otherdrones(threading.Thread):
 		# scrollBarOtherDrones.grid(row=1,columnspan=i,sticky=tk.E+tk.W)
 
     def run(self):
-        sleep(2) # remove this eventually
+        #sleep(2) # remove this eventually
         i=1
-        while 1:
-            self.updateActiveDrones()
-            if (i%60)==0: # print every 30 seconds - thread is alive
-                print "Updated Active Drones in the vicinity" 
-            i=i+1
-            sleep(0.5) # sleep for 500ms before updating
 
-    def updateActiveDrones(self):
-        # add missing key error exceptions here
-        for orc in activeDronesList:
-            self.allDroneDict[orc].configure(bg='green', fg='black')
+    # def updateActiveDrones(self):
+    #     # add missing key error exceptions here
+    #     for orc in activeDronesList:
+    #         self.allDroneDict[orc].configure(bg='green', fg='black')
 			
 class loggingThreadClass(threading.Thread):
 	
@@ -843,7 +837,7 @@ class statisticsThreadClass(threading.Thread):
 		# master.after(250,self.AnimatePlot(self.canvas))
 		# anim = animation.FuncAnimation(self.fig, self.AnimatePlot, frames = 100, init_func = self.init_draw, interval = 500) #init_func = init, frames = 360, interval = 5, blit = True)
 		# plt.show()
-		# self.canvas.draw()
+		self.canvas.draw()
 	def Plot(self,var_name, var_state, canvas):
 
 		# tseconds = (np.array(self.messages['ATTITUDE']['BootTime']) - timezone) / (60)
@@ -1743,7 +1737,7 @@ class Video(threading.Thread):
             imgImport.save('Camera '+str(self.cameraChannelOnVideo)+'_'+strftime("%c")+'.jpg')
             self.takeScreenShot=0
 
-        self.vidLabel.after(2,self.showVideo) # calls the method after 10 ms
+        #self.vidLabel.after(2,self.showVideo) # calls the method after 10 ms
 		
 class tkinterGUI(tk.Frame):
 	def __init__(self, messages, startBool, Log_msgIDs, new_data):
@@ -1763,8 +1757,7 @@ class tkinterGUI(tk.Frame):
 		geom_string = "%dx%d+0+0" % (screenW,screenH)
 		# Assigning max height and width to outer Frame - Maximize Frame Size
 		#top.wm_geometry(geom_string)
-		top.attributes('-zoomed', True)
-		top.resizable(0,0)
+		#top.attributes('-zoomed', True)
 		self.place(x=0, y=0,width=screenW,height=screenH)
 		# Retrive scalled dimensions according to schema 
 		[vidH, vidW, h, w]=self.masterWidgetSizes()
@@ -1814,6 +1807,7 @@ class tkinterGUI(tk.Frame):
 		otherDrones.start()
 
 		print '# active threads are ',threading.enumerate()
+		top.resizable(0,0)
 		
 	def masterWidgetSizes(self):
 		# Obtain Screen Height and Width in pixel units
@@ -1939,7 +1933,11 @@ def closeProgram():
 def startTkinter(PlotPacket,startBool, msgIDs, new_data):
     root = tkinterGUI(PlotPacket,startBool, msgIDs, new_data)
     root.master.title("Azog") # Name of current drone, Here it is Azog
+    root.master.attributes('-zoomed', True)
+    root.master.attributes('-fullscreen', True)
+    print 'Entering Tkinter mainloop'
     root.mainloop()
+    print 'Exited Tkinter mainloop'
 
 def sendSettingPacket(m,f,p,c):
 	# m - Mapping modes are : SLAM (0) or VICON pos input (1)

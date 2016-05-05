@@ -360,8 +360,8 @@ class loggingThreadClass(threading.Thread):
 	def __init__(self, master, startBool, Log_msgIDs):
 		threading.Thread.__init__(self)
 		loggingFrame = tk.Frame(master)
-		h_dash=int((screenH-h-int(0.25*vidH))/5)-5# height of each setting box
-		loggingFrame.place(x=w+vidW,y=h+int(0.25*vidH),width=screenW-vidW-w,height=screenH-h-int(0.25*vidH)-25)
+		h_dash=int((screenH-h-int(0.25*vidH))/5)# height of each setting box
+		loggingFrame.place(x=w+vidW,y=h+int(0.25*vidH),width=screenW-vidW-w,height=screenH-h-int(0.25*vidH))
 		# loggingFrame.grid(row = 2, 
 						# column = 3,
 						# rowspan = 1,
@@ -531,9 +531,9 @@ class settingsThreadClass(threading.Thread):
     def __init__(self,master):
 		threading.Thread.__init__(self)
 		settingsFrame=tk.Frame(master)
-		h_dash=int((screenH-h-int(0.66*vidH))/5)-5# height of each setting box
+		h_dash=int((screenH-h-int(0.66*vidH))/5)# height of each setting box
 		settingsFrame.place(x=0,y=h+int(0.66*vidH),width=w,height=screenH-h-int(0.66*vidH))
-		print h+int(0.66*vidH),screenH-h-int(0.66*vidH), h_dash,screenH-h-int(0.66*vidH)-4*h_dash
+		#print h+int(0.66*vidH),screenH-h-int(0.66*vidH), h_dash,screenH-h-int(0.66*vidH)-4*h_dash
 		# settingsFrame.grid(row=3,
 			# column=0,
 			# sticky=tk.N+tk.S+tk.E+tk.W)
@@ -644,7 +644,7 @@ class statisticsThreadClass(threading.Thread):
 		# statisticsFrame.columnconfigure(0, weight = 1)
 
 		plotFrame = tk.Frame(statisticsFrame)
-		plotFrameh = int(0.5*vidH)+20
+		plotFrameh = int(0.5*vidH)
 		plotFrame.place(x=0,y=0,width=w,height=plotFrameh)
 		#plotFrame.grid(row = 0, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
 		# plotFrame.rowconfigure(1, weight = 1)
@@ -1750,7 +1750,7 @@ class tkinterGUI(tk.Frame):
 		top=self.winfo_toplevel()
 
 		global screenH, screenW,vidH, vidW, h, w       
-		screenH= top.winfo_screenheight()-25 # take 25 pixels to account for top bar
+		screenH= top.winfo_screenheight() # take 25 pixels to account for top bar
 		screenW =top.winfo_screenwidth()
 
 		# Defining gemotery of outermost Frame 

@@ -30,7 +30,7 @@ activeDronesList=['Othrod','Ugluk','Bolg','Orcobal']
 style.use("ggplot")
 
 class listener(threading.Thread):
-    def __init__(self, sizeOfBuffer, messages, startLogging, Log_msgIDs, new_data):
+    def __init__(self, sizeOfBuffer, messages, startLogging, Log_msgIDs, new_data, UDPmaster):
 		threading.Thread.__init__(self)
 		#global receivedPacketBuffer # Must declare gloabl varibale prior to assigning values
 		#global receivedPacketBufferLock
@@ -44,11 +44,13 @@ class listener(threading.Thread):
 		self.startLogging = startLogging
 		
 		################################
-		self.UDPmaster = udpConnection() #Setup the UDP Connection!!
-		self.UDPmaster.mav.heartbeat_send(1,  2, 3, 4, 5, 6)
+		# self.UDPmaster = udpConnection() #Setup the UDP Connection!!
+		# self.UDPmaster.mav.heartbeat_send(1,  2, 3, 4, 5, 6)
 		################################
 		
-		#print self.UDPmaster
+		self.UDPmaster = UDPmaster
+		# print self.UDPmaster
+		
 		self.Log_msgIDs = Log_msgIDs
 		
 		self.message_Attitude_Boot_Time = []
@@ -257,6 +259,21 @@ class logger(threading.Thread):
 			
 		except:
 			traceback.print_exc()
+
+class send(threading.Thread):
+	def __init__(self, UDPmaster):
+		threading.Thread.__init__(self)
+		# self.UDPmaster = udpConnection() #Setup the UDP Connection!!
+		self.UDPmaster = UDPmaster
+		# print UDPmaster		
+		
+	def run(self):
+		# print UDPmaster
+		while True:
+			self.UDPmaster.mav.heartbeat_send(1,  2, 3, 4, 5, 6)
+			sleep(1)
+		# self.UDPmaster.mav.mav_flight_ctrl_and_modes_send(self, chan1_raw, chan2_raw, chan3_raw, chan4_raw, chan5_raw, chan6_raw, chan7_raw, chan8_raw, mav_flight_mode_ctrl, mav_flight_mode_auto, mav_flight_mode_kill)
+		# self.UDPmaster.mav.mav_flight_ctrl_and_modes_send(chan1_raw, chan2_raw, chan3_raw, chan4_raw, chan5_raw, chan6_raw, chan7_raw, chan8_raw, mav_flight_mode_ctrl, mav_flight_mode_auto, mav_flight_mode_kill)
 
 class myUAVThreadClass(threading.Thread):
 	def __init__(self,master):
@@ -1756,7 +1773,7 @@ class tkinterGUI(tk.Frame):
 		# Defining gemotery of outermost Frame 
 		geom_string = "%dx%d+0+0" % (screenW,screenH)
 		# Assigning max height and width to outer Frame - Maximize Frame Size
-		#top.wm_geometry(geom_string)
+		top.wm_geometry(geom_string)
 		#top.attributes('-zoomed', True)
 		self.place(x=0, y=0,width=screenW,height=screenH)
 		# Retrive scalled dimensions according to schema 
@@ -1807,7 +1824,7 @@ class tkinterGUI(tk.Frame):
 		otherDrones.start()
 
 		print '# active threads are ',threading.enumerate()
-		top.resizable(0,0)
+		# top.resizable(0,0)
 		
 	def masterWidgetSizes(self):
 		# Obtain Screen Height and Width in pixel units
@@ -1870,7 +1887,7 @@ class tkinterGUI(tk.Frame):
 		|_____________|_____________________________|_______________|
 		'''
 		
-def udpConnection():
+def udpConnection():	
 	#ClientIPaddress = '192.168.1.107' # IP to send the packets
 	ClientIPaddress = '192.168.7.2' # IP to send the packets
 	portNum = 14551 # port number of destination
@@ -1892,23 +1909,32 @@ def udpConnection():
 	
 	return master
 	
-def UDP(messages, startLogging, Log_msgIDs, new_data):
+# def UDP_Sending():
+	# UDPSendingThread = send()
+	# UDPSendingThread.setDaemon(True)
+	
+	# UDPSendingThread.start()
+	
+	# UDPSendingThread.join()
+	
+def UDP_Communication(messages, startLogging, Log_msgIDs, new_data):
 	sizeOfBuffer = 10
-	UDPlistenThread=listener(sizeOfBuffer, messages, startLogging, Log_msgIDs, new_data) # sizeOfRingBuffer
+	UDPmaster = udpConnection()
+	
+	UDPSendingThread = send(UDPmaster)
+	UDPlistenThread=listener(sizeOfBuffer, messages, startLogging, Log_msgIDs, new_data, UDPmaster) # sizeOfRingBuffer
+	
 	UDPlistenThread.setDaemon(True)
+	UDPSendingThread.setDaemon(True)
 	
-	#UDPlogThread=logger(Packets)
-	#UDPlogThread.setDaemon(True)
+	print('UDP Communication process starting')
 	
-	print('UDP process starting')
+	UDPSendingThread.start()
 	UDPlistenThread.start()
-
-	# UDPlogThread.start()
-
-	# print 'Pack:' + str(messages[:]) #The Packet which will be outputted to the plotter
-	UDPlistenThread.join()
-	#UDPlogThread.join()
 	
+	UDPSendingThread.join()
+	UDPlistenThread.join()
+
 	# Declaring global for killUDPprocesscounter
 	"""
 	print "UDP process started"
@@ -1933,8 +1959,8 @@ def closeProgram():
 def startTkinter(PlotPacket,startBool, msgIDs, new_data):
     root = tkinterGUI(PlotPacket,startBool, msgIDs, new_data)
     root.master.title("Azog") # Name of current drone, Here it is Azog
-    root.master.attributes('-zoomed', True)
-    root.master.attributes('-fullscreen', True)
+    # root.master.attributes('-zoomed', True)
+    # root.master.attributes('-fullscreen', True)
     print 'Entering Tkinter mainloop'
     root.mainloop()
     print 'Exited Tkinter mainloop'
@@ -1967,7 +1993,6 @@ def broadcast():
 	
 	UDPConnectionThread.join()    
 
-
 class AutoScrollbar(tk.Scrollbar):
     # a scrollbar that hides itself if it's not needed.  only
     # works if you use the grid geometry manager.
@@ -1985,6 +2010,7 @@ class AutoScrollbar(tk.Scrollbar):
 
 def main():
     #global udpProcess # try to kill updprocess using startTkinter
+	global UDPmaster
 	lock = Lock()
 	manager = Manager()
 	startLogging = Value('i', 0, lock = lock)
@@ -1993,13 +2019,19 @@ def main():
 	Log_msgIDs = manager.list()
 	# Log_msgIDs = Array('i', [0]*4, lock = lock)
 	# print 'Start Bool: ' + str(startLogging.value) + '\n'
-	# UDPmaster = udpConnection()
-	udpProcess = Process(name = 'UDP Process', target = UDP, args=(messages, startLogging, Log_msgIDs, new_data))
+
+	
+	# udpSendingProcess = Process(name = 'UDP Sending Process', target = UDP_Sending, args = ())
+	udpCommunicationProcess = Process(name = 'UDP Communication Process', target = UDP_Communication, args=(messages, startLogging, Log_msgIDs, new_data))
 	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(messages, startLogging, Log_msgIDs, new_data))
     # broadcastProcess = Process(name='Broadcasting Process', target=broadcast)
-	udpProcess.start()
+	
+	# udpSendingProcess.start()
+	udpCommunicationProcess.start()
 	TkinterProcess.start()
-	udpProcess.join()
+	
+	# udpSendingProcess.join()
+	udpCommunicationProcess.join()
 	TkinterProcess.join()
 	
 if __name__ == '__main__':

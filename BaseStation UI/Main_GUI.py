@@ -10,6 +10,8 @@ from matplotlib import style, ticker
 import csv
 import traceback
 
+import ADC
+
 from PIL import ImageTk , Image # for image conversion
 #import cv2 # OpenCV for video handling
 import tkFont, threading, Queue, tkMessageBox
@@ -371,7 +373,7 @@ class otherdrones(threading.Thread):
     #     # add missing key error exceptions here
     #     for orc in activeDronesList:
     #         self.allDroneDict[orc].configure(bg='green', fg='black')
-			
+
 class loggingThreadClass(threading.Thread):
 	
 	def __init__(self, master, startBool, Log_msgIDs):

@@ -64,7 +64,7 @@ class listener(threading.Thread):
 		self.Use_Second_Buffer 					= False
 		self.outfile 							= 'data.csv' #Initialize the File name all of the data will be logged into (May wish to make more than one file name or auto-generate one based on the start and end time of the data collection)
 		self.new_data 							= new_data
-			
+
     def run(self):
 		i = 0
 		with open(self.outfile, 'w') as csv_handle: #Define the csv handle to open the self.outfile and write to it
@@ -369,95 +369,174 @@ class settingsThreadClass(threading.Thread): #User selected flight modes, only o
 		# Pilot reference mode: global (5), First Person View (6), PPV (7)
 		# Control mode: User (8) , Auto land (9), Come back home (10), Circle Mode (11)
 		
-		# mav_flight_mode_ctrl        : (See MAV_CTRL_MODE) Valid options are: MAV_CTRL_MODE_MANUAL = 0, MAV_CTRL_MODE_ALTITUDE = 1, MAV_CTRL_MODE_ATTITUDE = 2, MAV_CTRL_MODE_POS_LOCAL = 3, MAV_CTRL_MODE_POS_GLOBAL = 4, MAV_CTRL_MODE_POS_RADIAL = 5, MAV_CTRL_MODE_POS_SPHERICAL = 6, MAV_CTRL_MODE_POS_FOLLOW_ME = 7 (uint8_t)
-		# mav_flight_mode_auto        : (See MAV_AUTO_MODE) Valid options are: MAV_AUTO_MODE_MANUAL = 0, MAV_AUTO_MODE_EMERGENCY_LAND = 1, MAV_AUTO_MODE_RETURN_TO_HOME = 2, MAV_AUTO_MODE_WANDER = 3 (uint8_t)
-		# mav_flight_mode_kill        : (See MAV_KILL) Valid options are: MAV_KILL_SWITCH_OFF = 0, MAV_KILL_NOW = 1 (uint8_t)
-		
 		#Flight Control Modes are: Manual (0), Altitude (1), Attitude (2), Local Position (3), Global Position (4), Radial Position (5), Spherical Position (6), Follow Me (7)
-		#FLight Auto Modes are: Manual (0), Emergency Land (1), Return Home (2), Wander (3)
+		#Flight Auto Modes are: Manual (0), Emergency Land (1), Return Home (2), Wander (3)
 		#Flight Kill Modes are: Fly (0), Kill Now (1)
 		
-		killButton=tk.Button(settingsFrame, text="Kill Drone", command = killDroneMethod, bg ="red")
-		mappingModeFrame=tk.Frame(settingsFrame)
-		flightModeFrame=tk.Frame(settingsFrame)
-		pilotReferenceModeFrame=tk.Frame(settingsFrame)
-		controlModeFrame=tk.Frame(settingsFrame)
-
-		killButton.place(x=0,y=0,width=w,height=h_dash)
+		
+		# mappingModeFrame = tk.Frame(settingsFrame)
+		# flightModeFrame = tk.Frame(settingsFrame)
+		# pilotReferenceModeFrame = tk.Frame(settingsFrame)
+		# controlModeFrame = tk.Frame(settingsFrame)
+		
+		
 		# FlightControlModeFrame.place()
 		# FlightAutoModeFrame.place()
 		# FlightKillModeFrame.place()
 		
-		mappingModeFrame.place(x=0,y=h_dash,width=w,height=h_dash)
-		flightModeFrame.place(x=0,y=2*h_dash,width=w,height=h_dash)
-		pilotReferenceModeFrame.place(x=0,y=3*h_dash,width=w,height=h_dash)
-		controlModeFrame.place(x=0,y=4*h_dash,width=w,height=h_dash)
+		# FlightKillModeFrame = tk.Frame(settingsFrame)
+		FlightControlModeFrame = tk.Frame(settingsFrame)
+		FlightAutoModeFrame = tk.Frame(settingsFrame)
+		
+		# FlightKillModeFrame.place(x = 0, y = 0, width = w, height = h_dash)
+		FlightControlModeFrame.place(x = 0, y = h_dash, width = w, height = h_dash)
+		FlightAutoModeFrame.place(x = 0, y = 2*h_dash, width = w, height = h_dash)
+		
+		# mappingModeFrame.place(x=0,y=h_dash,width=w,height=h_dash)
+		# flightModeFrame.place(x=0,y=2*h_dash,width=w,height=h_dash)
+		# pilotReferenceModeFrame.place(x=0,y=3*h_dash,width=w,height=h_dash)
+		# controlModeFrame.place(x=0,y=4*h_dash,width=w,height=h_dash)
 
-		m = tk.IntVar()
-		f = tk.IntVar()
-		p = tk.IntVar()
-		c = tk.IntVar()
+		# m = tk.IntVar()
+		# f = tk.IntVar()
+		# p = tk.IntVar()
+		# c = tk.IntVar()
 
 		# default flight modes
-		m.set(0) #mappingMode = 0    
-		f.set(4) #flightMode = 4
-		p.set(5) #pilotReferenceMode=5
-		c.set(8) #controlMode= 8
+		# m.set(0) #mappingMode = 0    
+		# f.set(4) #flightMode = 4
+		# p.set(5) #pilotReferenceMode=5
+		# c.set(8) #controlMode= 8
+		
+		k = tk.IntVar()
+		c = tk.IntVar()
+		a = tk.IntVar()
+		
+		k.set(0) #KillMode = 0 (Fly)
+		c.set(0) #ControlMode = 0 (Manual Control)
+		a.set(0) #AutoMode = 0 (Manual Auto)
 		
 		#Create the Settings buttons for each flight mode
-		mappingModeRadioButton0=tk.Radiobutton(mappingModeFrame, text="SLAM", variable=m, 
-								value=0,indicatoron=0,
-								state=tk.ACTIVE, command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-		mappingModeRadioButton1=tk.Radiobutton(mappingModeFrame, text="VICON position input", 
-								variable=m,
-								value=1,indicatoron=0,
-								command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-		mappingModeRadioButton0.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-		mappingModeRadioButton1.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		killButton = tk.Button(settingsFrame, text="Kill Drone", command = lambda : FlightModeState(k,c,a), bg ="red")
+		killButton.place(x=0,y=0,width=w,height=h_dash)
+		#Kill Mode Flight Buttons
+		# KillModeButton_Fly 				= tk.Radiobutton(FlightKillModeFrame, text = "Fly", variable = k,
+											# value = 0, indicatoron = 0, state = tk.ACTIVE, 
+											# command = lambda : FlightModeState(k,c,a))
+		# KillModeButton_Kill 			= tk.Radiobutton(FlightKillModeFrame, text = "Kill", variable = k,
+											# value = 1, indicatoron = 0, state = tk.ACTIVE, 
+											# command = lambda : FlightModeState(k,c,a))
+							
+		# KillModeButton_Fly.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		# KillModeButton_Kill.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		
+		#Control Mode Flight Buttons
+		ControlModeButton_Manual 		= tk.Radiobutton(FlightControlModeFrame, text = 'Manual Ctrl', variable = c,
+											value = 0, indicatoron = 0, state = tk.ACTIVE,
+											command = lambda : FlightModeState(k,c,a))
+		ControlModeButton_Altitude 		= tk.Radiobutton(FlightControlModeFrame, text = 'Altitude Ctrl', variable = c,
+											value = 1, indicatoron = 0, state = tk.ACTIVE,
+											command = lambda : FlightModeState(k,c,a))
+		ControlModeButton_Attitude 		= tk.Radiobutton(FlightControlModeFrame, text = 'Attitude Ctrl', variable = c,
+											value = 2, indicatoron = 0, state = tk.ACTIVE,
+											command = lambda : FlightModeState(k,c,a))
+		ControlModeButton_Pos_Local 	= tk.Radiobutton(FlightControlModeFrame, text = 'Local Position Ctrl', variable = c,
+											value = 3, indicatoron = 0, state = tk.ACTIVE,
+											command = lambda : FlightModeState(k,c,a))
+		ControlModeButton_Pos_Global 	= tk.Radiobutton(FlightControlModeFrame, text = 'Global Position Ctrl', variable = c,
+											value = 4, indicatoron = 0, state = tk.ACTIVE,
+											command = lambda : FlightModeState(k,c,a))
+		ControlModeButton_Pos_Radial 	= tk.Radiobutton(FlightControlModeFrame, text = 'Radial Position Ctrl', variable = c,
+											value = 5, indicatoron = 0, state = tk.ACTIVE,
+											command = lambda : FlightModeState(k,c,a))
+		ControlModeButton_Pos_Spherical = tk.Radiobutton(FlightControlModeFrame, text = 'Spherical Position Ctrl', variable = c,
+											value = 6, indicatoron = 0, state = tk.ACTIVE,
+											command = lambda : FlightModeState(k,c,a))
+		ControlModeButton_Pos_FollowMe 	= tk.Radiobutton(FlightControlModeFrame, text = 'Follow Me', variable = c,
+											value = 7, indicatoron = 0, state = tk.ACTIVE,
+											command = lambda : FlightModeState(k,c,a))
+										
+		ControlModeButton_Manual.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		ControlModeButton_Altitude.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		ControlModeButton_Attitude.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		ControlModeButton_Pos_Local.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		ControlModeButton_Pos_Global.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		ControlModeButton_Pos_Radial.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		ControlModeButton_Pos_Spherical.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		ControlModeButton_Pos_FollowMe.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		
+		#Auto Mode Flight Buttons
+		AutoModeButton_Manual 			= tk.Radiobutton(FlightAutoModeFrame, text = 'Manual Auto', variable = a,
+											value = 0, indicatoron = 0, state = tk.ACTIVE,
+											command = lambda : FlightModeState(k,c,a))
+		AutoModeButton_EmergencyLand 	= tk.Radiobutton(FlightAutoModeFrame, text = 'Emergency Land', variable = a,
+											value = 1, indicatoron = 0, state = tk.ACTIVE,
+											command = lambda : FlightModeState(k,c,a))
+		AutoModeButton_ReturnHome 		= tk.Radiobutton(FlightAutoModeFrame, text = 'Return Home', variable = a,
+											value = 2, indicatoron = 0, state = tk.ACTIVE,
+											command = lambda : FlightModeState(k,c,a))
+		AutoModeButton_Wander 			= tk.Radiobutton(FlightAutoModeFrame, text = 'Wander', variable = a,
+											value = 3, indicatoron = 0, state = tk.ACTIVE,
+											command = lambda : FlightModeState(k,c,a))
+		
+		AutoModeButton_Manual.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		AutoModeButton_EmergencyLand.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		AutoModeButton_ReturnHome.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		AutoModeButton_Wander.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
+		
+		# mappingModeRadioButton0=tk.Radiobutton(mappingModeFrame, text="SLAM", variable=m, 
+								# value=0,indicatoron=0,
+								# state=tk.ACTIVE, command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		# mappingModeRadioButton1=tk.Radiobutton(mappingModeFrame, text="VICON position input", 
+								# variable=m,
+								# value=1,indicatoron=0,
+								# command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		# mappingModeRadioButton0.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		# mappingModeRadioButton1.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
 
-		flightModeRadioButton2=tk.Radiobutton(flightModeFrame, text="Altitude", variable=f, value=2,
-								indicatoron=0,
-								state=tk.ACTIVE, # set as default
-								command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-		flightModeRadioButton3=tk.Radiobutton(flightModeFrame, text="Manual Thrust", variable=f, value=3,
-								indicatoron=0,command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-		flightModeRadioButton4=tk.Radiobutton(flightModeFrame, text="POS hold", variable=f, value=4,
-								indicatoron=0,
-								command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-		flightModeRadioButton2.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-		flightModeRadioButton3.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-		flightModeRadioButton4.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		# flightModeRadioButton2=tk.Radiobutton(flightModeFrame, text="Altitude", variable=f, value=2,
+								# indicatoron=0,
+								# state=tk.ACTIVE, # set as default
+								# command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		# flightModeRadioButton3=tk.Radiobutton(flightModeFrame, text="Manual Thrust", variable=f, value=3,
+								# indicatoron=0,command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		# flightModeRadioButton4=tk.Radiobutton(flightModeFrame, text="POS hold", variable=f, value=4,
+								# indicatoron=0,
+								# command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		# flightModeRadioButton2.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		# flightModeRadioButton3.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		# flightModeRadioButton4.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
 
-		pilotReferenceModeRadioButton5=tk.Radiobutton(pilotReferenceModeFrame, text="Global", variable=p, value=5,
-											indicatoron=0,
-											state=tk.ACTIVE,
-											command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-		pilotReferenceModeRadioButton6=tk.Radiobutton(pilotReferenceModeFrame, text="First Person View",
-											variable=p, value=6,indicatoron=0,
-											command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-		pilotReferenceModeRadioButton7=tk.Radiobutton(pilotReferenceModeFrame, text="PPV", variable=p,
-											value=7,indicatoron=0,
-											command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-		pilotReferenceModeRadioButton5.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-		pilotReferenceModeRadioButton6.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-		pilotReferenceModeRadioButton7.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		# pilotReferenceModeRadioButton5=tk.Radiobutton(pilotReferenceModeFrame, text="Global", variable=p, value=5,
+											# indicatoron=0,
+											# state=tk.ACTIVE,
+											# command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		# pilotReferenceModeRadioButton6=tk.Radiobutton(pilotReferenceModeFrame, text="First Person View",
+											# variable=p, value=6,indicatoron=0,
+											# command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		# pilotReferenceModeRadioButton7=tk.Radiobutton(pilotReferenceModeFrame, text="PPV", variable=p,
+											# value=7,indicatoron=0,
+											# command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		# pilotReferenceModeRadioButton5.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		# pilotReferenceModeRadioButton6.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		# pilotReferenceModeRadioButton7.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
 
-		controlModeRadioButton8=tk.Radiobutton(controlModeFrame, text="User", variable=c,
-											value=8,indicatoron=0,
-											command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-		controlModeRadioButton9=tk.Radiobutton(controlModeFrame, text="Auto Land", variable=c,
-											value=9,indicatoron=0,
-											command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-		controlModeRadioButton10=tk.Radiobutton(controlModeFrame, text="Return Home", variable=c,
-											value=10,indicatoron=0,
-											command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-		controlModeRadioButton11=tk.Radiobutton(controlModeFrame, text="Hover", variable=c,
-											value=11,indicatoron=0,
-											command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
-		controlModeRadioButton8.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-		controlModeRadioButton9.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-		controlModeRadioButton10.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-		controlModeRadioButton11.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		# controlModeRadioButton8=tk.Radiobutton(controlModeFrame, text="User", variable=c,
+											# value=8,indicatoron=0,
+											# command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		# controlModeRadioButton9=tk.Radiobutton(controlModeFrame, text="Auto Land", variable=c,
+											# value=9,indicatoron=0,
+											# command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		# controlModeRadioButton10=tk.Radiobutton(controlModeFrame, text="Return Home", variable=c,
+											# value=10,indicatoron=0,
+											# command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		# controlModeRadioButton11=tk.Radiobutton(controlModeFrame, text="Hover", variable=c,
+											# value=11,indicatoron=0,
+											# command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
+		# controlModeRadioButton8.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		# controlModeRadioButton9.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		# controlModeRadioButton10.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
+		# controlModeRadioButton11.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
 		
 class statisticsThreadClass(threading.Thread): #Based on the User selected options this class will plot real time data from the drone
 	def __init__(self, master, messages, new_data):
@@ -1446,6 +1525,9 @@ def startTkinter(PlotPacket,startBool, msgIDs, new_data): #This will start the G
     root.mainloop()
     print 'Exited Tkinter mainloop'
 
+def FlightModeState(k,c,a):
+	print "New Settings received :",'Kill Mode',k,'\tControl Mode :',c,'\tAuto Mode',p
+	
 def sendSettingPacket(m,f,p,c):
 	# m - Mapping modes are : SLAM (0) or VICON pos input (1)
 	# f - Flight modes are : Altitude (2) vs Manual Thrust (3) vs POS hold (4)

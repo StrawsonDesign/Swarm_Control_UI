@@ -10,7 +10,7 @@ from matplotlib import style, ticker
 import csv
 import traceback
 
-import ADC
+# import ADC #Import the ADC code so joystick values can be sent to the drone from the ground station
 
 from PIL import ImageTk , Image # for image conversion
 #import cv2 # OpenCV for video handling
@@ -24,56 +24,57 @@ from multiprocessing import Process, Lock, Manager #multiprocessing
 
 from argparse import ArgumentParser
 
-from pymavlink import mavutil
+from pymavlink import mavutil #Mavlink
 
 allDronesList=['Othrod','The Great Goblin','Boldog','Ugluk','Bolg','Orcobal','More Orcs','Orc1','Orc2','Orc3','Orc4']
 activeDronesList=['Othrod','Ugluk','Bolg','Orcobal']
 
-style.use("ggplot")
+style.use("ggplot") #Define what style to use for the Plot
 
 class listener(threading.Thread):
     def __init__(self, sizeOfBuffer, messages, startLogging, Log_msgIDs, new_data, UDPmaster):
 		threading.Thread.__init__(self)
-		self.receivedPacketBuffer_1= deque([], sizeOfBuffer)
-		self.receivedPacketBuffer_2= deque([], sizeOfBuffer)
-		self.receivedPacketBufferLock = threading.Lock()
-		print "Initialized Ring Buffer as size of", sizeOfBuffer
-		self.messages = messages
-		self.sizeOfBuffer = sizeOfBuffer
-		self.startLogging = startLogging
+		#Initialize the variables
+		self.receivedPacketBuffer_1				= deque([], sizeOfBuffer)
+		self.receivedPacketBuffer_2 			= deque([], sizeOfBuffer)
+		self.receivedPacketBufferLock 			= threading.Lock()
+		self.messages 							= messages
+		self.sizeOfBuffer 						= sizeOfBuffer
+		self.startLogging 						= startLogging		
+		self.UDPmaster 							= UDPmaster		
+		self.Log_msgIDs 						= Log_msgIDs
 		
-		self.UDPmaster = UDPmaster
+		#Initialize the variables for the Attitude Packet
+		self.message_Attitude_Boot_Time 		= []
+		self.message_Roll 						= []
+		self.message_Pitch 						= []
+		self.message_Yaw 						= []
 		
-		self.Log_msgIDs = Log_msgIDs
+		#Initialize the variables for the Battery Packet
+		self.message_Battery_Boot_Time 			= []
+		self.message_Battery_Voltage			= []
 		
-		self.message_Attitude_Boot_Time = []
-		self.message_Roll = []
-		self.message_Pitch = []
-		self.message_Yaw = []
+		#Initialize the variables for the Position Packet
+		self.message_Position_Boot_Time 		= []
+		self.message_X_Position 				= []
+		self.message_Y_Position 				= []
+		self.message_Z_Position 				= []
 		
-		self.message_Battery_Boot_Time = []
-		self.message_Battery_Voltage =[]
-		
-		self.message_Position_Boot_Time = []
-		self.message_X_Position = []
-		self.message_Y_Position = []
-		self.message_Z_Position = []
-		
-		self.Use_First_Buffer = True
-		self.Use_Second_Buffer = False
-		self.outfile='data.csv'
-		self.new_data = new_data
+		self.Use_First_Buffer 					= True
+		self.Use_Second_Buffer 					= False
+		self.outfile 							= 'data.csv' #Initialize the File name all of the data will be logged into (May wish to make more than one file name or auto-generate one based on the start and end time of the data collection)
+		self.new_data 							= new_data
 			
     def run(self):
 		i = 0
-		with open(self.outfile, 'w') as csv_handle:
+		with open(self.outfile, 'w') as csv_handle: #Define the csv handle to open the self.outfile and write to it
 			while 1:
 				i = i + 1
 				sleep(.1)
 				self.new_data.value = 0
 				try:
 					if self.receivedPacketBufferLock.acquire(1):
-						data = self.UDPmaster.recv() #This should recv the data from the socket
+						data = self.UDPmaster.recv() #This should receive data from the socket
 						
 						if self.startLogging.value == 1:
 						
@@ -92,22 +93,22 @@ class listener(threading.Thread):
 				finally:
 					self.receivedPacketBufferLock.release()
 					if i == 1:
-						BootTime = time()
+						BootTime = time() #Determine the time when the program started
 						
-					if i%self.sizeOfBuffer==0:
+					if i%self.sizeOfBuffer == 0:
 					
 						for x in xrange(self.sizeOfBuffer):
-							if self.startLogging.value == 1:
-								if self.Use_First_Buffer == True:
+							if self.startLogging.value == 1: #Check if the User chose to log data
+								if self.Use_First_Buffer == True: #Use the first buffer if the second buffer is either being logged or on the first loop
 									self.packet = self.UDPmaster.mav.parse_char(self.receivedPacketBuffer_1.popleft())
 									
-								elif self.Use_Second_Buffer == True:
+								elif self.Use_Second_Buffer == True: #Use the second bugger if the first buffer is being logged
 									self.packet = self.UDPmaster.mav.parse_char(self.receivedPacketBuffer_2.popleft())
 									
 							else:
 								self.packet = self.UDPmaster.mav.parse_char(self.receivedPacketBuffer_1.popleft())
 							
-							if self.packet is not None:
+							if self.packet is not None: #If data exists
 								self.UDPmaster.post_message(self.packet)
 								
 								if self.packet.get_msgId() == 30: 							#Attitude Packet (Contains Roll, Pitch, Yaw)
@@ -116,19 +117,19 @@ class listener(threading.Thread):
 									self.message_Pitch.append(self.packet.pitch)			#pitch : Pitch angle (rad, -pi..+pi) (float)
 									self.message_Yaw.append(self.packet.yaw)				#yaw   : Yaw angle (rad, -pi..+pi) (float)
 									
-								elif self.packet.get_msgId() == 1:
+								elif self.packet.get_msgId() == 1: 							#Battery Packet
 									self.message_Battery_Boot_Time.append(time() - BootTime)
 									self.message_Battery_Voltage.append(self.packet.voltages)
 									
-								elif self.packet.get_msgId() == 104:
+								elif self.packet.get_msgId() == 104: 						#Position Packet
 									self.message_Position_Boot_Time.append(time() - BootTime)
 									self.message_X_Position.append(self.packet.x)
 									self.message_Y_Position.append(self.packet.y)
 									self.message_Z_Position.append(self.packet.z)
 									
 								if self.startLogging.value == True and self.packet.get_msgId() in self.Log_msgIDs[:]: # Check if the GUI should be Logging data
-										csv_writer = csv.writer(csv_handle, delimiter =',')
-										UDPlogThread = logger(csv_writer, self.packet)
+										csv_writer = csv.writer(csv_handle, delimiter =',') #Define the csv module, seperate the data with ',' and using the csv_handle
+										UDPlogThread = logger(csv_writer, self.packet) #Start logging the data
 										UDPlogThread.setDaemon(True)
 										UDPlogThread.start()
 										UDPlogThread.join()
@@ -140,11 +141,14 @@ class listener(threading.Thread):
 								# No Packet!
 								pass
 								
-							if x == self.sizeOfBuffer-1:
+							if x == self.sizeOfBuffer-1: #If the buffer is now full save all of the parsed data into the message dictionary for logging purposes
 								self.messages['ATTITUDE'] = {'BootTime':self.message_Attitude_Boot_Time, 'Roll': self.message_Roll, 'Pitch': self.message_Pitch, 'Yaw': self.message_Yaw}
 								self.messages['SYS_STATUS'] = {'BootTime':self.message_Battery_Boot_Time, 'Battery_Voltage': self.message_Battery_Voltage}
 								self.messages['VICON_POSITION_ESTIMATE'] = {'BootTime': self.message_Position_Boot_Time, 'X': self.message_X_Position, 'Y': self.message_Y_Position, 'Z': self.message_Z_Position}
+								#Boolean so the program knows that the buffer has been completely parsed and the data has been saved
 								self.new_data.value = 1
+								
+								#Reset the variables which temporarily store the data
 								self.message_Attitude_Boot_Time = []
 								self.message_Roll = []
 								self.message_Pitch = []
@@ -158,19 +162,19 @@ class listener(threading.Thread):
 								self.message_Y_Position = []
 								self.message_Z_Position = []								
 								
-						if self.startLogging.value == 1:
-							if self.Use_First_Buffer == True:
+						if self.startLogging.value == 1: #Check if the User chose to log data
+							if self.Use_First_Buffer == True: #If the first buffer was used this loop, use the second buffer on the next loop
 								self.Use_First_Buffer = False
 								self.Use_Second_Buffer = True
 								
-							elif self.Use_Second_Buffer == True:
+							elif self.Use_Second_Buffer == True: #If the second buffer was used this loop, use the first buffer on the next loop
 								self.Use_First_Buffer = True
 								self.Use_Second_Buffer = False
 								
-						else:
-							self.Use_First_Buffer = True
+						else: #Use the first buffer only when no data is being logged
+							self.Use_First_Buffer = True 
 				
-class logger(threading.Thread):
+class logger(threading.Thread): #This class is called when certain packets are to be written in a text file
 	def __init__(self,csv_writer, packet):
 		threading.Thread.__init__(self)
 		self.csv_writer = csv_writer
@@ -178,40 +182,40 @@ class logger(threading.Thread):
 		
 	def run(self):
 		try:
-			self.csv_writer.writerow([self.packet])
+			self.csv_writer.writerow([self.packet]) #This creates a row with the current packet being written on it
 			
-		except(KeyboardInterrupt, SystemExit):
+		except(KeyboardInterrupt, SystemExit): #If a keyboard interrupt is detected then the logging will be exited
 			raise
 			
 		except:
 			traceback.print_exc()
 
-class send(threading.Thread):
+class send(threading.Thread): #This class is called to send the drone heartbeat, joystick, and mode packets.
 	def __init__(self, UDPmaster):
 		threading.Thread.__init__(self)
 		self.UDPmaster = UDPmaster
 		
 	def run(self):
 		while True:
-			self.UDPmaster.mav.heartbeat_send(1,  2, 3, 4, 5, 6)
-			sleep(1)
+			self.UDPmaster.mav.heartbeat_send(1,  2, 3, 4, 5, 6) #Sending the drone heartbeat packets so it knows communication between the ground station and the drone is still active
+			sleep(1) #Sleep for 1 second
 		# self.UDPmaster.mav.mav_flight_ctrl_and_modes_send(chan1_raw, chan2_raw, chan3_raw, chan4_raw, chan5_raw, chan6_raw, chan7_raw, chan8_raw, mav_flight_mode_ctrl, mav_flight_mode_auto, mav_flight_mode_kill)
 
-class myUAVThreadClass(threading.Thread):
+class myUAVThreadClass(threading.Thread): #This class contains information pretaining to the drone currently being flown by this ground station
 	def __init__(self,master):
 		threading.Thread.__init__(self)
 		myUAVFrame = tk.Frame(master)
 		myUAVFrame.place(x=0,y=0,width=w,height=h)
 		
-		batteryLife = 75
-		signalStrength = 86
-		upTime = 524.53
-		myUAV = 'Hot'
+		batteryLife = 75 #This variable contains the current [Voltage] of the battery
+		signalStrength = 86 #This variable contains the signal strength of the connection between the ground station and the drone
+		upTime = 524.53 #This variable contains the total time the drone has been active for, starting from the time the BBB was turned on
+		myUAV = 'Hot' #This variable contains the name of the drone which is currently connected
 		
 		batteryLabel = tk.Label(myUAVFrame, text = "Battery Life: %d" % batteryLife)
 		signalLabel = tk.Label(myUAVFrame, text = "Signal Strength: %d" % signalStrength)
 		upTimeLabel = tk.Label(myUAVFrame, text = "Up Time: %f [s]" % upTime)
-		myUAVName = tk.Label(myUAVFrame, text = "UAV Name: %s" % myUAV)		
+		myUAVName = tk.Label(myUAVFrame, text = "UAV Name: %s" % myUAV)	
 		
 		batteryLabel.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		signalLabel.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
@@ -238,12 +242,12 @@ class otherdrones(threading.Thread):
 			# otherDroneCanvas.columnconfigure(i,weight=1)
 			self.allDroneDict[orc]=tk.Button(otherDroneCanvas,text=orc, bg = "gray14", fg="snow")
 			self.allDroneDict[orc].pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
-			i=i+1
+			i = i+1
 
     def run(self):
-        i=1
+        i = 1
 
-class loggingThreadClass(threading.Thread):
+class loggingThreadClass(threading.Thread): #This class records any data which the user selects based on provided options, all the user has the option to stop and start the recording the data at any time
 	
 	def __init__(self, master, startBool, Log_msgIDs):
 		threading.Thread.__init__(self)
@@ -259,6 +263,7 @@ class loggingThreadClass(threading.Thread):
 		log_startButtonFrame = tk.Frame(loggingFrame)
 		log_stopButtonFrame = tk.Frame(loggingFrame)
 		
+		#Place the Logging Button inside the Logging Frame
 		log_attitudeBoxFrame.place(x=0, y=0,width=w, height=h_dash)
 		log_positionBoxFrame.place(x=0, y=h_dash, width=w, height=h_dash)
 		log_velocityBoxFrame.place(x=0, y=2*h_dash, width=w, height=h_dash)
@@ -272,6 +277,7 @@ class loggingThreadClass(threading.Thread):
 		log_ivelocity = tk.IntVar()
 		log_ibattery = tk.IntVar()
 		
+		#Create the Logging Buttons
 		log_attitudeCheckButton = tk.Checkbutton(log_attitudeBoxFrame, text = 'Attitude', variable = log_iattitude, command = lambda : self.logVariables('Attitude', log_iattitude.get()))
 		log_positionCheckButton = tk.Checkbutton(log_positionBoxFrame, text = 'Position', variable = log_iposition, command = lambda : self.logVariables('Position', log_iposition.get()))
 		log_velocityCheckButton = tk.Checkbutton(log_velocityBoxFrame, text = 'Velocity', variable = log_ivelocity, command = lambda : self.logVariables('Velocity', log_ivelocity.get()))
@@ -293,77 +299,68 @@ class loggingThreadClass(threading.Thread):
 		self.msgIDs = []
 		self.startLogging = startBool
 		
+		#The message IDs for each packet
+		Attitude_msgID = 30
+		Position_msgID = 104
+		Velocity_msgID = 2134124124
+		Battery_msgID  = 1
+		
 	def Stop(self):
 		self.quit()     # stops mainloop
 		self.destroy()  # this is necessary on Windows to prevent
 						# Fatal Python Error: PyEval_RestoreThread: NULL tstate
 
-	def startRecording(self):
+	def startRecording(self): #Start Recording (Logging) any data selected
 		self.startLogging.value = 1
-		print 'Start Recording Data'
 		
-	def stopRecording(self):
+	def stopRecording(self): #Stop Recording (Logging) any data
 		self.startLogging.value = 0
-		print 'Stop Recording Data'
 		
-	def logVariables(self, var_Name, var_State):
+	def logVariables(self, var_Name, var_State, Attitude_msgID, Position_msgID, Velocity_msgID, Battery_msgID):# Based on the user choice only certain variables are recorded
 	
-		if var_State == 1:
-			self.loggingVariables.append(var_Name)
+		if var_State == 1: #If the variables was selected
+			self.loggingVariables.append(var_Name) #Add the Name of the variable to the string list of variables being logged currently
 			
-			print self.loggingVariables
+			if 'Attitude' is var_Name: #If 'Attitude' was the option selected
+				self.Log_msgIDs.append(Attitude_msgID) #Add the Attitude message ID to the message ID list being logged currently
+				
+			elif 'Position' is var_Name: #If 'Position' was the option selected
+				self.Log_msgIDs.append(Position_msgID) #Add the Position message ID to the message ID list being logged currently
+				
+			elif 'Velocity' is var_Name: #If 'Velocity' was the option selected
+				self.Log_msgIDs.append(Velocity_msgID) #Add the Velocity message ID to the message ID list being logged currently
+				
+			elif 'Battery' is var_Name: #If 'Battery' was the option selected
+				self.Log_msgIDs.append(Battery_msgID) #Add the Battery message ID to the message ID list being logged currently
 			
-			if 'Attitude' is var_Name:
-				self.Log_msgIDs.append(30)
-				
-			elif 'Position' is var_Name:
-				self.Log_msgIDs.append(104)
-				
-			elif 'Velocity' is var_Name:
-				self.Log_msgIDs.append(123890122)
-				
-			elif 'Battery' is var_Name:
-				self.Log_msgIDs.append(1)
-				
-			print self.Log_msgIDs	
+		elif var_State == 0: #If the variable was de-selected
 			
-		elif var_State == 0:			
-			
-			if 'Attitude' is var_Name:
-				ivar_Name = self.Log_msgIDs.index(30)
-				print ivar_Name
-				self.Log_msgIDs.pop(ivar_Name)
-
+			if 'Attitude' is var_Name: #If 'Attitude' was de-selected
+				ivar_Name = self.Log_msgIDs.index(Attitude_msgID) #Find the index in the Log message ID list which contains 'Attitude'
+				self.Log_msgIDs.pop(ivar_Name) #Remove 'Attitude' from the Log message ID list
 				
-			elif 'Position' is var_Name:
-				ivar_Name = self.Log_msgIDs.index(104)
-				self.Log_msgIDs.pop(ivar_Name)
+			elif 'Position' is var_Name: #If 'Position' was de-selected
+				ivar_Name = self.Log_msgIDs.index(Position_msgID) #Find the index in the Log message ID list which contains 'Position'
+				self.Log_msgIDs.pop(ivar_Name) #Remove 'Position' from the Log message ID list
 				
-			elif 'Velocity' is var_Name:
-				ivar_Name = self.Log_msgIDs.index(123890122)
-				self.Log_msgIDs.pop(ivar_Name)
+			elif 'Velocity' is var_Name: #If 'Velocity' was de-selected
+				ivar_Name = self.Log_msgIDs.index(Velocity_msgID) #Find the index in the Log message ID list which contains 'Velocity'
+				self.Log_msgIDs.pop(ivar_Name) #Remove 'Velocity' from the Log message ID list
 				
-			elif 'Battery' is var_Name:
-				ivar_Name = self.Log_msgIDs.index(1)
-				self.Log_msgIDs.pop(ivar_Name)		
+			elif 'Battery' is var_Name: #If 'Battery' was de-selected
+				ivar_Name = self.Log_msgIDs.index(Battery_msgID) #Find the index in the Log message ID list which contains 'Battery'
+				self.Log_msgIDs.pop(ivar_Name) #Remove 'Battery' from the Log message ID list
 			
-			ivar_Name = self.loggingVariables.index(var_Name)
-			self.loggingVariables.pop(ivar_Name)
+			ivar_Name = self.loggingVariables.index(var_Name) 
+			self.loggingVariables.pop(ivar_Name) #Remove the variable name that was de-selected from the logging variables string list
 			
-			print self.loggingVariables
-			# print self.msgIDs
-			print self.Log_msgIDs
-			
-		self.Log_names = self.loggingVariables
+		self.Log_names = self.loggingVariables #Update the list of variables names being logged currently
 		
-	def run(self):
-		print "Log names: " + str(self.loggingVariables)
-		print "Log message IDs: " + str(self.Log_msgIDs)
-		
-class settingsThreadClass(threading.Thread):
+class settingsThreadClass(threading.Thread): #User selected flight modes, only one modes is viable at any point in time from each of the following modes: Flight control mode, Flight auto mode, and Flight kill mode.
     def __init__(self,master):
 		threading.Thread.__init__(self)
 		settingsFrame=tk.Frame(master)
+		#Place all of the buttons for each of the possible modes
 		h_dash=int((screenH-h-int(0.66*vidH))/5)# height of each setting box
 		settingsFrame.place(x=0,y=h+int(0.66*vidH),width=w,height=screenH-h-int(0.66*vidH))
 
@@ -371,7 +368,15 @@ class settingsThreadClass(threading.Thread):
 		# Flight modes are : Altitude (2) vs Manual Thrust (3) vs POS hold (4)
 		# Pilot reference mode: global (5), First Person View (6), PPV (7)
 		# Control mode: User (8) , Auto land (9), Come back home (10), Circle Mode (11)
-
+		
+		# mav_flight_mode_ctrl        : (See MAV_CTRL_MODE) Valid options are: MAV_CTRL_MODE_MANUAL = 0, MAV_CTRL_MODE_ALTITUDE = 1, MAV_CTRL_MODE_ATTITUDE = 2, MAV_CTRL_MODE_POS_LOCAL = 3, MAV_CTRL_MODE_POS_GLOBAL = 4, MAV_CTRL_MODE_POS_RADIAL = 5, MAV_CTRL_MODE_POS_SPHERICAL = 6, MAV_CTRL_MODE_POS_FOLLOW_ME = 7 (uint8_t)
+		# mav_flight_mode_auto        : (See MAV_AUTO_MODE) Valid options are: MAV_AUTO_MODE_MANUAL = 0, MAV_AUTO_MODE_EMERGENCY_LAND = 1, MAV_AUTO_MODE_RETURN_TO_HOME = 2, MAV_AUTO_MODE_WANDER = 3 (uint8_t)
+		# mav_flight_mode_kill        : (See MAV_KILL) Valid options are: MAV_KILL_SWITCH_OFF = 0, MAV_KILL_NOW = 1 (uint8_t)
+		
+		#Flight Control Modes are: Manual (0), Altitude (1), Attitude (2), Local Position (3), Global Position (4), Radial Position (5), Spherical Position (6), Follow Me (7)
+		#FLight Auto Modes are: Manual (0), Emergency Land (1), Return Home (2), Wander (3)
+		#Flight Kill Modes are: Fly (0), Kill Now (1)
+		
 		killButton=tk.Button(settingsFrame, text="Kill Drone", command = killDroneMethod, bg ="red")
 		mappingModeFrame=tk.Frame(settingsFrame)
 		flightModeFrame=tk.Frame(settingsFrame)
@@ -379,22 +384,27 @@ class settingsThreadClass(threading.Thread):
 		controlModeFrame=tk.Frame(settingsFrame)
 
 		killButton.place(x=0,y=0,width=w,height=h_dash)
+		# FlightControlModeFrame.place()
+		# FlightAutoModeFrame.place()
+		# FlightKillModeFrame.place()
+		
 		mappingModeFrame.place(x=0,y=h_dash,width=w,height=h_dash)
 		flightModeFrame.place(x=0,y=2*h_dash,width=w,height=h_dash)
 		pilotReferenceModeFrame.place(x=0,y=3*h_dash,width=w,height=h_dash)
 		controlModeFrame.place(x=0,y=4*h_dash,width=w,height=h_dash)
 
-		m=tk.IntVar()
-		f=tk.IntVar()
-		p=tk.IntVar()
-		c=tk.IntVar()
+		m = tk.IntVar()
+		f = tk.IntVar()
+		p = tk.IntVar()
+		c = tk.IntVar()
 
 		# default flight modes
 		m.set(0) #mappingMode = 0    
 		f.set(4) #flightMode = 4
 		p.set(5) #pilotReferenceMode=5
 		c.set(8) #controlMode= 8
-
+		
+		#Create the Settings buttons for each flight mode
 		mappingModeRadioButton0=tk.Radiobutton(mappingModeFrame, text="SLAM", variable=m, 
 								value=0,indicatoron=0,
 								state=tk.ACTIVE, command=lambda : sendSettingPacket(m.get(),f.get(),p.get(),c.get()))
@@ -449,23 +459,23 @@ class settingsThreadClass(threading.Thread):
 		controlModeRadioButton10.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
 		controlModeRadioButton11.pack(side=tk.LEFT,fill=tk.BOTH,expand=1)
 		
-class statisticsThreadClass(threading.Thread):
+class statisticsThreadClass(threading.Thread): #Based on the User selected options this class will plot real time data from the drone
 	def __init__(self, master, messages, new_data):
 		threading.Thread.__init__(self)
 		statisticsFrame = tk.Frame(master)
 		statisticsFrame.place(x=0,y=h,width=w,height=int(0.66*vidH))
 		statisticsFrame.configure(bg='green')
 
-		plotFrame = tk.Frame(statisticsFrame)
-		plotFrameh = int(0.5*vidH)
+		plotFrame 										= tk.Frame(statisticsFrame)
+		plotFrameh 										= int(0.5*vidH)
 		plotFrame.place(x=0,y=0,width=w,height=plotFrameh)
 		
-		stat_xPositionBoxFrame = tk.Frame(statisticsFrame)
-		stat_yPositionBoxFrame = tk.Frame(statisticsFrame)
-		stat_zPositionBoxFrame = tk.Frame(statisticsFrame)
-		stat_rollBoxFrame = tk.Frame(statisticsFrame)
-		stat_pitchBoxFrame = tk.Frame(statisticsFrame)
-		stat_yawBoxFrame = tk.Frame(statisticsFrame)
+		stat_xPositionBoxFrame 							= tk.Frame(statisticsFrame)
+		stat_yPositionBoxFrame 							= tk.Frame(statisticsFrame)
+		stat_zPositionBoxFrame 							= tk.Frame(statisticsFrame)
+		stat_rollBoxFrame 								= tk.Frame(statisticsFrame)
+		stat_pitchBoxFrame 								= tk.Frame(statisticsFrame)
+		stat_yawBoxFrame 								= tk.Frame(statisticsFrame)
 
 		rem_h=int(int(0.66*vidH)-plotFrameh)
 		frame_wid=int(w/6)
@@ -476,15 +486,15 @@ class statisticsThreadClass(threading.Thread):
 		stat_pitchBoxFrame.place(x=4*frame_wid,y=plotFrameh,width=frame_wid,height=rem_h)
 		stat_yawBoxFrame.place(x=5*frame_wid,y=plotFrameh,width=w-5*frame_wid,height=rem_h)
 		
-		self.stat_iXposition = tk.IntVar()
-		self.stat_iYposition = tk.IntVar()
-		self.stat_iZposition = tk.IntVar()
-		self.stat_iroll = tk.IntVar()
-		self.stat_ipitch = tk.IntVar()
-		self.stat_iyaw = tk.IntVar()
+		self.stat_iXposition 							= tk.IntVar()
+		self.stat_iYposition 							= tk.IntVar()
+		self.stat_iZposition 							= tk.IntVar()
+		self.stat_iroll 								= tk.IntVar()
+		self.stat_ipitch 								= tk.IntVar()
+		self.stat_iyaw 									= tk.IntVar()
 
-		self.fig = plt.figure(figsize = (5,5), dpi = 75)
-		self.ax = self.fig.add_subplot(111)
+		self.fig 										= plt.figure(figsize = (5,5), dpi = 75)
+		self.ax 										= self.fig.add_subplot(111)
 
 		self.canvas = FigureCanvasTkAgg(self.fig, plotFrame)
 		self.canvas.get_tk_widget().grid(row = 0, column = 0, sticky = tk.N + tk.S + tk.W + tk.E)
@@ -494,19 +504,19 @@ class statisticsThreadClass(threading.Thread):
 		self.canvas.show()
 		
 		self.ax.set_ylabel('Position (m)')
-		self.xPosition_line = self.ax.plot([], [])[0]
-		self.yPosition_line = self.ax.plot([], [])[0]
-		self.zPosition_line = self.ax.plot([], [])[0]
+		self.xPosition_line 							= self.ax.plot([], [])[0]
+		self.yPosition_line 							= self.ax.plot([], [])[0]
+		self.zPosition_line								= self.ax.plot([], [])[0]
 		
-		self.ax2 = self.ax.twinx()
+		self.ax2 										= self.ax.twinx()
 		self.ax2.set_ylabel('Rotation Angle (radians)')
 		
-		self.roll_line 		= self.ax2.plot([], [])[0]
-		self.pitch_line 	= self.ax2.plot([], [])[0]
-		self.yaw_line 		= self.ax2.plot([], [])[0]
+		self.roll_line 									= self.ax2.plot([], [])[0]
+		self.pitch_line 								= self.ax2.plot([], [])[0]
+		self.yaw_line 									= self.ax2.plot([], [])[0]
 		
-		self.new_data = new_data
-		self.messages = messages
+		self.new_data 									= new_data
+		self.messages 									= messages
 
 		stat_xPositionCheckButton = tk.Checkbutton(stat_xPositionBoxFrame, text = 'X Position', variable = self.stat_iXposition, command = lambda : self.Plot('X_Position', self.stat_iXposition.get(), self.canvas))
 		stat_yPositionCheckButton = tk.Checkbutton(stat_yPositionBoxFrame, text = 'Y Position', variable = self.stat_iYposition, command = lambda : self.Plot('Y_Position', self.stat_iYposition.get(), self.canvas))
@@ -522,9 +532,9 @@ class statisticsThreadClass(threading.Thread):
 		stat_pitchCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 		stat_yawCheckButton.pack(side = tk.LEFT, fill = tk.BOTH, expand = 1)
 
-		self.Roll_Changed = False
-		self.Pitch_Changed = False
-		self.Yaw_Changed = False
+		self.Roll_Changed 								= False
+		self.Pitch_Changed 								= False
+		self.Yaw_Changed 								= False
 				
 		self.xPosition_line.set_data([],[])
 		self.yPosition_line.set_data([],[])
@@ -534,14 +544,14 @@ class statisticsThreadClass(threading.Thread):
 		self.yaw_line.set_data([],[])
 		self.legend_changed = False
 		
-	def run(self):		
+	def run(self):	#Run the Real Time Plot Function
 		while 1:
 			if self.new_data.value == 1:
 				self.AnimatePlot(self.canvas,self.legend_changed)
-			sleep(.12)
-			
+			sleep(.12) #Sleep for .12 seconds			
 		self.canvas.draw()
-	def Plot(self,var_name, var_state, canvas):
+		
+	def Plot(self,var_name, var_state, canvas): #If a option is de-selected by the user then the data will be removed from the Plot
 		if var_state == 0:				
 			if var_name is "X_Position":
 				self.xPosition_line.set_data([],[])
@@ -564,7 +574,7 @@ class statisticsThreadClass(threading.Thread):
 				print 'Stop Plotting Yaw'
 				self.yaw_line.set_data([],[])		
 			
-	def AnimatePlot(self,canvas,legend_changed):
+	def AnimatePlot(self,canvas,legend_changed): #Real Time Plotter
 		Prev_Rotation_Scaling_Factor = 0
 		Rotation_Scaling_Factor = 0
 		Prev_Position_Scaling_Factor = 0
@@ -573,50 +583,50 @@ class statisticsThreadClass(threading.Thread):
 		
 		NumDataPlots = self.stat_iyaw.get() + self.stat_ipitch.get() + self.stat_iroll.get() + self.stat_iZposition.get() + self.stat_iYposition.get() + self.stat_iXposition.get()
 		
-		if NumDataPlots is 0:
-			Position_Lines, _ = self.ax.get_legend_handles_labels()
-			Rotation_Lines, _ = self.ax2.get_legend_handles_labels()
-			Position_Lables = None
-			Rotation_Lables = None
-			L = self.ax2.legend(Position_Lines+Rotation_Lines, 'None', bbox_to_anchor = (0., 1.02, 1., .102), loc=3,
-						ncol= 1, mode="expand", borderaxespad=0.)
+		if NumDataPlots is 0: #If none of the options are selected for plotting
+			Position_Lines, _ 							= self.ax.get_legend_handles_labels()
+			Rotation_Lines, _ 							= self.ax2.get_legend_handles_labels()
+			Position_Lables 							= None
+			Rotation_Lables 							= None
+			L 											= self.ax2.legend(Position_Lines+Rotation_Lines, 'None', bbox_to_anchor = (0., 1.02, 1., .102), loc=3,
+																ncol= 1, mode="expand", borderaxespad=0.)
 			L.remove()
 			
-		else:
-			Position_Lines, Position_Lables = self.ax.get_legend_handles_labels()
-			Rotation_Lines, Rotation_Lables = self.ax2.get_legend_handles_labels()
+		else: #If at least one option has been selected for plotting
+			Position_Lines, Position_Lables 			= self.ax.get_legend_handles_labels() #Obtain the Position labels and handles
+			Rotation_Lines, Rotation_Lables 			= self.ax2.get_legend_handles_labels() #Obtain the Rotation labels and handles
 			
-			if self.stat_iXposition.get() == 0:
-				if 'X' in Position_Lables:
-					Position_Lines.pop(Position_Lables.index('X'))
-					Position_Lables.pop(Position_Lables.index('X'))
+			if self.stat_iXposition.get() == 0: #If 'X' isn't currently selected
+				if 'X' in Position_Lables: #If 'X' was previously selected then this is true
+					Position_Lines.pop(Position_Lables.index('X')) #Remove 'X' from Position Handle
+					Position_Lables.pop(Position_Lables.index('X')) #Remove 'X' from the Position Lable
 					
-			if self.stat_iYposition.get() == 0:
-				if 'Y' in Position_Lables:
-					Position_Lines.pop(Position_Lables.index('Y'))
-					Position_Lables.pop(Position_Lables.index('Y'))
+			if self.stat_iYposition.get() == 0: #If 'Y' isn't currently selected
+				if 'Y' in Position_Lables: #If 'Y' was previously selected then this is true
+					Position_Lines.pop(Position_Lables.index('Y')) #Remove 'Y' from Position Handle
+					Position_Lables.pop(Position_Lables.index('Y')) #Remove 'Y' from the Position Lable
 					
-			if self.stat_iZposition.get() == 0:
-				if 'Z' in Position_Lables:
-					Position_Lines.pop(Position_Lables.index('Z'))
-					Position_Lables.pop(Position_Lables.index('Z'))
+			if self.stat_iZposition.get() == 0: #If 'Z' isn't currently selected
+				if 'Z' in Position_Lables: #If 'Z' was previously selected then this is true
+					Position_Lines.pop(Position_Lables.index('Z')) #Remove 'Z' from Position Handle
+					Position_Lables.pop(Position_Lables.index('Z')) #Remove 'Z' from the Position Lable
 					
-			if self.stat_iroll.get() == 0:
-				if 'Roll' in Rotation_Lables:
-					Rotation_Lines.pop(Rotation_Lables.index("Roll"))
-					Rotation_Lables.pop(Rotation_Lables.index("Roll"))
+			if self.stat_iroll.get() == 0: #If 'Roll' isn't currently selected
+				if 'Roll' in Rotation_Lables: #If 'Roll' was previously selected then this is true
+					Rotation_Lines.pop(Rotation_Lables.index("Roll")) #Remove 'Roll' from Position Handle
+					Rotation_Lables.pop(Rotation_Lables.index("Roll")) #Remove 'Roll' from the Position Lable
 					
-			if self.stat_ipitch.get() == 0:
-				if 'Pitch' in Rotation_Lables:
-					Rotation_Lines.pop(Rotation_Lables.index("Pitch"))
-					Rotation_Lables.pop(Rotation_Lables.index("Pitch"))
-					
-			if self.stat_iyaw.get() == 0:
-				if 'Yaw' in Rotation_Lables:
-					Rotation_Lines.pop(Rotation_Lables.index('Yaw'))
-					Rotation_Lables.pop(Rotation_Lables.index('Yaw'))
+			if self.stat_ipitch.get() == 0: #If 'Pitch' isn' currently selected
+				if 'Pitch' in Rotation_Lables: #If 'Pitch' was previously selected then this is true
+					Rotation_Lines.pop(Rotation_Lables.index("Pitch")) #Remove 'Pitch' from Position Handle
+					Rotation_Lables.pop(Rotation_Lables.index("Pitch")) #Remove 'Pitch' from the Position Lable
+					 
+			if self.stat_iyaw.get() == 0: #If 'Yaw' isn' currently selected
+				if 'Yaw' in Rotation_Lables: #If 'Yaw' was previously selected then this is true
+					Rotation_Lines.pop(Rotation_Lables.index('Yaw')) #Remove 'Yaw' from Position Handle
+					Rotation_Lables.pop(Rotation_Lables.index('Yaw')) #Remove 'Yaw' from the Position Lable
 			
-			if Rotation_Scaling_Factor == 0:
+			if Rotation_Scaling_Factor == 0: #If the Scaling Factor for the Rotation Variables is Zero
 				if ('(1/' + str(Rotation_Scaling_Factor) + ')*Roll') in Rotation_Lables:
 					Rotation_Lines.pop(Rotation_Lables.index('(1/' + str(Rotation_Scaling_Factor) + ')*Roll'))
 					Rotation_Lables.pop(Rotation_Lables.index('(1/' + str(Rotation_Scaling_Factor) + ')*Roll'))					
@@ -666,7 +676,6 @@ class statisticsThreadClass(threading.Thread):
 					Position_Lines.pop(Position_Lables.index('(1/' + str(Prev_Position_Scaling_Factor) + ')*Z'))
 					Position_Lables.pop(Position_Lables.index('(1/' + str(Prev_Position_Scaling_Factor) + ')*Z'))
 					
-			print Rotation_Lines
 			L = self.ax2.legend(Position_Lines + Rotation_Lines, Position_Lables + Rotation_Lables, bbox_to_anchor = (0., 1.02, 1., .102), loc=3,
 					ncol= NumDataPlots, mode="expand", borderaxespad=0.)
 						
@@ -1428,7 +1437,7 @@ def closeProgram():
     killUDPprocessCounter=0
     print "here I am ", killUDPprocessCounter
 	
-def startTkinter(PlotPacket,startBool, msgIDs, new_data):
+def startTkinter(PlotPacket,startBool, msgIDs, new_data): #This will start the GUI
     root = tkinterGUI(PlotPacket,startBool, msgIDs, new_data)
     root.master.title("Azog") # Name of current drone, Here it is Azog
     # root.master.attributes('-zoomed', True)
@@ -1452,7 +1461,7 @@ def sendSettingPacket(m,f,p,c):
 def killDroneMethod():
     print 'this should send a specific MAVlink packet'
 
-class AutoScrollbar(tk.Scrollbar):
+class AutoScrollbar(tk.Scrollbar): #This class contains all of the drones which part of the swam
     # a scrollbar that hides itself if it's not needed.  only
     # works if you use the grid geometry manager.
     def set(self, lo, hi):
@@ -1476,10 +1485,9 @@ def main():
 	messages = manager.dict()
 	Log_msgIDs = manager.list()
 
-	
 	# udpSendingProcess = Process(name = 'UDP Sending Process', target = UDP_Sending, args = ())
-	udpCommunicationProcess = Process(name = 'UDP Communication Process', target = UDP_Communication, args=(messages, startLogging, Log_msgIDs, new_data))
-	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(messages, startLogging, Log_msgIDs, new_data))
+	udpCommunicationProcess = Process(name = 'UDP Communication Process', target = UDP_Communication, args=(messages, startLogging, Log_msgIDs, new_data)) #This process contains the sending and receiving threads
+	TkinterProcess = Process(name='Tkinter Process', target=startTkinter, args=(messages, startLogging, Log_msgIDs, new_data)) #This process deals strictly with the GUI
 	
 	# udpSendingProcess.start()
 	udpCommunicationProcess.start()

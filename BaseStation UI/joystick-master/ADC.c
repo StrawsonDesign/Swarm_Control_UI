@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <unistd.h>
-#include "adc.h"
+#include "ADC.h"
 
 int get_adc_value(int ch)
 {
